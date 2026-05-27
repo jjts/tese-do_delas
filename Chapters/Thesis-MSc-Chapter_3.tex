@@ -1,0 +1,379 @@
+% #############################################################################
+% This is Chapter 3
+% !TEX root = ../main.tex
+% #############################################################################
+% Change the Name of the Chapter i the following line
+\fancychapter{Proposed Fatori-V Platform}
+% The following line allows to ref this chapter
+\label{chap3:fatori-v}
+% #############################################################################
+\section{General Features and Overview}
+\label{chap3:fatori-v_overview}
+
+\begin{figure}[H]
+\centering
+    \includegraphics[width=0.7\textwidth]{Images/chap3_layers_simple.png}
+    \caption{Fatori-V Overview}
+    \label{fig:fatori_simple_overview}
+\end{figure}
+
+
+\ac{Fatori-V} is an open-source Python platform designed to support the implementation and evaluation of \acp{FTM}. It allows users to run experiments on a \ac{RISC-V} \ac{SoC} by providing a simple, compact, human-readable \ac{UI} and automating the remaining steps. \Cref{fig:fatori_simple_overview} displays its two-layer system and the main components involved.
+
+The user sets up the platform using input and configuration files. For each
+experiment, a \texttt{.yaml} file is needed. \ac{Fatori-V} generates MACRO
+files, which are header files for SystemVerilog, firmware, benchmark
+configuration, and auxiliary scripts such as Vivado TCL hooks.
+
+The Py2HWSW layer compiles the design, produces the bitstream, and programs
+the \ac{FPGA}. The platform executes benchmark sessions on the board and, when
+enabled, synchronizes them with an \ac{FI} campaign, collecting logs and
+creating results tables. One run represents one architecture configuration,
+which contains one session for each benchmark software executing in that
+architecture. Some other features of \ac{Fatori-V} are described below.
+Fatori-V is an open-source Python platform engineered to facilitate the
+implementation and evaluation of Fault Tolerance Mechanisms (FTMs) within RISC-V
+System-on-Chip (SoC) architectures. By providing a compact, human-readable
+interface that automates complex workflows, the platform streamlines the
+execution of experiments on FPGA hardware. As illustrated in Figure 3.1, the
+system architecture operates across two primary layers, managing the transition
+from user-defined configurations to automated hardware deployment and data
+collection.
+
+The operational workflow begins with the user providing input and configuration
+files, specifically through .yaml files. Fatori-V interprets these files to
+generate the necessary MACRO headers for SystemVerilog, firmware, benchmark
+configurations, and auxiliary Vivado TCL scripts. Subsequently, the Py2HWSW
+layer automates the compilation, bitstream generation, and FPGA programming
+processes. During execution, the platform orchestrates benchmark sessions and
+integrates optional Fault Injection (FI) campaigns, capturing logs and
+synthesizing results into structured tables. Within this framework, a single
+"run" represents a specific architecture configuration, encompassing multiple
+benchmark sessions to ensure comprehensive testing.
+
+The platform offers extensive configurability across four primary
+domains. First, Architectural Configuration allows users to define performance
+features such as Instruction Cache settings and RISC-V ISA
+extensions. Additionally, it provides control over monitor depth and enables
+dynamic sizing of PBlocks for native Ibex modules, allowing for precise control
+over logic utilization.
+
+Second, the Fault Tolerance and Injection capabilities support the selection and
+parameterization of both native Ibex and platform-specific FTMs, including
+M-of-N redundancy schemes. Complementing this, the Fault Injection module allows
+for temporal and spatial distribution of errors—ranging from uniform to burst
+distributions across various hardware targets—enabling unified injection into
+both configuration memory and registers.
+
+Third, the Batch Execution and Automation features maximize efficiency and
+reproducibility. The platform supports sequential batch processing of
+experiments and multiple benchmark sessions per run. Features such as fixed-seed
+trees, input auto-fixes, and "dry mode" debugging ensure that experiments remain
+reliable and traceable. Users can also incorporate standard benchmarks, such as
+CoreMark and Embench-IoT, or provide file overrides to bypass specific build
+steps.
+
+Finally, the Data Logging and Reporting functionality automates the storage of per-run and per-session logs, governed by configurable verbosity levels and centralized message control. It facilitates performance analysis by exporting results to .csv and .xlsx formats, mirroring build artifacts for future inspection, and calculating derived metrics through centralized configuration files.
+
+% -------------------------------------------------------------
+\section{Implementation Layers and Platform Structure}
+\label{chap3:hwvssw}
+
+As shown in \cref{fig:fatori_simple_overview}, the \ac{Fatori-V} Layer communicates with the Py2HWSW layer through MACROfiles. Among these files, an important one is the \texttt{fatori\_features.svh} file, shown below.
+
+\begin{lstlisting}[language=matlabfloz,caption={Example of build-time feature macros generated by the software layer.},label=lst:fatori_features]
+`__FATORI_MACRO_DEF(FATORI_ICACHE, 1)
+`__FATORI_MACRO_DEF(FATORI_BRANCH_PRED, 1)
+`__FATORI_MACRO_DEF(FATORI_RV32M, ibex_pkg::RV32MSingleCycle)
+`__FATORI_MACRO_DEF(FATORI_REGFILE, ibex_pkg::RegFileFPGA)
+\end{lstlisting}
+
+The Py2HWSW Layer contains the \ac{RTL} implementation of the system. Every hardware modification made during this work is implemented in this layer, starting from an existing \ac{RISC-V} baseline selected through the process described in \cref{chap2:analysis} to the implementations described in \cref{chap4:el2,chap5:ibex,chap6:fatori_hardware}. It is configured through 19 interface files, including 6 \texttt{.svh} headers, 5 \texttt{.h} headers, and 8 \texttt{.tcl} scripts. The \ac{Fatori-V} Layer is responsible for generating those 19 files and placing them in the correct locations inside the hardware tree. It also provides the file-based \ac{UI}, integrates the \ac{FI} tool, implements run and session automation, and organizes the metric data of the underlying layer into tables.
+
+The \ac{Fatori-V} repository is organized by subsystems, as shown in \cref{fig:fatori_repo_tree}.  
+
+\begin{wrapfigure}{l}{0.4\textwidth}
+\vspace{-10pt}
+  \begin{center}
+    \includegraphics[width=0.27\textwidth]{Images/folder_hierarchy.jpg}
+  \end{center}
+  \caption{Fatori-V repository hierarchy.}
+\label{fig:fatori_repo_tree}
+\vspace{-5pt}
+\end{wrapfigure}
+
+The user interacts mainly with \texttt{runs/}, \texttt{inputs/}, \texttt{config/}, and \texttt{results/}. The \texttt{runs/} folder stores experiment \texttt{.yaml} files, one per experiment, and for each run file the platform creates a dedicated output folder under \texttt{results/}. The folders \texttt{inputs/} and \texttt{config/}, together with \texttt{fatori\_settings.py}, define the global configuration of the system. A more detailed view of the user-facing folders is given in \cref{chap3:UI}.
+
+The \texttt{architecture/} folder contains the Py2HWSW layer, later described in \cref{chap5:iob-soc-ibex}. The \texttt{fi/} folder contains the fault injection tool developed in this thesis. Despite being a major feature of \ac{Fatori-V}, it is implemented as a separate tool and can be integrated into other systems, and it is described in \cref{chap8:fatori_fi}.
+
+The \texttt{benchmarks/} folder wraps the integrated benchmarks. It includes clones of upstream benchmark repositories, Makefiles that extract and build their sources, and local port files that adapt them to this platform. The main entry point for \ac{Fatori-V}'s implementation is \texttt{fatori-v.py}, where the Run/Session program is implemented, and \texttt{scripts/} contains the supporting Python code organized by areas (e.g., \texttt{cli/}, \texttt{logging/}, \texttt{reports/}, or \texttt{pblocks/}).
+
+
+
+
+% #############################################################################
+\section{User Interface and Generated Outputs}
+\label{chap3:UI}
+
+\ac{Fatori-V} is controlled through a file-based \ac{UI}. The interface is divided into run files, global configuration files, and result directories. Run files define individual experiments. Global files setup the platform and provide external inputs. Result directories store the generated files, logs, reports, and final tables produced by each run.
+
+Each experiment is described by one run \texttt{.yaml} file placed under \texttt{runs/}. The run file selects the target board, architectural features, \acp{FTM}, benchmark sessions, optional \ac{FI} campaign, and reported metrics. A complete example is provided in \cref{app_a:yaml}. This interface keeps experiment setup at the configuration level, so the user can define several runs without editing the hardware or software implementation directly. A run file is organized into three top-level blocks. The \texttt{run} block defines identification and execution context. The \texttt{general} block defines high-level switches, including hardware features, benchmarks, \ac{FI}, and metric level. The \texttt{specifics} block defines detailed parameters for the features enabled in \texttt{general}. \Cref{tab:yaml_run_fields,tab:yaml_general_fields,tab:yaml_specifics_fields} summarize the most relevant fields.
+
+
+\begin{table}[h]
+\centering
+\small
+\setlength{\tabcolsep}{3.2pt}
+\renewcommand{\arraystretch}{1.25}
+\begin{tabularx}{\textwidth}{|l|X|}
+\hline
+Field path &
+Purpose \\
+\hline
+\hline
+\texttt{run.identification.name} &
+Human-readable run name, used in output naming. \\
+\hline
+\texttt{run.identification.seed} &
+Default seed for reproducibility. \\
+\hline
+\texttt{run.identification.run} &
+Selects \ac{FPGA} execution or simulation mode. \\
+\hline
+\end{tabularx}
+\caption{\texttt{run} block, identification and execution context.}
+\label{tab:yaml_run_fields}
+\end{table}
+
+\begin{table}[h]
+\centering
+\small
+\setlength{\tabcolsep}{3.2pt}
+\renewcommand{\arraystretch}{1.25}
+\begin{tabularx}{\textwidth}{|>{\raggedright\arraybackslash}p{0.47\textwidth}|X|}
+\hline
+Field path &
+Purpose \\
+\hline
+\hline
+\texttt{general.features.fault\_manager} &
+Enables the Fault Manager, recommended for \ac{FI}. \\
+\hline
+\texttt{general.features.performance\_mechanisms.*} &
+Performance feature toggles, such as \texttt{icache}, \texttt{branch\_pred}, \texttt{branch\_target\_alu}, \texttt{wstage}. \\
+\hline
+\texttt{general.features.isa\_extensions.*} &
+\ac{ISA} toggles, such as \texttt{RV32E}, \texttt{RV32M}, \texttt{RV32B}, \texttt{RV32C}. \\
+\hline
+\texttt{general.features.fault\_tolerance\_mechanisms.*} &
+High-level \ac{FTM} toggles, such as \texttt{dummy\_instr}, \texttt{lockstep}, \texttt{register\_m\_of\_n}, \texttt{logic\_m\_of\_n}, \texttt{self\_testing}. \\
+\hline
+\texttt{general.benchmarks.<bench>.enable} &
+Enables a benchmark session, disabled ones are skipped. \\
+\hline
+\texttt{general.benchmarks.<bench>.config.*} &
+Benchmark-specific parameters, when applicable. \\
+\hline
+\texttt{general.fault\_injection.enable} &
+Enables fault injection for enabled benchmarks. \\
+\hline
+\texttt{general.fault\_injection.area\_profile} &
+Selects the spacial injection policy (device, modules, target list, or input). \\
+\hline
+\texttt{general.fault\_injection.time\_profile} &
+Selects the temporal injection distribution (uniform, ramp, Poisson, MMPP2, microburst, trace, or input). \\
+\hline
+\texttt{general.metrics\_level} &
+Selects the amount of metric hardware counters included. \\
+\hline
+\end{tabularx}
+\caption{\texttt{general} block, high-level switches and choices.}
+\label{tab:yaml_general_fields}
+\end{table}
+
+\begin{table}[h]
+\centering
+\small
+\setlength{\tabcolsep}{3.2pt}
+\renewcommand{\arraystretch}{1.25}
+\begin{tabularx}{\textwidth}{|>{\raggedright\arraybackslash}p{0.5\textwidth}|X|}
+\hline
+Field path &
+Purpose \\
+\hline
+\hline
+\texttt{specifics.ibex.*} &
+Native Ibex parameter choices, such as register file and multiplier implementations. \\
+\hline
+\texttt{specifics.fault\_tolerance.reg\_m\_of\_n.*} &
+Per-register M-of-N parameters, including N and M, correction, and targeting rules. \\
+\hline
+\texttt{specifics.fault\_tolerance.logic\_m\_of\_n.*} &
+Logic-block M-of-N parameters, including N and M, hold, recursion control, and target selection. \\
+\hline
+\texttt{specifics.fault\_tolerance.self\_testing.*} &
+Self-test policy, spacing, targets, and failure handling. \\
+\hline
+\texttt{specifics.fault\_tolerance.fault\_injection.time.*} &
+Time profile parameters, such as rate, duration, and profile-specific arguments. \\
+\hline
+\texttt{specifics.fault\_tolerance.fault\_injection.area.*} &
+Area profile parameters, such as target pool sizing, ratio rules, and target selection. \\
+\hline
+\end{tabularx}
+\caption{\texttt{specifics} block, detailed parameters for enabled features.}
+\label{tab:yaml_specifics_fields}
+\end{table}
+
+
+Global files, summarized in \cref{fig:ui_inputs_config}, are configured once and reused across experiments. The \texttt{inputs/} folder stores hardware, software, and TCL files that are not generated, and are instead copied to the build tree. The destination of each copied file is defined through the corresponding \texttt{locations.yaml} file. \texttt{fatori\_registers.yaml} assigns stable IDs and names to wrapped registers. \texttt{gen\_locations.yaml} maps generated files to their destinations. \texttt{system\_hierarchy.yaml} defines parent-child relations between hardware modules for mechanisms that require hierarchical targeting. The \texttt{config/} folder configures the platform itself. The \texttt{validation\_checks.py} file defines the rules used to validate and normalize the run file, as described in \cref{chap7:software_overview}. \texttt{metrics\_definitions.py} defines measured and computed metrics, including the formulas needed to compute them. \texttt{log\_levels.py} and \texttt{messages\_formats.py} define the event-based centralized logging system. \texttt{fatori\_settings.py} stores defaults such as board selection, clock, baud rate, and dry-run mode. Selected settings can also be overridden through the \ac{CLI}.
+
+
+\begin{figure}[h]
+\centering
+\begin{minipage}[t]{0.45\textwidth}
+\centering
+\includegraphics[width=0.5\linewidth]{Images/input_config.jpg}
+\caption{Input and config entry points.}
+\label{fig:ui_inputs_config}
+\end{minipage}\hfill
+\begin{minipage}[t]{0.5\textwidth}
+\centering
+\includegraphics[width=0.6\linewidth]{Images/results.jpg}
+\caption{Per-run results folder layout.}
+\label{fig:ui_results_layout}
+\end{minipage}
+\end{figure}
+
+
+Each run creates one output directory under \texttt{results/\textless run name\textgreater/}, whose structure is shown in \cref{fig:ui_results_layout}. The top level stores the original run file, the verified run file produced by validation, and the consolidated \texttt{CSV} and \texttt{XLSX} result tables. The \texttt{gen/} subdirectory mirrors the files generated for that run, including \texttt{.svh}, \texttt{.h}, \texttt{.tcl}, and pblock-related files. The \texttt{reports/} subdirectory stores build reports and parsed implementation metrics. The \texttt{sessions/} subdirectory stores one folder per benchmark session, including benchmark logs, extracted benchmark metrics, and \ac{FI} logs when injection is enabled. The file \texttt{sessions/bench\_metrics.csv} aggregates per-session benchmark metrics before they are merged with implementation data. The final outputs of a run are the consolidated \texttt{CSV} and \texttt{XLSX} result tables, summarized in \cref{tab:results_table_benchmark_excerpt,tab:results_table_fpga_excerpt}, that combine benchmark metrics extracted from \texttt{sessions/bench\_metrics.csv} with \ac{FPGA} implementation metrics parsed from Vivado reports into \texttt{\textless board name\textgreater\_metrics.csv}.
+
+
+\begin{table}[h]
+\centering
+\scriptsize
+\setlength{\tabcolsep}{3.2pt}
+\renewcommand{\arraystretch}{1.25}
+\begin{tabularx}{\textwidth}{|X|X|X|X|X|}
+\hline
+System Features &
+FI Parameters &
+coremark &
+embench-iot &
+fatori stress \\
+\hline
+\hline
+&
+&
+FI Status: on &
+FI Status: off &
+FI Status: off \\
+\hline
+Run Name: example &
+FI Corrector: N/A &
+instructions\_per\_cycle: 0 &
+instructions\_per\_cycle: 0 &
+instructions\_per\_cycle: 0 \\
+\hline
+Global Seed: 5432 &
+Time Profile: uniform &
+detected\_injections: 542 &
+detected\_injections: 0 &
+detected\_injections: 0 \\
+\hline
+Run Mode: fpga &
+Time Seed: uses global &
+mcycle: 707200229 &
+mcycle: 4837000757 &
+mcycle: 11558370 \\
+\hline
+Metrics Level: 5 &
+Uniform: Rate Hz: 5.0 &
+minstret: 193058420 &
+minstret: 1463227089 &
+minstret: 2124519 \\
+\hline
+Fault Manager: on &
+Uniform: Period s: None &
+hpm\_lsu\_busy: 95738778 &
+hpm\_lsu\_busy: 490864005 &
+hpm\_lsu\_busy: 2423267 \\
+\hline
+Dummy Instructions: off &
+Area: Repeat Targets: off &
+hpm\_loads: 32646654 &
+hpm\_loads: 173880082 &
+hpm\_loads: 689186 \\
+\hline
+Logic M-of-N: on &
+Area: Seed: uses global &
+hpm\_br\_taken: 23406924 &
+hpm\_br\_taken: 85672174 &
+hpm\_br\_taken: 343518 \\
+\hline
+\end{tabularx}
+\caption{Example and heavily reduced portion of the results table (Sheet 1: Benchmark Metrics).}
+\label{tab:results_table_benchmark_excerpt}
+\end{table}
+
+\begin{table}[h]
+\centering
+\scriptsize
+\setlength{\tabcolsep}{3.2pt}
+\renewcommand{\arraystretch}{1.25}
+\begin{tabularx}{\textwidth}{|X|X|X|X|X|X|}
+\hline
+Common Info &
+Utilization &
+Timing &
+Power &
+Methodology &
+DRC \\
+\hline
+\hline
+Vivado: v.2020.2 &
+Used LUTs: 4678 &
+WNS: 2.571 &
+OnChip Pw (W): 0.589 &
+Metho Violat: 64 &
+Violations: 13 \\
+\hline
+Date: Feb 1 2026 &
+Total LUTs: 242400 &
+TNS: 0.000 &
+DPower (W): 0.108 &
+SYNTH-15: Warning &
+AVAL-318: Warning \\
+\hline
+Design: iob\_aes\_ku040 &
+LUTs Util \%: 1.93 &
+TNS Fail Endpoints: 0 &
+Static Power (W): 0.481 &
+SYNTH-15 Desc: ... &
+AVAL-318 Desc: ... \\
+\hline
+Dvc: xcku040-fbva676 &
+FF Total Used: 2656 &
+Total Endpoints: 9849 &
+DPower \%: 18.3 &
+SYNTH-15 Count: 64 &
+AVAL-318 Count: 1 \\
+\hline
+D State: Fully Routed &
+Avail FF: 484800 &
+WHS: 0.011 &
+Static Power \%: 81.7 &
+T Warn Violat: 64 &
+DPIP-2: Warning \\
+\hline
+&
+DDs Utilization \%: 0.55 &
+THS: 0.000 &
+&
+&
+DPIP-2 Desc: ... \\
+\hline
+\end{tabularx}
+\caption{Example and heavily reduced portion of the results table (Sheet 2: FPGA Reports).}
+\label{tab:results_table_fpga_excerpt}
+\end{table}

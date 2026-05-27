@@ -1,0 +1,9 @@
+% #############################################################################
+% Abstract Text
+% !TEX root = ../main.tex
+% #############################################################################
+\acresetall
+
+\Acp{FPGA} are increasingly used in space applications, where radiation-induced \acp{SEU} can corrupt both architectural state and configuration memory in \ac{RISC-V}-based platforms. While many \acp{FTM} exist, performing fair trade-off studies across mechanisms is still difficult because developers need a practical platform for integrating mechanisms that can run real software, inject faults repeatably, and report comparable metrics.
+
+This thesis delivers \ac{Fatori-V}, an open-source platform designed to support the implementation and evaluation of \acp{FTM} on a configurable \ac{RISC-V} \ac{SoC}. \ac{Fatori-V} is built integrating Ibex \cite{ibex} in IOb-SoC \cite{iob-soc}, and exposes a single, human-readable \texttt{.yaml} interface that parameterizes the full experiment (hardware features, \acp{FTM}, fault injection, benchmarks, and reporting). \ac{Fatori-V} emulates \acp{SEU} by using the \ac{FI} tool also developed in this work. This tool unifies configuration-memory injection (via Xilinx \ac{SEM} with ACME-style essential-bit targeting \cite{SEM,ACME}) and register/\ac{FF} injection (via an on-chip injection interface), supporting multiple area and time profiles and reproducible target pools. 

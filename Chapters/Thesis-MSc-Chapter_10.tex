@@ -1,0 +1,32 @@
+% #############################################################################
+% This is Chapter 10
+% !TEX root = ../main.tex
+% #############################################################################
+\fancychapter{Conclusion}
+\label{chap:conclusion}
+
+% #############################################################################
+\section{Summary}
+\label{sec:conclusion_assessment}
+
+This thesis developed \ac{Fatori-V}, a \texttt{.yaml}-driven platform for implementing and evaluating \acp{FTM} on a configurable \ac{RISC-V} \ac{SoC} targeting \acp{FPGA}. The work selected the final Ibex-based baseline, integrated Ibex in IOb-\ac{SoC}, implemented the Ibex-to-\ac{AXI} bridge, added Py2HWSW build hooks, wrapped pipeline registers, integrated benchmarks, automated runs, and generated comparable \ac{FT}, performance, power, timing, and hardware-cost metrics.
+
+The platform includes Register M-of-N, Logic M-of-N, \ac{ST} hardware, the Fault Manager, and the \ac{CSR}-based monitoring path. The standalone \ac{FI} tool supports \ac{SEM} and \ac{ACME}-based configuration memory injection, register and \ac{FF} injection through on-chip hardware, mixed target pools, reusable area and time profiles, benchmark synchronization, and target-pool replay. The Pblock Assignment Model maps selected hardware targets to physical regions, allowing configuration memory injections to be aimed at module-level scopes.
+
+The validation in \cref{chap9:fatori_validation} showed that the Pblock Model reached 91.63\% average accuracy and that the implemented time profiles matched their configured behaviour with scores between 96.50\% and 98.64\%. The \ac{FTM} comparison in \cref{chap9:general-ftm-testing} showed that register faults were the most disruptive tested fault type. Without Register M-of-N, register-injection campaigns crashed at all tested rates. With Register M-of-N and Correction enabled, the benchmark passed the full register-only sweep. Native Ibex \acp{FTM}, including SecureIbex, did not improve the breaking points in the tested \ac{SEU}-oriented campaigns.
+
+The studies in \cref{chap9:register-mon,chap9:logic-mon} showed that $N=3$, $M=2$ with Correction enabled was the best tested Register M-of-N trade-off. Logic M-of-N improved configuration memory campaigns, but its effect was limited to the five protected targets and by the absence of configuration memory correction. The observability results also exposed two limits in the current implementation. Register M-of-N protects the system, but the aggregation path can merge several detections into one counted event. Logic M-of-N can mask corrupted replica outputs, but it does not repair corrupted configuration memory.
+
+% #############################################################################
+\section{Future Work}
+\label{chap10:future}
+
+Future work should extend the \ac{FI} tool beyond configuration memory and register/\ac{FF} state. Block \ac{RAM}, distributed memory, and register-file injection can be added through local proxy modules that perform safe read-modify-write operations and reuse the current target-pool and time-profile interfaces.
+
+The Register M-of-N monitoring path should preserve every corrected fault event. The current aggregation system can merge simultaneous or close detections before they reach the counters. Per-source counters, wider event buses, or an event queue before the Fault Manager would make the reported observability match the correction behaviour.
+
+Logic M-of-N should be extended with configuration memory correction. The current voter masks corrupted replica outputs, but the corrupted configuration bits remain in place. Future work should connect Logic M-of-N detections to a repair path based on \ac{SEM}, \ac{ICAP}, partial reconfiguration, or another correction backend. The same study should test wider target coverage, per-target $N$ and $M$, and the timing limits found in some Logic M-of-N configurations.
+
+The \ac{ST} \ac{FTM} should be completed and evaluated. Future work should finalize the test patterns, select scheduling policies, measure execution overhead, and compare its detection results with Register M-of-N and Logic M-of-N under the same \ac{FI} campaigns.
+
+\ac{Fatori-V} should also be expanded with more benchmarks, automatic parameter sweeps, finer injection-rate steps near failure transitions, more \acp{FPGA}, and more \acp{CPU} and \acp{SoC}. The Ibex-to-\ac{AXI} bridge can be extended with burst support, and the logging flow can be made more resilient so metrics are preserved when a campaign causes a hang or reset.

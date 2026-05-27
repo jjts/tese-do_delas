@@ -1,0 +1,270 @@
+% #############################################################################
+% This is Chapter 8
+% !TEX root = ../main.tex
+% #############################################################################
+\fancychapter{Fault Injection}
+\label{chap8:fatori_fi}
+
+
+
+% -------------------------------------------------------------
+\section{System Overview}
+\label{chap8:fi_workflow}
+
+The \ac{FI} system developed for this work is implemented as standalone \ac{FI} tool, invoked by \ac{Fatori-V} when \ac{FI} is enabled. The tool defines each campaign by combining temporal and spatial distributions, called Area and Time Profiles. The tool supports both configuration memory and \ac{FF}/register injections. The selected Area profile builds the injection targets pool, and the Time profile schedules the injections.
+
+The main entry file is \texttt{fault\_injection.py}, which executes the flow shown in \cref{fig:fi_flow}. The tool starts by parsing the \ac{CLI} and loading the System Dictionary, which describes the board, pblock bounds, and register IDs. It then initializes logging and sets the campaign seeds.
+
+\begin{figure}[h]
+  \centering
+\includegraphics[width=0.8\linewidth]{Images/chap8_fi_system.png}
+  \caption{Fault Injection flow phases.}
+  \label{fig:fi_flow}
+\end{figure}
+
+The selected Area Profile builds an ordered list of injection targets. Register targets store the register identifier used by the hardware injection path. Configuration memory targets store addresses generated with \ac{ACME}, which maps selected pblock regions into \ac{EBD} entries and converts them into \ac{SEM} injection addresses. Previously generated \ac{ACME} results can be loaded from cache when the same pblock and \ac{EBD} pair is reused.
+
+After the target list is built, the respective transport layer is activated. If synchronization is enabled, the tool waits for the benchmark start signal before injecting. 
+
+During execution, the Time Profile fetches injections from the built pool, waits according to its schedule, and routes each target to the correct injection path. Both paths share the external \ac{FI} \ac{UART} connection to the \ac{FPGA}, but use different command formats. Configuration memory targets are sent to \ac{SEM}. Register targets have their identifier broadcasted to the pipeline. 
+
+The campaign ends when the timing policy finishes, the target pool is exhausted, synchronization is lost, or an external stop is requested. The tool outputs the injection log, the generated target list, and the \ac{ACME} cache files to the output path provided through \ac{CLI}.
+
+
+
+% -----------------------------------
+\subsection{Injection Targets}
+\label{chap8:fi_targets_specs}
+
+The \ac{FI} tool represents each injection as one \texttt{TargetSpec} structure. Each structure stores the information needed to execute the injection, independently of its type. Area Profiles merge multiple \texttt{TargetSpec} structures to build an ordered injection pool called \texttt{TargetPool}. Time Profiles can schedule injections from that pool. A reduced example of an injection pool is shown in \cref{lst:tpool_example}.
+
+
+\begin{lstlisting}[float=h,caption={Reduced example of a mixed \texttt{TargetPool}.},label={lst:tpool_example}]
+targets:
+  - kind: CONFIG
+    module_name: "alu"
+    config_address: "00001234"
+    pblock_name: "alu_pb"
+    source: "profile:modules"
+
+  - kind: REG
+    module_name: "ibex_id_stage"
+    reg_id: 93
+    reg_name: "imd_val_q_reg_0"
+    source: "profile:modules"
+\end{lstlisting}
+
+
+The \texttt{kind} field defines the injection type. \texttt{CONFIG} targets represent configuration memory injections executed through \ac{SEM}. They include \texttt{config\_address}, which stores the address passed to \ac{SEM}, and \texttt{pblock\_name}, which identifies the source pblock in the logs. \texttt{REG} targets represent register injections executed through the hardware path described in \cref{chap8:fi_reg_injections}. They include \texttt{reg\_id}, the 8-bit identifier broadcast by \texttt{fi\_coms}, and \texttt{reg\_name}, which identifies the selected register in the logs.
+
+The generated pool can be exported to a \texttt{.yaml} file, so that later campaigns can reload that file through the \texttt{target\_list} Area Profile. This allows a campaign to be repeated without running target expansion again, and improves reproducibility. 
+
+
+
+
+
+
+
+% -------------------------------------------------------------
+\subsection{User Interface and System Inputs}
+\label{chap8:fi_user_interface}
+
+The \ac{FI} tool is configured through the \ac{CLI}. The command selects the board, serial port, baud rate, seeds, System Dictionary, \ac{EBD} file, Area Profile, Time Profile, and profile-specific arguments. A reduced example is shown in \cref{lst:fi_cli_example}.
+
+\begin{lstlisting}[float=h,caption={Reduced example of the FI CLI usage.},label={lst:fi_cli_example}]
+python3 -m fi.fault_injection
+  --board xcku040 --dev /dev/ttyUSB0 --baud 115200
+  --global-seed 123 --log-level normal
+  --system-dict system_dict.yaml
+  --ebd build_v1.ebd 
+  --area modules --area-args targets=ibex_alu,ratio=1,target_mode=sequential 
+  --time poisson --time-args rate_hz=5,duration_s=60
+
+\end{lstlisting}
+
+The System Dictionary \texttt{.yaml} file is always required. It defines the target board, the pblock bounds of each injectable module, and the register IDs associated with each module. The \ac{EBD} file is required only when configuration memory injections are enabled, because \ac{ACME} uses it to map pblock regions into \ac{SEM} injection addresses.
+
+For standalone use, the user must provide a System Dictionary that describes the current architecture. In \ac{Fatori-V}, the System Dictionary is generated by the Pblock Model described in \cref{chap7:pblock}. An example System Dictionary is provided in \cref{app_c:system_dict}.
+
+Other inputs depend on the selected profiles. An Area Profile can load a user-provided \texttt{TargetPool} \texttt{.yaml} file instead of generating one, as described in \cref{chap8:fi_area}. A Time Profile can also require an external trace file, as described in \cref{chap8:fi_time}. The \ac{EBD} file is generated in Vivado with the command shown in \cref{lst:fi_ebd_example}.
+
+\begin{lstlisting}[float=h,caption={TCL command to generate the \ac{EBD} file},label={lst:fi_ebd_example}]
+set_property BITSTREAM.SEU.ESSENTIALBITS yes [current_design]
+\end{lstlisting}
+
+
+
+
+
+
+% #############################################################################
+\section{Fault Injection Software}
+
+This section details how the Area and Time Profiles used to build and schedule the injections were implemented.
+
+% -------------------------------------------------------------
+\subsection{Spatial Fault Distributions}
+\label{chap8:fi_area}
+
+Spatial fault distributions are implemented as Area Profiles and convert a requested injection scope into an ordered \texttt{TargetPool}. The pool may contain \texttt{CONFIG} targets, \texttt{REG} targets, or both. When both are enabled, the \texttt{ratio} argument defines the intended share of \texttt{REG} targets.
+
+
+Each Area Profile follows the fixed interface shown in \cref{app_e:area_prof}. It is loaded from \texttt{fi/profiles/area/}, receives the System Dictionary, the board name, the \ac{EBD} path, and the profile arguments passed through \texttt{--area-args}. The implementation then uses the arguments it requires and returns an ordered \texttt{TargetPool}. If a required profile argument is not provided and has no default value, the \ac{FI} tool reports an error. This interface allows users to add new spatial distributions, keeping the \ac{FI} tool modular. External Area Profiles are loaded through the implemented \texttt{input} profile.
+
+The native Area Profiles are \texttt{device}, \texttt{modules}, and \texttt{target\_list}. The \texttt{device} profile builds targets across the full device. Configuration memory targets are generated from the full-device bounds through \ac{ACME}, while register targets are taken from the board register list in the System Dictionary. Through \texttt{--area-args}, the user can select whether targets are kept in order or shuffled, set the \texttt{ratio}, and enable target repetition until \texttt{tpool\_size} is reached.
+
+The \texttt{modules} profile restricts injections to selected hardware modules. For each selected module, the profile derives configuration memory targets from its pblock bounds and register targets from its register list. Through \texttt{--area-args}, the user can enable modules with \texttt{targets}, remove modules with \texttt{exclude}, and choose how modules are selected during pool construction with \texttt{module\_mode} (random, round robin or sequentially). Within each module, \texttt{target\_mode} controls whether targets are kept in order or shuffled.
+
+The \texttt{target\_list} profile loads an existing \texttt{TargetPool} from a \texttt{.yaml} file provided through \texttt{pool\_file}. This profile does not use the System Dictionary, board name, or \ac{EBD} path, because the target list is already defined. It is used to replay a previous campaign or to run a manually defined target sequence.
+
+
+
+
+
+% -------------------------------------------------------------
+\subsection{Mapping Essential Bits to Injection Addresses}
+\label{chap8:fi_acme_impl}
+
+This subsection describes how the \ac{FI} tool converts a given pblock into injection addresses for the \ac{SEM} for \texttt{CONFIG} targets, implementing the \ac{ACME} equations introduced in \cref{chap8:fi_sem_theory,chap8:fi_acme_theory}. 
+
+The \ac{ACME} inputs are the pblock bounds, the \ac{EBD} file generated by Vivado, and the board-specific mapping constants. \ac{ACME} uses the pblock bounds to select the relevant \ac{EBD} entries, then converts each selected essential bit into the \(\{LA,WD,BT\}\) tuple required by \ac{SEM}. The output is a list of \ac{SEM}-ready addresses used by the Area Profile when building \texttt{CONFIG} targets.
+
+The mapping uses three representations of the same bit. The target pblock is described in Vivado tile coordinates \((X,Y)\). The \ac{EBD} file stores each essential bit as a payload-line position \((L,p)\), where \(L\) is the payload line index after the header and \(p\) is the position of a \texttt{1} inside that line. \ac{SEM} receives the injection address as \(\{LA,WD,BT\}\), where \(LA\) is the linear frame address, \(WD\) is the word index inside the frame, and \(BT\) is the bit index inside the 32-bit word.
+
+The \ac{FI} tool applies \ac{ACME} in two steps. First, it expands the \ac{EBD} file by converting each \ac{EBD} bit \((L,p)\) into a \(\{LA,WD,BT\}\) tuple using \cref{eq:acme_ebd_to_lawdbt}. Then, it filters the expanded tuples, keeping only the ones whose estimated physical position belongs to the requested pblock. This second step is board-dependent.
+
+For Basys3, each expanded tuple is assigned to a horizontal band using \cref{eq:basys3_band_from_la}. The \(X\) coordinate is estimated with \cref{eq:basys3_x_from_la}, and \(Y\) is assigned as the midpoint of the selected band. The candidate is kept only if the resulting \((X,Y)\) lies inside the pblock rectangle.
+
+\begin{equation}
+  band = \left\lfloor \frac{LA}{FY} \right\rfloor
+  \label{eq:basys3_band_from_la}
+\end{equation}
+
+\begin{equation}
+  X \approx X_{\min} + \left\lfloor \frac{(LA \bmod FY)\cdot (X_{\max}-X_{\min})}{FY} \right\rfloor
+  \label{eq:basys3_x_from_la}
+\end{equation}
+
+For XCKU040, the tool uses a row-dependent linear relation between tile columns and linear frame addresses, shown in \cref{eq:xcku40_la_from_x}. During filtering, \cref{eq:xcku40_x_from_la} estimates the tile column from the candidate \(LA\). The \(Y\) coordinate is assigned as the row midpoint, and the candidate is kept only if the estimated point lies inside the pblock rectangle.
+
+\begin{equation}
+LA \approx F_X\cdot (X-\texttt{OFFSET\_X}) + \texttt{OFFSET\_Y}(r)
+\label{eq:xcku40_la_from_x}
+\end{equation}
+
+\begin{equation}
+X \approx \texttt{OFFSET\_X} + \left\lfloor \frac{LA-\texttt{OFFSET\_Y}(r)}{F_X} \right\rfloor
+\label{eq:xcku40_x_from_la}
+\end{equation}
+
+The constants used by both implementations are summarized in \cref{tab:chap8_acme_constants}.
+
+\begin{table}[h]
+\centering
+\small
+\setlength{\tabcolsep}{3pt}
+\renewcommand{\arraystretch}{1.2}
+\begin{tabularx}{\textwidth}{|l|X|c|c|X|X|}
+\hline
+Board & Device & \(W_f\) & \(N_\text{dummy}\) & Physical limits and rows & Mapping constants \\
+\hline
+\hline
+Basys3 & Artix-7 XC7A35T & 101 & 109 & \(X=[0,209]\), \(Y=[0,159]\). Row cut-lines at \(Y=26,53,79,106,132\). & \(FY=3520\), \(FX=22\). \\
+\hline
+XCKU040 & Kintex UltraScale XCKU040 & 123 & 141 & \(X=[50,357]\), \(Y=[0,309]\). Row cut-lines at \(Y=61,123,185,247\). & \(F_X=17\), \(\texttt{OFFSET\_X}=50\), \(\texttt{OFFSET\_Y}(r)\in\{0,10472,20944,31416,41888\}\). \\
+\hline
+\end{tabularx}
+\caption{Constants used by the \ac{ACME} implementations in the \ac{FI} tool.}
+\label{tab:chap8_acme_constants}
+\end{table}
+
+The Basys3 and XCKU040 constants were obtained from board documentation when available and from empirical placement experiments in Vivado. Each experiment placed a reference module in known pblocks, generated an \ac{EBD} file, expanded it into \(\{LA,WD,BT\}\) tuples, and fitted the relation between address ranges and physical coordinates.
+
+
+
+
+
+% #############################################################################
+\subsection{Temporal Fault Distributions}
+\label{chap8:fi_time}
+
+Temporal fault distributions are implemented as Time Profiles and define when injections occur. A Time Profile consumes the \texttt{TargetPool} produced by the Area Profile, requests one target at a time, waits according to its scheduling rule, and sends the target to the correct backend.
+
+Each Time Profile follows the fixed interface shown in \cref{app_d:time_prof}. It is loaded from \texttt{fi/profiles/time/}, receives the profile arguments passed through \texttt{--time-args}, the selected seed, and the global settings. If a required input argument is not provided and has no default value, the \ac{FI} tool reports an error. This interface allows users to add new temporal distributions, keeping the \ac{FI} tool modular and expandable. External Time Profiles are loaded through the implemented \texttt{input} profile. The optional \texttt{duration\_s} argument is available in all profiles, and limits the campaign duration.
+
+The native Time Profiles are \texttt{uniform}, \texttt{ramp}, \texttt{poisson}, \texttt{microburst}, \texttt{mmpp2}, and \texttt{trace}. The \texttt{uniform} profile injects at a constant rate. Through \texttt{--time-args}, the user can define the period directly with \texttt{period\_s} or derive it from \texttt{rate\_hz}. 
+
+The \texttt{ramp} profile changes the injection rate linearly from \texttt{start\_rate\_hz} to \texttt{end\_rate\_hz} during the provided \texttt{duration\_s}. These three arguments are required. The implementation updates the rate after each injection, computes the next period from the current elapsed time, and advances the next deadline accordingly.
+
+The \texttt{poisson} profile samples exponential inter-arrival times with average rate \texttt{rate\_hz}. The user can also override the profile seed with \texttt{seed}. The implementation uses a local \ac{RNG} to sample each delay. If the next sampled injection would occur after \texttt{duration\_s}, the profile stops without consuming another target.
+
+The \texttt{microburst} profile alternates burst and idle intervals. Through \texttt{--time-args}, the user defines \texttt{burst\_rate\_hz}, \texttt{burst\_duration\_s}, \texttt{idle\_rate\_hz}, and \texttt{idle\_duration\_s}. Each interval uses a uniform-like scheduller at its configured rate. If \texttt{idle\_rate\_hz} is zero, the idle interval contains no injections.
+
+The \texttt{mmpp2} profile implements a two-state Markov-modulated Poisson process. The user defines the low and high injection rates with \texttt{low\_hz} and \texttt{high\_hz}, and the transition probabilities with \texttt{p\_low\_to\_high} and \texttt{p\_high\_to\_low}. The optional arguments \texttt{start\_state} and \texttt{seed} define the initial state and profile seed. The implementation samples the next Poisson delay using the current state rate, injects the next target, and then uses the transition probabilities to decide whether the next injection remains in the same state or switches state.
+
+The \texttt{trace} profile replays injection times from a text file provided with \texttt{file} or \texttt{path}. The \texttt{mode} argument selects whether file values are absolute timestamps or relative gaps. The optional \texttt{repeat}  argument control replay count. The implementation ignores blank lines and \texttt{\#} comments, reads the first value of each data line, and replays the resulting schedule.
+
+
+
+
+
+
+
+
+
+
+%##########################################################
+\section{Implemented Fault Injection Hardware}
+
+The \ac{FI} hardware provides the on-chip support needed to execute the injections schedulled by the \ac{FI} tool. Configuration memory injections are executed by Xilinx's \ac{SEM} \ac{IP}, while register injections use locally developed hardware.
+
+
+
+
+% -----------------------------------
+\subsection{Flip-Flop and Register Injections}
+\label{chap8:fi_reg_injections}
+
+The register-injection system was created because \ac{SEM} only injects faults in configuration memory. The goal was to support register faults with a scalable mechanism that does not require a dedicated control path for each register. The solution uses one broadcast register ID and one common self-injection wrapper developed in this work.
+
+A register-injection command starts with the \texttt{R} byte and is followed by an 8-bit register ID. These commands go through the \ac{FI} \ac{UART} controller, which decodes them and broadcasts the 8-bit register ID. 
+
+All \ac{FI}-enabled pipeline registers have a fixed local ID and compare it with the listened broadcast value. When both IDs match, only that register stores an injection request. Each register ID is unique and is hardcoded into the module.
+
+When \ac{FI} is enabled, the default register wrapper is replaced by the developed self-injection wrapper. The wrapper keeps the normal register interface and adds \texttt{fi\_port}. Internally, it compares \texttt{fi\_port} with its \texttt{ID} parameter and stores the match in \texttt{flip\_required}. This stored request avoids losing the injection when the broadcast lasts only one cycle.
+
+The fault is applied only when the register is not being written. If \texttt{en\_i} is asserted, the request remains pending and the normal write is preserved. When the register becomes idle, the wrapper forces a local write by setting an internal enable and writing the stored value XORed with a fixed mask. In the current implementation, the mask flips the middle bit of the stored word, selected with \texttt{DATA\_W/2}. After the flip is applied, \texttt{flip\_required} is cleared.
+
+
+
+
+% -----------------------------------
+\subsection{Injection \ac{UART} Router}
+\label{chap8:fi_coms}
+
+The \ac{FI} hardware uses the developed \texttt{fi\_coms} router to connect the external \ac{FI} \ac{UART} to the injection paths. The router, the \ac{SEM} \ac{IP}, and the broadcast wiring are gated and are only generated when \ac{FI} is enabled.
+
+The router listens to the \ac{FI} \ac{UART} and intercepts register-injection \texttt{R} commands. When the incoming byte is not \texttt{R}, the command stream is forwarded to \ac{SEM}'s \ac{UART}, preserving the interface described in \cref{chap8:fi_sem_theory}. When the router receives an \texttt{R} byte, it captures the following byte as the register ID, stores it in an internal FIFO, and later broadcasts it through \texttt{fi\_port} for one clock cycle.
+
+The \texttt{fi\_port} signal is generated by the injection handler \ac{FSM}. When the FIFO contains an entry, the handler reads the next register ID, drives \texttt{fi\_port} for one clock cycle, and clears it in the following cycle. This signal is created at the \texttt{iob\_ibex} level and propagated through the Ibex hierarchy, and connected to the register wrappers. Each wrapper compares the broadcast ID with its local ID.
+
+The module also exports monitoring pulses for injection counting and latency measurement. The \texttt{reg\_injection\_pulse} output is asserted when an \texttt{R} command is accepted, and \texttt{logic\_injection\_pulse} is asserted when an \ac{SEM} injection command is detected.
+
+The router supports three response modes. In \texttt{Transparent} mode, it provides no debug signals. In \texttt{ACK} mode, it confirms each injection with a single-character response. In \texttt{DEBUG} mode, it reports the register-injection sequence and \ac{SEM} answers for debugging. Normal campaigns disable \texttt{ACK} and \texttt{DEBUG} to reduce \ac{UART} traffic.
+
+
+
+
+% #############################################################################
+\section{Additional Features}
+\label{chap8:fi_integration}
+
+The \ac{FI} tool includes other support features besides the ones described. This section briefly mentions some.
+
+The \ac{SEM} backend includes an optional preflight check that sends a status command before the campaign starts. This validates the \ac{UART} connection and confirms that \ac{SEM} is responsive before any injection is scheduled.
+
+For high-rate campaigns, \ac{SEM} injections can be sent without waiting for each monitor response. This reduces the influence of \ac{UART} response latency on the Time Profile schedule.
+
+The tool also provides a debug mode, where hardware communication is replaced by stub messages, while target generation, scheduling, logging, and campaign termination remain active.
+
+Logging is configurable through verbosity levels and event selection. This allows short logs during normal campaigns and more detailed logs during debugging, without changing the campaign implementation.

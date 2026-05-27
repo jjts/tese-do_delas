@@ -1,0 +1,269 @@
+% #############################################################################
+% This is Appendix A
+% !TEX root = ../main.tex
+% #############################################################################
+\chapter{Appendix A: Fatori-V Run File}
+\label{app_a:yaml}
+
+This appendix shows a compact example of a \ac{Fatori-V} \texttt{.yaml} run file, used to setup a full experiment. The file is organized in three top-level sections: identification (used for folder naming and organization), general (where the major knobs reside), and specifics (where the user configures what was enabled in the general section).
+
+\begingroup
+\setlength{\columnsep}{28pt}     % more separation between columns
+% \setlength{\columnseprule}{0.1pt} % optional: thin vertical rule between columns
+\begin{multicols}{2}
+\raggedcolumns
+
+Identification Section\par
+\begin{lstlisting}[language=simpleyaml,style=yamlcompact,breaklines=true,aboveskip=4pt,belowskip=6pt]
+run: # Top-level run descriptor
+  identification: # Naming + stamping + reproducibility
+    name: "example" # Output folder/prefix
+    description: "Example, simple Ibex"
+    seed: 5432 # Global seed
+    run: fpga 
+  hardware:
+    board: xcku040
+\end{lstlisting}
+
+General Section\par
+\begin{lstlisting}[language=simpleyaml,style=yamlcompact,breaklines=true,aboveskip=4pt,belowskip=6pt]
+general:
+  features: # High-level feature toggles
+    fault_manager: on # Enable the fault manager
+    fault_tolerance_mechanisms: # FTMs
+      data_indep_timing: off
+      dummy_instr: off
+      hard_pc: off
+      icache_ecc: off
+      lockstep: off
+      logic_m_of_n: off
+      mem_ecc: off
+      pmp: off
+      register_m_of_n: off
+      regfile_ecc: off
+      regfile_raddr_glitch: off
+      regfile_we_glitch: off
+      secure_guards: off
+      self_testing: off
+      shadow_csrs: off
+    performance_mechanisms: # Performance
+      icache: off
+      branch_pred: off
+      branch_target_alu: off
+      wstage: off
+    isa_extensions: # ISA features
+      RV32E: off
+      RV32M: on
+      RV32B: on
+      RV32C: on
+
+  benchmarks: # What software to run
+    hello_world: # IOBundle's Hello World
+      enable: off
+      timeout_s: -1
+    fatori_stress: # Fatori Stress
+      enable: on
+      timeout_s: -1
+      config:
+        iterations: 5000
+        targets:
+          alu: on
+          multiplier: on
+          decoder: on
+          controller: on
+          lsu: on
+          branch_pred: on
+          compressed: on
+    embench-iot: # Embench-IoT
+      enable: off
+      timeout_s: -1
+      config:
+        embench-benchmarks: # Select apps to run
+          aha_mont64: on
+          crc32: on
+          cubic: on
+          edn: on
+          huffbench: off
+          matmult_int: off
+          md5sum: off
+          minver: off
+          nbody: off
+          nettle_aes: on
+          nettle_sha256: off
+          nsichneu: off
+          picojpeg: off
+          primecount: off
+          qrduino: off
+          sglib_combined: off
+          slre: off
+          st: off
+          statemate: off
+          ud: off
+          wikisort: off
+    coremark: # CoreMark
+      enable: off
+      timeout_s: -1
+      config:
+        iterations: 500
+
+  fault_injection: # Genenral FI Config
+    enable: on
+    
+    # device|modules|target_list|input
+    area_profile: modules 
+    
+    # uniform|ramp|poisson|mmpp2|trace|microburst
+    time_profile: uniform  
+
+  metrics_level: 5 # Hardware Monitors
+
+  overrides: # Override generated files
+    fatori_features.svh: null
+    fatori_ftms.svh: null
+    fatori_pblocks.svh: null
+    fatori_logic_mon.svh: null
+    fatori_reg_mon.svh: null
+    fatori_selftest.svh: null
+
+  results: # What to log / output
+    run_yaml: off
+    verified_yaml: off
+    reports: off
+    injection_log: off
+    plots: off
+    gen: off
+    metrics_xls: off
+    fi_log_level: verbose
+\end{lstlisting}
+
+Specifics Section\par
+\begin{lstlisting}[language=simpleyaml,style=yamlcompact,breaklines=true,aboveskip=4pt,belowskip=0pt]
+specifics: # Refine the general settings
+  ibex: # Ibex RTL settings
+    regfile: fpga
+    multiplier: single_cycle
+    bit_manipulation: balanced
+
+  fault_tolerance: # Tune FI Campaign and FTMs
+    fault_injection:
+      time: # Per time-profile parameters
+        seed: null
+        uniform:
+          rate_hz: 1.0
+          period_s: null
+          duration_s: null
+        ramp:
+          start_rate_hz: 1.0
+          end_rate_hz: 5.0
+          duration_s: 20
+        poisson:
+          rate_hz: 2.0
+          duration_s: 20
+        mmpp2:
+          low_hz: 1.0
+          high_hz: 10.0
+          p_low_to_high: 0.05
+          p_high_to_low: 0.05
+          start_state: low
+          duration_s: 20
+        trace:
+          file: schedules/example_trace.txt
+          mode: relative
+          repeat: 1
+          duration_s: 20
+        microburst:
+          burst_rate_hz: 5
+          idle_rate_hz: 0
+          burst_duration_s: 1
+          idle_duration_s: 2
+          bursts: null
+          duration_s: 20
+        input: # Custom profile hook
+          profile_path: time/new_time_profile.py
+
+      area: # Per area-profile parameters
+        repeat: on # Repeat Injections
+        target_pool_size: 10000000
+        ratio: 100 # % of Register Injections
+        strict: off
+        seed: null
+        device: # If area_profile = device
+          mode: random
+        modules: # If area_profile = modules
+          module_mode: round_robin
+          target_mode: sequential
+          weights: 1-1-1
+          targets: # Where to inject
+            alu: on
+            branch_predictor: off
+            multiplier: off
+            controller: on
+            decoder: on
+            lsu: on
+            if_stage: on
+            id_stage: on
+            wb_stage: off
+            prefetch_buffer: off
+            fault_manager: off
+        target_list: # If area_profile 
+          pool_file: examples/sample_pool.yaml
+        input:  # If area_profile = input
+          profile_path: area/new_area_profile.py
+
+    fault_manager: # Configure the fault manager
+      rst_on_major: off
+      wait_sleep_before_rst: off
+
+    reg_m_of_n: # Register-level M-of-N redundancy
+      m_of_n_N: 3
+      m_of_n_M: null
+      m_of_n_seed: null
+      m_of_n_percentage: 50
+      hold_on_major: off
+      target: # Per-module enable mask
+        fault_mgr: on
+        dummy_instr: on
+        lockstep: on
+        ibex_top: on
+        ibex_core: on
+        load_store_unit: on
+        prefetch_buffer: on
+        controller: on
+        cs_registers: on
+        csr: on
+        decoder: on
+        fetch_fifo: on
+        id_stage: on
+        if_stage: on
+        wb_stage: on
+
+    logic_m_of_n: # Logic-level M-of-N redundancy
+      m_of_n_N: 3
+      m_of_n_M: null
+      hold_on_major: off
+      block_recursive: off
+      target:
+        load_store_unit: off
+        controller: on
+        decoder: on
+        if_stage: off
+        alu: off
+        multiplier: off
+
+    self-testing: # Periodic self-test scheduling
+      policy: abort
+      spacing: 10
+      target:
+        load_store_unit: off
+        pc_logic: off
+        alu: off
+        multiplier: off
+
+  metrics: # Optional metrics level overrides
+    ibex_hpmc_num: null
+    ibex_hpmc_width: null
+    custom_ft_layer_override: null
+\end{lstlisting}
+
+\end{multicols}
+\endgroup

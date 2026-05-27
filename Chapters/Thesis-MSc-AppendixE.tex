@@ -1,0 +1,40 @@
+% #############################################################################
+% Appendix E
+% !TEX root = ../main.tex
+% #############################################################################
+\chapter{Appendix D: Area Profile Template}
+\label{app_e:area_prof}
+
+This is an example Area Profile implementation. An external implementation needs to follow the Area Profile interface described in \cref{chap8:fi_area_iface} and implement a Target Pool builder. The input profile can be chosen to point to an external implementation.
+
+
+\begin{lstlisting}[caption={Minimal template for an external area profile compatible with \texttt{--area input}.},label={lst:fi_area_external_template}]
+# my_area_profile.py
+PROFILE_KIND = "area"
+PROFILE_NAME = "my_area"
+
+def describe(): return "Example area profile."
+def default_args(): return {"module_path": None, "tpool_size": 100, "seed": None}
+
+from fi.profiles.area.base import AreaProfileBase
+from fi.targets.pool import TargetPool
+from fi.targets.types import TargetSpec, TargetKind
+
+class MyProfile(AreaProfileBase):
+    def build_pool(self, system_dict, board_name, ebd_path, cfg):
+        bd = system_dict.boards[board_name]
+        n = int(self.args.get("tpool_size", 100))
+        pool = TargetPool()
+        for reg_id, reg in list(bd.registers.items())[:n]:
+            pool.add(TargetSpec(
+                kind=TargetKind.REG,
+                module_name=reg.module,
+                reg_id=reg_id,
+                reg_name=reg.name,
+                source="profile:external",
+            ))
+        return pool
+
+def make_profile(args, *, global_seed, settings):
+    return MyProfile(name=PROFILE_NAME, args=args, global_seed=global_seed)
+\end{lstlisting}

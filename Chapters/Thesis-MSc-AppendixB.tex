@@ -1,0 +1,79 @@
+% ---------------------------------------------------------------------------
+% Appendix B (place in your appendices file)
+% ---------------------------------------------------------------------------
+\chapter{SEM Monitor Interface Reference}
+\label{app_b:sem_monitor}
+
+This appendix lists a small subset of SEM monitor commands and the typical responses observed during bring-up and automated fault-injection. The exact command set and report fields depend on the SEM version and device family; the examples below follow the UltraScale SEM controller monitor logs \cite{PG187}.
+
+\begin{table}[H]
+\centering
+\begin{tabularx}{\textwidth}{|l|X|}
+\hline
+Command & Typical behaviour and response pattern \\
+\hline
+I & Enter Idle. Prints SC 00 and the prompt becomes I. Idle is the injection-accepting state. \\
+\hline
+O & Enter Observation. Prints SC 02 and the prompt becomes O. In mitigation modes, scanning and correction occur while observing. \\
+\hline
+S & Status summary. Prints a short report (including maximum frames and current state). \\
+\hline
+N packed\_addr & Inject one configuration bit flip at the addressed location. If injection is enabled, prints SC 10 then SC 00 and returns to I. \\
+\hline
+R fs & Software reset. Prints a banner, enters initialization (SC 01), reports initialization steps, then enters observation (SC 02). \\
+\hline
+T addr & Frame address translation. Prints a translated address representation on a single line. \\
+\hline
+Q addr & Query frame. Prints multiple lines of readback data (one per word), then returns to I. \\
+\hline
+D & Enter Detect Only. Prints SC 20 and the prompt becomes D. \\
+\hline
+U & Diagnostic scan. Prints SC 40, then reports detected errors (if any), then returns to I. \\
+\hline
+\end{tabularx}
+\caption{Selected SEM monitor commands and expected response patterns \cite{PG187}.}
+\label{tab:sem_cmds}
+\end{table}
+
+Example injection and state control (injection enabled):
+\begin{lstlisting}
+I N C000A098000
+SC 10
+SC 00
+I O
+SC 02
+O
+\end{lstlisting}
+
+Example software reset and initialization sequence:
+\begin{lstlisting}
+I R 04
+SEM_ULTRA_V3_1
+SC 01
+FS 04
+AF 01
+ICAP OK
+RDBK OK
+INIT OK
+SC 02
+O
+\end{lstlisting}
+
+Example error report in observation (classification disabled):
+\begin{lstlisting}
+O
+RI 00
+SC 04
+ECC
+TS 00000971
+PA 00180200
+LA 0000A098
+COR
+WD 22 BT 10
+END
+FC 00
+SC 08
+FC 40
+SC 02
+O
+\end{lstlisting}

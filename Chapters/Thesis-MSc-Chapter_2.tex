@@ -1,0 +1,355 @@
+% #############################################################################
+% This is Chapter 2
+% !TEX root = ../main.tex
+% #############################################################################
+\fancychapter{Related Work and Baseline SoC Selection}
+\label{chap2:platform_foundation}
+
+
+
+% #############################################################################
+\section{State of the Art on Fault Tolerance Testing Platforms}
+\label{chap2:existing_tools}
+
+The lack of complete \ac{FT}/\ac{FI} platforms noted in \cref{chap1:motivation} that motivated the implementation of \ac{Fatori-V}, is further displayed in \cref{tab:fi_platforms_gap}, which compares state of the art platforms according to the features needed to develop and test \acp{FTM}. Full \ac{RTL} shows whether the platform provides a modifiable hardware implementation, matching the baseline access required in \cref{chap1:requirements}. \ac{FT} Interface shows whether \acp{FTM} can be integrated and observed without building all fault signalling from scratch. Memory Types shows whether available \ac{FI} can cover the relevant \ac{FPGA} areas, including configuration memory and register/\ac{FF} memory. Readable \ac{UI} shows whether experiments can be defined through a user-facing configuration instead of per-run code edits. \ac{FI} Setup shows whether injection time and target selection can be reused across campaigns. Metrics shows whether \ac{FT}, performance, and hardware-cost results are extracted in a comparable form. The entries use Yes, Partial, and No to indicate whether each point is provided as part of an integrated workflow.
+
+
+\begin{table}[h]
+\centering
+\scriptsize
+\setlength{\tabcolsep}{1.6pt}
+\renewcommand{\arraystretch}{1.15}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{|p{0.18\textwidth}|c|c|c|c|c|c|}
+\hline
+\ac{FT}/\ac{FI} Platform &
+Full \ac{RTL} &
+\ac{FT} Interface &
+Memory Types &
+Readable \ac{UI} &
+\ac{FI} Setup &
+Metrics \\
+\hline
+\hline
+Ruano \cite{ruano2021_fi_emulation} &
+No & No & Partial & Partial & No & Partial \\
+\hline
+Critical bits \cite{mdpi2020_critical_bits} &
+Partial & No & Partial & Partial & Partial & Partial \\
+\hline
+DPR FI \cite{wilson2021_dpr_fi} &
+Partial & No & Partial & No & Partial & Partial \\
+\hline
+VeeR regs \cite{leon2024_veer_eh1_fi} &
+Partial & No & Partial & No & No & Partial \\
+\hline
+Chiffre \cite{chiffre2018} &
+No & No & Partial & Partial & Partial & No \\
+\hline
+Nail \cite{nail2025} &
+No & No & Partial & Yes & Partial & No \\
+\hline
+ARCHIE \cite{archie} &
+No & No & Partial & Yes & Partial & Partial \\
+\hline
+FEAR-V \cite{accellera_qemu_fea} &
+No & No & Partial & Yes & Partial & Partial \\
+\hline
+QEFIRA \cite{qefira2024} &
+No & Partial & Partial & Yes & Partial & Partial \\
+\hline
+InjectV \cite{injectv2025} &
+No & No & Partial & Yes & Partial & Partial \\
+\hline
+CHAOS \cite{chaos2026} &
+No & No & Partial & Partial & Partial & Partial \\
+\hline
+\hline
+\ac{Fatori-V} &
+Yes & Yes & Yes & Yes & Yes & Yes \\
+\hline
+\end{tabular}%
+}
+\caption{Comparison of state-of-the-art \ac{FT}/\ac{FI} platforms to test and develop \acp{FTM}.}
+\label{tab:fi_platforms_gap}
+\end{table}
+
+
+\ac{FPGA} flows based on configuration memory injection, such as Ruano, Critical Bits, and DPR FI, cover configuration faults but not register/\ac{FF} injection. VeeR regs, Chiffre, and Nail cover register/\ac{FF} \ac{FI} but do not merge it with \ac{FPGA} configuration memory \ac{FI} in the experiments. Virtual-platform tools, such as ARCHIE, FEAR-V, QEFIRA, InjectV, and CHAOS, only provide campaign execution and logging in QEMU or gem5 environments, do not implement \ac{FI} for multiple memory types, do not report implementation-level hardware costs, and do not provide support for new \acp{FTM} implementations. Across these groups, the main limitations are the lack of a complete \ac{SoC} workflow for integrating and comparing multiple \acp{FTM}, limited support for reusable \ac{FI} campaigns (temporal and spatial fault distributions), and result extraction often restricted to fault outcomes instead of comparable \ac{FT}, performance and hardware-cost metrics. \ac{Fatori-V} is designed to tackle the listed gaps.
+
+
+
+
+
+
+
+
+% #############################################################################
+\section{Comparative Analysis of RISC-V SoCs}
+\label{chap2:analysis}
+
+
+\ac{Fatori-V} required an existing open-source \ac{RISC-V} \ac{RTL} baseline that supported \ac{RTL} modification, \ac{FTM} integration, software execution, and \ac{FPGA} implementation. This section compares candidate state of the art \acp{SoC} against the requirements defined in \cref{chap1:requirements}.
+
+The surveyed candidates were CVA6 \cite{CVA6}, a 64-bit Linux-capable core; CV32E40P \cite{cv32e40p}, a 32-bit embedded core from the PULP lineage; Ibex \cite{ibex}, a 32-bit embedded core with build-time configuration and native \ac{FT} support; PicoRV32 \cite{picorv32}, a small multi-cycle core with minimal \ac{SoC} examples; Rocket Chip \cite{rocket_chip}, a Chisel-based generated \ac{SoC}; VeeR EL2 through VeeRwolf \cite{VeeRwolf}, a 32-bit embedded core with a runnable \ac{SoC}, debug tools, and course material; and VexRiscv \cite{vexriscv}, a SpinalHDL-generated configurable core. \Cref{tab:candidate_comparison_fullcriteria} reports the comparison using public documentation, superficial source inspection, and reported implementation data. Documentation is graded from 0 to 10. Readability, workflow, \ac{FT} infrastructure, development access, and community activity are qualitative. Published area and performance values are supporting indicators because they may come from different configurations and devices.
+
+
+
+\begin{table}[h]
+\centering
+\scriptsize
+\setlength{\tabcolsep}{1.1pt}
+\renewcommand{\arraystretch}{1.22}
+\begin{tabular}{|
+>{\raggedright\arraybackslash}p{0.085\textwidth}|
+>{\centering\arraybackslash}p{0.030\textwidth}|
+>{\raggedright\arraybackslash}p{0.125\textwidth}|
+>{\raggedright\arraybackslash}p{0.125\textwidth}|
+>{\raggedright\arraybackslash}p{0.130\textwidth}|
+>{\raggedright\arraybackslash}p{0.085\textwidth}|
+>{\raggedright\arraybackslash}p{0.125\textwidth}|
+>{\raggedright\arraybackslash}p{0.120\textwidth}|
+>{\raggedright\arraybackslash}p{0.08\textwidth}|
+}
+\hline
+Core &
+Doc. &
+Readability and Modification &
+Workflow &
+FT Infrastructure &
+Dev. Access &
+Min. Hardware Cost &
+Max. Performance &
+Community \\
+\hline
+\hline
+CVA6 &
+8 &
+Low, complex core &
+High, Linux-capable &
+Small &
+No &
+--- &
+3.1\,CoreMark/\newline MHz* \cite{CVA6_maxperf} &
+High \\
+\hline
+CV32E40P &
+7 &
+High, clean SV &
+High, MCU platform &
+None &
+No &
+40 kG* (conf V1) \cite{CV32E40P_minhw} &
+3.19\,CoreMark/\newline MHz* \cite{CV32E40P_maxperf} &
+High \\
+\hline
+Ibex &
+8 &
+Very High, modular code &
+Medium, simple demo system &
+Full*, 7+ FTMs + FT Interface &
+No &
+16.85\,kGE* (micro) &
+3.13\,CoreMark/\newline MHz* (maxperf) \cite{Ibex_maxperf} &
+Very high \\
+\hline
+PicoRV32 &
+4 &
+Very High, small RTL &
+Medium, PicoSoC included &
+None &
+Local SoC Implementation &
+\(\sim\)750 LUT* \newline (Xilinx 7-series) \cite{PicoRV32_minhw} &
+0.40\,CoreMark/\newline MHz* \cite{PicoRV32_maxperf} &
+High \\
+\hline
+Rocket Chip &
+6 &
+Very Low, generator heavy &
+Very High, Chipyard flow &
+Small &
+No &
+--- &
+2.108\,CoreMark/\newline MHz* (Rocket) \cite{RocketChip_maxperf} &
+Very high \\
+\hline
+VeeR EL2 &
+10 &
+Medium, SoC coupled &
+Very High, custom debug tools &
+Medium*, Data/RF ECC, Lockstep &
+Previous work &
+--- &
+3.6\,CoreMark/\newline MHz* \cite{VeeR_EL2_maxperf} &
+High \\
+\hline
+VexRiscv &
+6 &
+Low, generator workflow &
+Medium, many integrations &
+None &
+Local SoC Implementation &
+504 LUT, 505 FF* \newline (small) \cite{VexRiscv_minhw} &
+1.57\,DMIPS/\newline MHz* \cite{VexRiscv_maxperf} &
+High \\
+\hline
+\end{tabular}
+\caption{Comparison of open-source \ac{RISC-V} candidates against the criteria from \cref{chap1:requirements}. Values marked with * come from specific published configurations.}
+\label{tab:candidate_comparison_fullcriteria}
+\end{table}
+
+
+The comparison reduced the choice to Ibex and VeeR EL2. The remaining candidates were discarded because they either lacked native \ac{FT} support, depended on generator-based flows, targeted larger application-class systems, or provided limited \ac{SoC} infrastructure. Ibex offered stronger \ac{FT} support, with multiple native \acp{FTM}, a defined error interface, alert classification, compact \ac{RTL}, clear module boundaries, clear integration interfaces, and build-time configurability. Its main drawback was the need to select and integrate an external \ac{SoC} workflow, since its available demo systems are lightweight and the baseline is mostly core-centric outside OpenTitan.
+
+VeeR EL2 through VeeRwolf offered a more complete starting workflow, with guided labs, examples, demos, board tutorials, reference documentation, a runnable \ac{SoC}, debug tools, and previous local work. Its main drawbacks were stronger \ac{SoC} coupling, a larger codebase, fewer native \acp{FTM}, and less unified fault handling. VeeR EL2 through VeeRwolf was selected as the first \ac{RTL} backbone for \ac{Fatori-V} because the available workflow was expected to reduce early integration risk. The main risk was that, if the guides and tools did not support the required \ac{RTL} changes, the coupled codebase and larger \ac{FTM} implementation load could cause major delays.
+
+
+% #############################################################################
+\section{Fault Injection Background}
+\label{chap8:fi_background}
+
+\ac{FI} is the deliberate perturbation of a \ac{RTL} system, by provoking bit-flips on its memory. It is used to observe how faults propagate through the architecture, and how detection, recovery, and masking mechanisms behave. Corruption is more significative in the context of \ac{SRAM}-based \acp{FPGA}, since everything from the configuration logic to firmware data is considered memory data. \ac{FI} is commonly used to emulate \acp{SEU} without relying on particle beams or in-flight tests, for controlled and repeatable validation of \acp{FTM}.
+
+% -------------------------------------------------------------
+\subsection{Memory Types and Fault Targets}
+\label{chap8:fi_targets}
+
+\ac{SRAM}-based \acp{FPGA} contain multiple memory types that may be affected by \acp{SEU} \cite{PG187}.
+
+Configuration Memory, stores the programmed configuration of the device. It defines \ac{LUT} equations, routing connections, I/O configurations, and other device features that collectively implement the compiled hardware design. Upsets in configuration bits can therefore directly impact how the programmed hardware behaves. Since configuration memory occupies the most area in \acp{FPGA}, it is the most probable to be hit by \acp{SEU}.
+
+Block Memory, refers to the high capacity storage elements used to store design state. Stored bits are clustered into a physical block with several blocks distributed across the entire device. Block Memory represents the second largest number of bits.
+
+Distributed Memory, refers to the medium capacity storage elements also used to store design state. This type of memory is present in certain \acp{CLB} and is distributed across the entire device. Distributed Memory represents the third largest number of bits.
+
+Flip Flops, are the most common state elements in synchronous designs. \ac{FPGA} users rely on them for pipelining, finite-state machines, counters, and many other implementations. They are low capacity storage elements used to store design state. This type of memory is present in all \acp{CLB} and is distributed across the entire device. \acp{FF} represent the fourth largest number of bits.
+
+The main goal of this \ac{FI} tool is to allow developers to validate \acp{FTM} under controlled and repeatable fault conditions. Besides radiation faults, the tool was also designed for scenarios where \ac{FF} corruption is relevant (like targetted attacks from hostile sources). Due to project time constraints, the current version only emulates corruption in both configuration memory and registers/\acp{FF}.
+
+
+
+
+% -----------------------------------
+\subsection{SEM IP to Execute Injections}
+\label{chap8:fi_sem_theory}
+
+Configuration-memory and \ac{FF} need different injection approaches. \ac{FF} injections are emulated through dedicated on-chip hardware modules described in \cref{chap8:fi_reg_injections}. Configuration-memory injections are pointed to specific modules with \ac{ACME}-based \ac{EBD} targeting and executed using Xilinx's \ac{SEM} \ac{IP}, an on-chip controller provided by Xilinx that monitors and mitigates soft errors in \ac{FPGA} configuration memory. It interacts with the configuration system through the \ac{ICAP}, which provides read and write access to configuration frames. The \ac{SEM} controller uses this port and the FRAME\_ECC primitive to observe the device's configuration error-detection function and provide corrections.
+
+In addition to its internal configuration connections, \ac{SEM} exposes multiple interfaces: a monitor interface (ASCII command console), a status interface (state, flags, heartbeat), optional \ac{ICAP} arbitration signals (for systems that share \ac{ICAP}), and optional external-memory support for \ac{SEM} to store (if enabled) error classification data. 
+The \ac{IP} can be configured in multiple modes: Mitigation and Testing, Mitigation Only, Detect and Testing, Detect Only, Emulation, and Monitoring Only. In this work, \ac{SEM} is instantiated in Mitigation and Testing mode with error classification disabled, although the current \ac{FI} System does not use \ac{SEM}'s mitigation or correction features. Mitigation and Testing enables both continuous mitigation and controlled fault injection, while the detect-only variants restrict the controller to reporting behaviour.
+The system's behaviour changes with its current state in \ac{SEM}'s \ac{FSM}, explained in \cref{tab:sem_state_codes}, displayed in \cref{fig:sem_state} and controlled via commands displayed in \cref{tab:sem_cmds_most_used}.
+
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=0.88\linewidth]{Images/SEM_State_Machine.png}
+  \caption{SEM state transition diagram for mitigation modes \cite{PG187}.}
+  \label{fig:sem_state}
+\end{figure}
+
+\begin{table}[h]
+\centering
+\begin{tabularx}{\textwidth}{|l|l|X|}
+\hline
+Report & State & Meaning in practice \\
+\hline
+\hline
+\texttt{SC 01} & Initialization & Startup sequence: configuration interfaces are checked and the controller is prepared to operate. \\
+\hline
+\texttt{SC 00} & Idle & Scanning is stopped. The controller accepts injection commands and status queries. The prompt becomes \texttt{I>}. \\
+\hline
+\texttt{SC 02} & Observation & Configuration continuous scanning is active. In mitigation modes, detected errors trigger correction. The prompt becomes \texttt{O>}. \\
+\hline
+\texttt{SC 04} & Correction & A configuration-memory error was detected and the controller is performing a correction cycle. \\
+\hline
+\texttt{SC 08} & Classification & Optional essential-bit classification step. When disabled, the controller may still pass through this state but does not fetch essential-bit data. \\
+\hline
+\texttt{SC 10} & Injection & An injection command is being executed. After the injected bit flip is applied, the controller returns to Idle. \\
+\hline
+\texttt{SC 1F} & Fatal error & Controller halted; the device typically requires reconfiguration. \\
+\hline
+\end{tabularx}
+\caption{SEM state codes reported through the monitor interface (summary).}
+\label{tab:sem_state_codes}
+\end{table}
+
+
+\begin{table}[h]
+\centering
+\begin{tabularx}{\textwidth}{|l|l|X|}
+\hline
+Command & Typical state & Effect on SEM \\
+\hline
+\hline
+\texttt{I} & Observation or Idle & Forces the controller into Idle (\texttt{SC 00}). This is the injection-accepting state. \\
+\hline
+\texttt{O} & Idle or Observation & Forces the controller into Observation (\texttt{SC 02}) to resume scanning. \\
+\hline
+\texttt{S} & Idle or Observation & Prints a status summary (state, flags, maximum frame count, and related fields) and returns to the current prompt. \\
+\hline
+\texttt{N <addr>} & Idle & Performs a single configuration-bit injection. SEM reports \texttt{SC 10} (Injection) and then returns to Idle (\texttt{SC 00}). \\
+\hline
+\end{tabularx}
+\caption{Most used SEM monitor commands. }
+\label{tab:sem_cmds_most_used}
+\end{table}
+
+The N injection command flips exactly one configuration bit at the specified address. In UltraScale devices, the monitor expects an 11-digit hexadecimal value that encodes the injection location (including frame addressing plus the word and bit position inside the frame).
+A typical injection sequence is shown in \cref{lst:sem_injection_flow}. The controller, currently on Idle, receives the injection and the bit flip is issued. The controller is then returned to Observation so that scanning (and, if enabled, correction) can proceed.
+
+\begin{lstlisting}[float=h,caption={Typical \ac{SEM} monitor flow for one configuration injection (UltraScale format shown).},label={lst:sem_injection_flow}]
+I> N C000A098000
+SC 10
+SC 00
+I> O
+SC 02
+O>
+\end{lstlisting}
+
+
+% -----------------------------------
+\subsection{ACME to Point Injections}
+\label{chap8:fi_acme_theory}
+
+\ac{SEM} injects faults by targeting an exact configuration-bit address, chosen from millions of possible addresses in an \ac{FPGA}. If addresses are selected uniformly at random, most injections land in unused or irrelevant configuration space, so the probability of affecting implemented logic is low. \ac{ACME} mitigates this problem by restricting injections to useful targets using an \ac{EBD} file that lists essential configuration bits, and a floorplanned region (pblock) that bounds the target module.
+
+An \ac{EBD} file can be automatically generated through Vivado, and compresses the total board addresses into the addresses that actually contain configuration data. A pblock consists of a virtual container with a certain size and that is fixed on a custom location within the board (the pblock's coordinates). In the Vivado flow, the user can force hardware modules to be confined to a pblock's borders, ensuring that injections within the pblock's range will land on those hardware modules.
+The \ac{ACME} algorithm can then map pblock physical coordinates to the corresponding configuration-frame address range in the \ac{EBD} file. The published algorithm needs to be adapted for every board on which it is meant to be used.
+
+
+\ac{ACME} starts by converting the pblock bounds into an estimated interval of \ac{EBD} lines. The pblock is provided as a rectangle in floorplan coordinates, while the \ac{EBD} file is organised by line number. Therefore, \ac{ACME} first estimates which \ac{EBD} lines may contain essential bits from the selected physical region. For each clock region, \ac{ACME} uses a linear approximation between the relevant floorplan coordinate ($u$) and the corresponding \ac{EBD} line number ($\widehat{\ell}_{cr}$), as shown in \cref{eq:acme-line-map}. The constants $m_{cr}$ and $b_{cr}$ are device-specific parameters defined for each clock region.
+
+\begin{equation}
+\widehat{\ell}_{cr}(u) = m_{cr}u + b_{cr}
+\label{eq:acme-line-map}
+\end{equation}
+
+The pblock bounds are evaluated with \cref{eq:acme-line-map}. When the pblock intersects more than one clock region, the mapping is applied to each affected region. \ac{ACME} then takes the lowest and highest estimated line numbers and rounds them outward, as shown in \cref{eq:acme-line-window}.
+
+\begin{equation}
+\ell_{\min} =
+\left\lfloor
+\min_{k}\ \widehat{\ell}_{cr(k)}(u_k)
+\right\rfloor,
+\qquad
+\ell_{\max} =
+\left\lceil
+\max_{k}\ \widehat{\ell}_{cr(k)}(u_k)
+\right\rceil
+\label{eq:acme-line-window}
+\end{equation}
+
+The interval between $\ell_{\min}$ and $\ell_{\max}$ defines the \ac{EBD} line window used by \ac{ACME}. This step does not select the final essential bits. It only limits the search to the part of the \ac{EBD} file that can correspond to the target pblock.
+
+The second step is to convert each essential bit of the target region into the tuple expected by \ac{SEM}, \{LA, WD, BT\}, where LA is a linear frame address, WD is the word index inside that frame, and BT is the bit index inside that 32-bit word. Since an \ac{EBD} file is an ASCII file with 32 characters per line, each line can be interpreted as one 32-bit word of configuration data. Let $L$ be the (0-based) \ac{EBD} line index after skipping the file header/dummy lines, and let $p$ be the character position of a `1' in that line (with $p=0$ at the leftmost character and $p=31$ at the rightmost character). Using the words-per-frame constant $W_f$ (device-dependent), the address fields can be obtained as shown in \cref{eq:acme_ebd_to_lawdbt}.
+
+\begin{equation}
+LA = \left\lfloor \frac{L}{W_f} \right\rfloor - 1,
+\qquad
+WD = L \bmod W_f,
+\qquad
+BT = 31 - p.
+\label{eq:acme_ebd_to_lawdbt}
+\end{equation}
+
+The resulting list of packed configuration \{LA, WD, BT\} addresses can be used directly by the \ac{SEM} injection command stream, enabling injections that land on essential bits of the selected module rather than across the full device.
+In this work, ACME-style expansion was used in two different boards. The adapted algorithms are described later in \cref{chap8:fi_acme_impl}.

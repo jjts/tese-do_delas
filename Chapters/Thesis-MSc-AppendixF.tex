@@ -1,0 +1,442 @@
+% #############################################################################
+% Appendix F
+% !TEX root = ../main.tex
+% #############################################################################
+\chapter{Appendix F: Results}
+\label{app_f:results}
+
+A\_BASE.1
+
+\begin{longtable}{|p{0.05\linewidth}|p{0.10\linewidth}|p{0.12\linewidth}|p{0.18\linewidth}|p{0.06\linewidth}|p{0.06\linewidth}|p{0.06\linewidth}|p{0.06\linewidth}|p{0.06\linewidth}|p{0.06\linewidth}|p{0.06\linewidth}|}
+\hline
+ID & FTMs & FI Setup & Goal & CoreMark & Embench & IPC & LUTs & FFs & WNS & Power \\
+\hline
+\endfirsthead
+\hline
+ID & FTMs & FI Setup & Goal & CoreMark & Embench & IPC & LUTs & FFs & WNS & Power \\
+\hline
+\endhead
+A00 & None & off & Absolute perf/HW baseline for all comparisons &  &  &  &  &  &  &  \\
+\hline
+A01 & None & Poisson 0.00001 Hz \textbar{} balanced & FI infrastructure overhead &  &  &  &  &  &  &  \\
+\hline
+\end{longtable}
+
+A\_BASE.2
+
+\begin{longtable}{|p{0.05\linewidth}|p{0.14\linewidth}|p{0.20\linewidth}|p{0.07\linewidth}|p{0.07\linewidth}|p{0.07\linewidth}|p{0.08\linewidth}|p{0.07\linewidth}|p{0.07\linewidth}|p{0.08\linewidth}|}
+\hline
+ID & FI Setup & Goal & Inj & Minor & Major & Corrected & DUE & SDC & Coverage \\
+\hline
+\endfirsthead
+\hline
+ID & FI Setup & Goal & Inj & Minor & Major & Corrected & DUE & SDC & Coverage \\
+\hline
+\endhead
+A02 & Poisson 1 Hz \textbar{} balanced & Unprotected FT reference at low rate &  &  &  &  &  &  &  \\
+\hline
+A03 & Poisson 100 Hz \textbar{} balanced & Unprotected FT reference at nominal rate &  &  &  &  &  &  &  \\
+\hline
+A04 & Poisson 1000 Hz \textbar{} balanced & Unprotected FT reference at high rate &  &  &  &  &  &  &  \\
+\hline
+A05 & Poisson 100 Hz \textbar{} REG-only & Unprotected register-fault baseline &  &  &  &  &  &  &  \\
+\hline
+A06 & Poisson 100 Hz \textbar{} CFG-only & Unprotected config-fault baseline &  &  &  &  &  &  &  \\
+\hline
+\end{longtable}
+
+B\_HW
+
+\begin{longtable}{|p{0.05\linewidth}|p{0.17\linewidth}|p{0.13\linewidth}|p{0.13\linewidth}|p{0.06\linewidth}|p{0.06\linewidth}|p{0.06\linewidth}|p{0.06\linewidth}|p{0.06\linewidth}|p{0.07\linewidth}|p{0.07\linewidth}|p{0.07\linewidth}|}
+\hline
+ID & FTM / Protected scope & Key Params & Goal & Total LUTs & Total FFs & Total DSPs & Total WNS & Total Power & Relevant Result 1 & Relevant Result 2 & Relevant Result 3 \\
+\hline
+\endfirsthead
+\hline
+ID & FTM / Protected scope & Key Params & Goal & Total LUTs & Total FFs & Total DSPs & Total WNS & Total Power & Relevant Result 1 & Relevant Result 2 & Relevant Result 3 \\
+\hline
+\endhead
+B00 & Reg MoN on wrapped pipeline registers & N=2, M=strict majority & HW cost of Reg MoN at minimum N &  &  &  &  &  &  &  &  \\
+\hline
+B01 & Reg MoN on wrapped pipeline registers & N=3, M=strict majority & HW cost of Reg MoN at N=3 &  &  &  &  &  &  &  &  \\
+\hline
+B02 & Reg MoN on wrapped pipeline registers & N=5, M=strict majority & HW cost of Reg MoN at N=5 &  &  &  &  &  &  &  &  \\
+\hline
+B03 & Reg MoN on wrapped pipeline registers & N=7, M=strict majority & HW cost of Reg MoN at N=7 &  &  &  &  &  &  &  &  \\
+\hline
+B04 & Reg MoN on wrapped pipeline registers & N=10, M=strict majority & HW cost of Reg MoN at N=10 &  &  &  &  &  &  &  &  \\
+\hline
+B05 & Logic MoN on IF stage + controller + decoder + LSU + ALU & N=2, M=strict majority & HW cost of Logic MoN at minimum N &  &  &  &  &  &  &  &  \\
+\hline
+B06 & Logic MoN on IF stage + controller + decoder + LSU + ALU & N=3, M=strict majority & HW cost of Logic MoN at N=3 &  &  &  &  &  &  &  &  \\
+\hline
+B07 & Logic MoN on IF stage + controller + decoder + LSU + ALU & N=5, M=strict majority & HW cost of Logic MoN at N=5 &  &  &  &  &  &  &  &  \\
+\hline
+B08 & Logic MoN on IF stage + controller + decoder + LSU + ALU & N=7, M=strict majority & HW cost of Logic MoN at N=7 &  &  &  &  &  &  &  &  \\
+\hline
+B09 & Logic MoN on IF stage + controller + decoder + LSU + ALU & N=10, M=strict majority & HW cost of Logic MoN at N=10 &  &  &  &  &  &  &  &  \\
+\hline
+B10 & Reg MoN on wrapped pipeline registers & N=3, M=3, margin=0, unanimous & HW cost of unanimous voter at N=3 &  &  &  &  &  &  &  &  \\
+\hline
+B11 & Reg MoN on wrapped pipeline registers & N=5, M=3, margin=2, strict majority & HW cost of majority voter at N=5 &  &  &  &  &  &  &  &  \\
+\hline
+B12 & Reg MoN on wrapped pipeline registers & N=5, M=4, margin=1, above majority & HW cost of tighter voter at N=5 &  &  &  &  &  &  &  &  \\
+\hline
+B13 & Reg MoN on wrapped pipeline registers & N=5, M=5, margin=0, unanimous & HW cost of unanimous voter at N=5 &  &  &  &  &  &  &  &  \\
+\hline
+B14 & Reg MoN on wrapped pipeline registers & N=7, M=4, margin=3, strict majority & HW cost of majority voter at N=7 &  &  &  &  &  &  &  &  \\
+\hline
+B15 & Reg MoN on wrapped pipeline registers & N=7, M=6, margin=1, above majority & HW cost of tighter voter at N=7 &  &  &  &  &  &  &  &  \\
+\hline
+B16 & Reg MoN on wrapped pipeline registers & N=7, M=7, margin=0, unanimous & HW cost of unanimous voter at N=7 &  &  &  &  &  &  &  &  \\
+\hline
+B17 & Logic MoN on IF stage + controller + decoder + LSU + ALU & N=3, M=3, margin=0, unanimous & HW cost of unanimous logic voter at N=3 &  &  &  &  &  &  &  &  \\
+\hline
+B18 & Logic MoN on IF stage + controller + decoder + LSU + ALU & N=5, M=3, margin=2, strict majority & HW cost of majority logic voter at N=5 &  &  &  &  &  &  &  &  \\
+\hline
+B19 & Logic MoN on IF stage + controller + decoder + LSU + ALU & N=5, M=4, margin=1, above majority & HW cost of tighter logic voter at N=5 &  &  &  &  &  &  &  &  \\
+\hline
+B20 & Logic MoN on IF stage + controller + decoder + LSU + ALU & N=5, M=5, margin=0, unanimous & HW cost of unanimous logic voter at N=5 &  &  &  &  &  &  &  &  \\
+\hline
+B21 & Logic MoN on IF stage + controller + decoder + LSU + ALU & N=7, M=4, margin=3, strict majority & HW cost of majority logic voter at N=7 &  &  &  &  &  &  &  &  \\
+\hline
+B22 & Logic MoN on IF stage + controller + decoder + LSU + ALU & N=7, M=6, margin=1, above majority & HW cost of tighter logic voter at N=7 &  &  &  &  &  &  &  &  \\
+\hline
+B23 & Logic MoN on IF stage + controller + decoder + LSU + ALU & N=7, M=7, margin=0, unanimous & HW cost of unanimous logic voter at N=7 &  &  &  &  &  &  &  &  \\
+\hline
+\end{longtable}
+
+C\_PERF
+
+\begin{longtable}{|p{0.05\linewidth}|p{0.16\linewidth}|p{0.14\linewidth}|p{0.18\linewidth}|p{0.08\linewidth}|p{0.08\linewidth}|p{0.08\linewidth}|p{0.08\linewidth}|p{0.08\linewidth}|}
+\hline
+ID & FTMs & Key Params & Goal & CoreMark & Embench & IPC & mcycle & minstret \\
+\hline
+\endfirsthead
+\hline
+ID & FTMs & Key Params & Goal & CoreMark & Embench & IPC & mcycle & minstret \\
+\hline
+\endhead
+C00 & lockstep &  & Perf overhead of lockstep &  &  &  &  &  \\
+\hline
+C01 & dummy\_instr &  & Perf overhead of instruction padding &  &  &  &  &  \\
+\hline
+C02 & regfile\_ecc &  & Perf overhead of regfile ECC &  &  &  &  &  \\
+\hline
+C03 & shadow\_csrs &  & Perf overhead of shadow CSRs &  &  &  &  &  \\
+\hline
+C04 & icache\_ecc & icache on & Perf overhead of ICache ECC &  &  &  &  &  \\
+\hline
+C05 & secure\_guards &  & Perf overhead of secure guards &  &  &  &  &  \\
+\hline
+C06 & hard\_pc &  & Perf overhead of hardened PC &  &  &  &  &  \\
+\hline
+C07 & raddr\_glitch + we\_glitch &  & Perf overhead of regfile glitch detection &  &  &  &  &  \\
+\hline
+C08 & data\_indep\_timing &  & Perf overhead of data-independent timing &  &  &  &  &  \\
+\hline
+C09 & Reg MoN on wrapped pipeline registers & N=3 & Perf overhead of Reg MoN &  &  &  &  &  \\
+\hline
+C10 & Logic MoN on IF stage + controller + decoder + LSU + ALU & N=3 & Perf overhead of Logic MoN &  &  &  &  &  \\
+\hline
+C11 & hard\_pc + shadow\_csrs + regfile\_ecc & detect-only native bundle & Perf overhead of combined lightweight native bundle &  &  &  &  &  \\
+\hline
+C12 & Reg MoN on wrapped pipeline registers & N=3, M=3, margin=0 & IPC effect of unanimous policy at N=3 &  &  &  &  &  \\
+\hline
+C13 & Reg MoN on wrapped pipeline registers & N=5, M=3, margin=2 & Perf at N=5 strict majority &  &  &  &  &  \\
+\hline
+C14 & Reg MoN on wrapped pipeline registers & N=5, M=4, margin=1 & Perf at N=5 above majority &  &  &  &  &  \\
+\hline
+C15 & Reg MoN on wrapped pipeline registers & N=5, M=5, margin=0 & Perf at N=5 unanimous &  &  &  &  &  \\
+\hline
+C16 & Reg MoN on wrapped pipeline registers & N=7, M=4, margin=3 & Perf at N=7 strict majority &  &  &  &  &  \\
+\hline
+C17 & Reg MoN on wrapped pipeline registers & N=7, M=6, margin=1 & Perf at N=7 above majority &  &  &  &  &  \\
+\hline
+C18 & Reg MoN on wrapped pipeline registers & N=7, M=7, margin=0 & Perf at N=7 unanimous &  &  &  &  &  \\
+\hline
+C19 & Logic MoN on IF stage + controller + decoder + LSU + ALU & N=3, M=3, margin=0 & Same policy question for Logic MoN &  &  &  &  &  \\
+\hline
+C20 & Logic MoN on IF stage + controller + decoder + LSU + ALU & N=5, M=3, margin=2 & Perf at N=5 strict majority &  &  &  &  &  \\
+\hline
+C21 & Logic MoN on IF stage + controller + decoder + LSU + ALU & N=5, M=4, margin=1 & Perf at N=5 above majority &  &  &  &  &  \\
+\hline
+C22 & Logic MoN on IF stage + controller + decoder + LSU + ALU & N=5, M=5, margin=0 & Perf at N=5 unanimous &  &  &  &  &  \\
+\hline
+C23 & Logic MoN on IF stage + controller + decoder + LSU + ALU & N=7, M=4, margin=3 & Perf at N=7 strict majority &  &  &  &  &  \\
+\hline
+C24 & Logic MoN on IF stage + controller + decoder + LSU + ALU & N=7, M=6, margin=1 & Perf at N=7 above majority &  &  &  &  &  \\
+\hline
+C25 & Logic MoN on IF stage + controller + decoder + LSU + ALU & N=7, M=7, margin=0 & Perf at N=7 unanimous &  &  &  &  &  \\
+\hline
+\end{longtable}
+
+D\_FT / G1
+
+\begin{longtable}{|p{0.05\linewidth}|p{0.14\linewidth}|p{0.12\linewidth}|p{0.12\linewidth}|p{0.14\linewidth}|p{0.06\linewidth}|p{0.06\linewidth}|p{0.06\linewidth}|p{0.06\linewidth}|p{0.06\linewidth}|p{0.06\linewidth}|p{0.06\linewidth}|}
+\hline
+ID & FTMs & Key Params & FI Setup & Goal & Inj & Minor & Major & Corrected & DUE & SDC & Coverage \\
+\hline
+\endfirsthead
+\hline
+ID & FTMs & Key Params & FI Setup & Goal & Inj & Minor & Major & Corrected & DUE & SDC & Coverage \\
+\hline
+\endhead
+D00 & ALL native & rate=1 Hz, mul FI off & Poisson 1 Hz \textbar{} balanced & Combined native ceiling at low rate &  &  &  &  &  &  &  \\
+\hline
+D01 & ALL native & rate=100 Hz, mul FI off & Poisson 100 Hz \textbar{} balanced & Combined native ceiling at nominal rate &  &  &  &  &  &  &  \\
+\hline
+D02 & ALL native & rate=1000 Hz, mul FI off & Poisson 1000 Hz \textbar{} balanced & Combined native ceiling at high rate &  &  &  &  &  &  &  \\
+\hline
+D03 & lockstep & rate=1 Hz & Poisson 1 Hz \textbar{} balanced & Lockstep at low rate &  &  &  &  &  &  &  \\
+\hline
+D04 & lockstep & rate=100 Hz & Poisson 100 Hz \textbar{} balanced & Lockstep at nominal rate &  &  &  &  &  &  &  \\
+\hline
+D05 & lockstep & rate=1000 Hz & Poisson 1000 Hz \textbar{} balanced & Lockstep at high rate &  &  &  &  &  &  &  \\
+\hline
+D06 & dummy\_instr & rate=1 Hz, mul FI off & Poisson 1 Hz \textbar{} balanced & Dummy instructions at low rate &  &  &  &  &  &  &  \\
+\hline
+D07 & dummy\_instr & rate=100 Hz, mul FI off & Poisson 100 Hz \textbar{} balanced & Dummy instructions at nominal rate &  &  &  &  &  &  &  \\
+\hline
+D08 & dummy\_instr & rate=1000 Hz, mul FI off & Poisson 1000 Hz \textbar{} balanced & Dummy instructions at high rate &  &  &  &  &  &  &  \\
+\hline
+D09 & regfile\_ecc & rate=1 Hz & Poisson 1 Hz \textbar{} balanced & Regfile ECC at low rate &  &  &  &  &  &  &  \\
+\hline
+D10 & regfile\_ecc & rate=100 Hz & Poisson 100 Hz \textbar{} balanced & Regfile ECC at nominal rate &  &  &  &  &  &  &  \\
+\hline
+D11 & regfile\_ecc & rate=1000 Hz & Poisson 1000 Hz \textbar{} balanced & Regfile ECC at high rate &  &  &  &  &  &  &  \\
+\hline
+D12 & shadow\_csrs & rate=1 Hz & Poisson 1 Hz \textbar{} balanced & Shadow CSRs at low rate &  &  &  &  &  &  &  \\
+\hline
+D13 & shadow\_csrs & rate=100 Hz & Poisson 100 Hz \textbar{} balanced & Shadow CSRs at nominal rate &  &  &  &  &  &  &  \\
+\hline
+D14 & shadow\_csrs & rate=1000 Hz & Poisson 1000 Hz \textbar{} balanced & Shadow CSRs at high rate &  &  &  &  &  &  &  \\
+\hline
+D15 & icache\_ecc & rate=1 Hz, icache on & Poisson 1 Hz \textbar{} balanced & ICache ECC at low rate &  &  &  &  &  &  &  \\
+\hline
+D16 & icache\_ecc & rate=100 Hz, icache on & Poisson 100 Hz \textbar{} balanced & ICache ECC at nominal rate &  &  &  &  &  &  &  \\
+\hline
+D17 & icache\_ecc & rate=1000 Hz, icache on & Poisson 1000 Hz \textbar{} balanced & ICache ECC at high rate &  &  &  &  &  &  &  \\
+\hline
+D18 & secure\_guards & rate=1 Hz & Poisson 1 Hz \textbar{} balanced & Secure guards at low rate &  &  &  &  &  &  &  \\
+\hline
+D19 & secure\_guards & rate=100 Hz & Poisson 100 Hz \textbar{} balanced & Secure guards at nominal rate &  &  &  &  &  &  &  \\
+\hline
+D20 & secure\_guards & rate=1000 Hz & Poisson 1000 Hz \textbar{} balanced & Secure guards at high rate &  &  &  &  &  &  &  \\
+\hline
+D21 & hard\_pc & rate=1 Hz & Poisson 1 Hz \textbar{} balanced & Hardened PC at low rate &  &  &  &  &  &  &  \\
+\hline
+D22 & hard\_pc & rate=100 Hz & Poisson 100 Hz \textbar{} balanced & Hardened PC at nominal rate &  &  &  &  &  &  &  \\
+\hline
+D23 & hard\_pc & rate=1000 Hz & Poisson 1000 Hz \textbar{} balanced & Hardened PC at high rate &  &  &  &  &  &  &  \\
+\hline
+D24 & raddr\_glitch + we\_glitch & rate=1 Hz & Poisson 1 Hz \textbar{} balanced & Regfile glitch detection at low rate &  &  &  &  &  &  &  \\
+\hline
+D25 & raddr\_glitch + we\_glitch & rate=100 Hz & Poisson 100 Hz \textbar{} balanced & Regfile glitch detection at nominal rate &  &  &  &  &  &  &  \\
+\hline
+D26 & raddr\_glitch + we\_glitch & rate=1000 Hz & Poisson 1000 Hz \textbar{} balanced & Regfile glitch detection at high rate &  &  &  &  &  &  &  \\
+\hline
+D27 & data\_indep\_timing & rate=1 Hz & Poisson 1 Hz \textbar{} balanced & Data-independent timing at low rate &  &  &  &  &  &  &  \\
+\hline
+D28 & data\_indep\_timing & rate=100 Hz & Poisson 100 Hz \textbar{} balanced & Data-independent timing at nominal rate &  &  &  &  &  &  &  \\
+\hline
+D29 & data\_indep\_timing & rate=1000 Hz & Poisson 1000 Hz \textbar{} balanced & Data-independent timing at high rate &  &  &  &  &  &  &  \\
+\hline
+\end{longtable}
+
+D\_FT / G\_LC
+
+\begin{longtable}{|p{0.05\linewidth}|p{0.14\linewidth}|p{0.12\linewidth}|p{0.12\linewidth}|p{0.14\linewidth}|p{0.06\linewidth}|p{0.06\linewidth}|p{0.06\linewidth}|p{0.06\linewidth}|p{0.06\linewidth}|p{0.06\linewidth}|p{0.06\linewidth}|}
+\hline
+ID & FTMs & Key Params & FI Setup & Goal & Inj & Minor & Major & Corrected & DUE & SDC & Coverage \\
+\hline
+\endfirsthead
+\hline
+ID & FTMs & Key Params & FI Setup & Goal & Inj & Minor & Major & Corrected & DUE & SDC & Coverage \\
+\hline
+\endhead
+D30 & hard\_pc + shadow\_csrs + regfile\_ecc & detect-only native bundle & Poisson 100 Hz \textbar{} balanced & Low-cost detect-only comparison point &  &  &  &  &  &  &  \\
+\hline
+\end{longtable}
+
+D\_FT / G2
+
+\begin{longtable}{|p{0.05\linewidth}|p{0.14\linewidth}|p{0.12\linewidth}|p{0.12\linewidth}|p{0.14\linewidth}|p{0.06\linewidth}|p{0.06\linewidth}|p{0.06\linewidth}|p{0.06\linewidth}|p{0.06\linewidth}|p{0.06\linewidth}|p{0.06\linewidth}|}
+\hline
+ID & FTM & Key Params & FI Setup & Goal & Inj & Minor & Major & Corrected & DUE & SDC & Coverage \\
+\hline
+\endfirsthead
+\hline
+ID & FTM & Key Params & FI Setup & Goal & Inj & Minor & Major & Corrected & DUE & SDC & Coverage \\
+\hline
+\endhead
+D31 & Reg MoN on wrapped pipeline registers & N=3, rate=1 Hz & Poisson 1 Hz \textbar{} balanced & Reg MoN vs rate at low rate &  &  &  &  &  &  &  \\
+\hline
+D32 & Reg MoN on wrapped pipeline registers & N=3, rate=100 Hz & Poisson 100 Hz \textbar{} balanced & Reg MoN vs rate at nominal rate &  &  &  &  &  &  &  \\
+\hline
+D33 & Reg MoN on wrapped pipeline registers & N=3, rate=1000 Hz & Poisson 1000 Hz \textbar{} balanced & Reg MoN vs rate at high rate &  &  &  &  &  &  &  \\
+\hline
+D34 & Logic MoN on IF stage + controller + decoder + LSU + ALU & N=3, rate=1 Hz & Poisson 1 Hz \textbar{} balanced & Logic MoN vs rate at low rate &  &  &  &  &  &  &  \\
+\hline
+D35 & Logic MoN on IF stage + controller + decoder + LSU + ALU & N=3, rate=100 Hz & Poisson 100 Hz \textbar{} balanced & Logic MoN vs rate at nominal rate &  &  &  &  &  &  &  \\
+\hline
+D36 & Logic MoN on IF stage + controller + decoder + LSU + ALU & N=3, rate=1000 Hz & Poisson 1000 Hz \textbar{} balanced & Logic MoN vs rate at high rate &  &  &  &  &  &  &  \\
+\hline
+\end{longtable}
+
+D\_FT / G3
+
+\begin{longtable}{|p{0.05\linewidth}|p{0.14\linewidth}|p{0.12\linewidth}|p{0.12\linewidth}|p{0.14\linewidth}|p{0.06\linewidth}|p{0.06\linewidth}|p{0.06\linewidth}|p{0.06\linewidth}|p{0.06\linewidth}|p{0.06\linewidth}|p{0.06\linewidth}|}
+\hline
+ID & FTM & Key Params & FI Setup & Goal & Inj & Minor & Major & Corrected & DUE & SDC & Coverage \\
+\hline
+\endfirsthead
+\hline
+ID & FTM & Key Params & FI Setup & Goal & Inj & Minor & Major & Corrected & DUE & SDC & Coverage \\
+\hline
+\endhead
+D37 & Reg MoN on wrapped pipeline registers & N=3, hold=off & Poisson 100 Hz \textbar{} REG-only & Best-case FT of Reg MoN in its protected domain &  &  &  &  &  &  &  \\
+\hline
+D38 & Logic MoN on IF stage + controller + decoder + LSU + ALU & N=3, hold=off & Poisson 100 Hz \textbar{} CFG-only & Best-case FT of Logic MoN in its protected domain &  &  &  &  &  &  &  \\
+\hline
+D39 & Reg MoN on wrapped pipeline registers & N=3, hold=on & Poisson 100 Hz \textbar{} REG-only & Effect of hold on Reg MoN &  &  &  &  &  &  &  \\
+\hline
+D40 & Logic MoN on IF stage + controller + decoder + LSU + ALU & N=3, hold=on & Poisson 100 Hz \textbar{} CFG-only & Effect of hold on Logic MoN &  &  &  &  &  &  &  \\
+\hline
+\end{longtable}
+
+D\_FT / G4
+
+\begin{longtable}{|p{0.05\linewidth}|p{0.14\linewidth}|p{0.12\linewidth}|p{0.12\linewidth}|p{0.14\linewidth}|p{0.06\linewidth}|p{0.06\linewidth}|p{0.06\linewidth}|p{0.06\linewidth}|p{0.06\linewidth}|p{0.06\linewidth}|p{0.06\linewidth}|}
+\hline
+ID & FTM & Key Params & FI Setup & Goal & Inj & Minor & Major & Corrected & DUE & SDC & Coverage \\
+\hline
+\endfirsthead
+\hline
+ID & FTM & Key Params & FI Setup & Goal & Inj & Minor & Major & Corrected & DUE & SDC & Coverage \\
+\hline
+\endhead
+D41 & Reg MoN on wrapped pipeline registers & N=2, M=1 & Poisson 100 Hz \textbar{} REG-only & Minimum N for Reg MoN &  &  &  &  &  &  &  \\
+\hline
+D42 & Reg MoN on wrapped pipeline registers & N=3, M=2 & Poisson 100 Hz \textbar{} REG-only & Thesis-default Reg MoN &  &  &  &  &  &  &  \\
+\hline
+D43 & Reg MoN on wrapped pipeline registers & N=5, M=3 & Poisson 100 Hz \textbar{} REG-only & Mid-range Reg MoN &  &  &  &  &  &  &  \\
+\hline
+D44 & Reg MoN on wrapped pipeline registers & N=7, M=4 & Poisson 100 Hz \textbar{} REG-only & High-N Reg MoN &  &  &  &  &  &  &  \\
+\hline
+D45 & Reg MoN on wrapped pipeline registers & N=10, M=6 & Poisson 100 Hz \textbar{} REG-only & Saturation check for Reg MoN &  &  &  &  &  &  &  \\
+\hline
+D46 & Logic MoN on IF stage + controller + decoder + LSU + ALU & N=2, M=1 & Poisson 100 Hz \textbar{} CFG-only & Minimum N for Logic MoN &  &  &  &  &  &  &  \\
+\hline
+D47 & Logic MoN on IF stage + controller + decoder + LSU + ALU & N=3, M=2 & Poisson 100 Hz \textbar{} CFG-only & Thesis-default Logic MoN &  &  &  &  &  &  &  \\
+\hline
+D48 & Logic MoN on IF stage + controller + decoder + LSU + ALU & N=5, M=3 & Poisson 100 Hz \textbar{} CFG-only & Mid-range Logic MoN &  &  &  &  &  &  &  \\
+\hline
+D49 & Logic MoN on IF stage + controller + decoder + LSU + ALU & N=7, M=4 & Poisson 100 Hz \textbar{} CFG-only & High-N Logic MoN &  &  &  &  &  &  &  \\
+\hline
+D50 & Logic MoN on IF stage + controller + decoder + LSU + ALU & N=10, M=6 & Poisson 100 Hz \textbar{} CFG-only & Saturation check for Logic MoN &  &  &  &  &  &  &  \\
+\hline
+\end{longtable}
+
+D\_FT / G5
+
+\begin{longtable}{|p{0.05\linewidth}|p{0.14\linewidth}|p{0.12\linewidth}|p{0.12\linewidth}|p{0.14\linewidth}|p{0.06\linewidth}|p{0.06\linewidth}|p{0.06\linewidth}|p{0.06\linewidth}|p{0.06\linewidth}|p{0.06\linewidth}|p{0.06\linewidth}|}
+\hline
+ID & FTMs & Key Params & FI Setup & Goal & Inj & Minor & Major & Corrected & DUE & SDC & Coverage \\
+\hline
+\endfirsthead
+\hline
+ID & FTMs & Key Params & FI Setup & Goal & Inj & Minor & Major & Corrected & DUE & SDC & Coverage \\
+\hline
+\endhead
+D51 & Both MoN N=3 & variant=P, profile=Uniform, 100 Hz constant & Uniform 100 Hz \textbar{} balanced & Protected steady-state baseline &  &  &  &  &  &  &  \\
+\hline
+D52 & None & variant=U, profile=Uniform, 100 Hz constant & Uniform 100 Hz \textbar{} balanced & Unprotected steady-state baseline &  &  &  &  &  &  &  \\
+\hline
+D53 & Both MoN N=3 & variant=P, profile=Poisson, 100 Hz mean & Poisson 100 Hz \textbar{} balanced & Protected stochastic baseline &  &  &  &  &  &  &  \\
+\hline
+D54 & None & variant=U, profile=Poisson, 100 Hz mean & Poisson 100 Hz \textbar{} balanced & Unprotected stochastic baseline &  &  &  &  &  &  &  \\
+\hline
+D55 & Both MoN N=3 & variant=P, profile=Ramp, 10$\rightarrow$200 Hz over 120 s & Ramp \textbar{} balanced & Protected gradual-rate test &  &  &  &  &  &  &  \\
+\hline
+D56 & None & variant=U, profile=Ramp, 10$\rightarrow$200 Hz over 120 s & Ramp \textbar{} balanced & Unprotected gradual-rate test &  &  &  &  &  &  &  \\
+\hline
+D57 & Both MoN N=3 & variant=P, profile=MMPP2, low=10 high=200 & MMPP2 \textbar{} balanced & Protected bursty regime-switching test &  &  &  &  &  &  &  \\
+\hline
+D58 & None & variant=U, profile=MMPP2, low=10 high=200 & MMPP2 \textbar{} balanced & Unprotected bursty regime-switching test &  &  &  &  &  &  &  \\
+\hline
+D59 & Both MoN N=3 & variant=P, profile=Microburst, 400 Hz for 3 s idle 9 s & Microburst \textbar{} balanced & Protected peak-stress burst test &  &  &  &  &  &  &  \\
+\hline
+D60 & None & variant=U, profile=Microburst, 400 Hz for 3 s idle 9 s & Microburst \textbar{} balanced & Unprotected peak-stress burst test &  &  &  &  &  &  &  \\
+\hline
+\end{longtable}
+
+D\_FT / G6
+
+\begin{longtable}{|p{0.05\linewidth}|p{0.14\linewidth}|p{0.12\linewidth}|p{0.12\linewidth}|p{0.14\linewidth}|p{0.06\linewidth}|p{0.06\linewidth}|p{0.06\linewidth}|p{0.06\linewidth}|p{0.06\linewidth}|p{0.06\linewidth}|p{0.06\linewidth}|}
+\hline
+ID & FTMs & Key Params & FI Setup & Goal & Inj & Minor & Major & Corrected & DUE & SDC & Coverage \\
+\hline
+\endfirsthead
+\hline
+ID & FTMs & Key Params & FI Setup & Goal & Inj & Minor & Major & Corrected & DUE & SDC & Coverage \\
+\hline
+\endhead
+D61 & None & variant=A, rate=10 Hz & Poisson 10 Hz \textbar{} balanced & Unprotected FT at 10 Hz &  &  &  &  &  &  &  \\
+\hline
+D62 & None & variant=A, rate=50 Hz & Poisson 50 Hz \textbar{} balanced & Unprotected FT at 50 Hz &  &  &  &  &  &  &  \\
+\hline
+D63 & None & variant=A, rate=500 Hz & Poisson 500 Hz \textbar{} balanced & Unprotected FT at 500 Hz &  &  &  &  &  &  &  \\
+\hline
+D64 & ALL FTMs native+MoN & variant=C, rate=1 Hz, mul FI off & Poisson 1 Hz \textbar{} balanced & Max protection at low rate &  &  &  &  &  &  &  \\
+\hline
+D65 & ALL FTMs native+MoN & variant=C, rate=10 Hz, mul FI off & Poisson 10 Hz \textbar{} balanced & Max protection at 10 Hz &  &  &  &  &  &  &  \\
+\hline
+D66 & ALL FTMs native+MoN & variant=C, rate=50 Hz, mul FI off & Poisson 50 Hz \textbar{} balanced & Max protection at 50 Hz &  &  &  &  &  &  &  \\
+\hline
+D67 & ALL FTMs native+MoN & variant=C, rate=100 Hz, mul FI off & Poisson 100 Hz \textbar{} balanced & Max protection at nominal rate &  &  &  &  &  &  &  \\
+\hline
+D68 & ALL FTMs native+MoN & variant=C, rate=500 Hz, mul FI off & Poisson 500 Hz \textbar{} balanced & Max protection breakdown point &  &  &  &  &  &  &  \\
+\hline
+\end{longtable}
+
+D\_FT / G7
+
+\begin{longtable}{|p{0.05\linewidth}|p{0.14\linewidth}|p{0.12\linewidth}|p{0.12\linewidth}|p{0.14\linewidth}|p{0.06\linewidth}|p{0.06\linewidth}|p{0.06\linewidth}|p{0.06\linewidth}|p{0.06\linewidth}|p{0.06\linewidth}|p{0.06\linewidth}|}
+\hline
+ID & FTM & Key Params & FI Setup & Goal & Inj & Minor & Major & Corrected & DUE & SDC & Coverage \\
+\hline
+\endfirsthead
+\hline
+ID & FTM & Key Params & FI Setup & Goal & Inj & Minor & Major & Corrected & DUE & SDC & Coverage \\
+\hline
+\endhead
+D69 & Reg MoN on wrapped pipeline registers & N=3, M=3, margin=0, unanimous & Poisson 100 Hz \textbar{} REG-only & Pure detection at N=3 &  &  &  &  &  &  &  \\
+\hline
+D70 & Reg MoN on wrapped pipeline registers & N=5, M=3, margin=2, strict majority & Poisson 100 Hz \textbar{} REG-only & Maximum correction at N=5 &  &  &  &  &  &  &  \\
+\hline
+D71 & Reg MoN on wrapped pipeline registers & N=5, M=4, margin=1, above majority & Poisson 100 Hz \textbar{} REG-only & Tighter threshold at N=5 &  &  &  &  &  &  &  \\
+\hline
+D72 & Reg MoN on wrapped pipeline registers & N=5, M=5, margin=0, unanimous & Poisson 100 Hz \textbar{} REG-only & Extreme detection threshold at N=5 &  &  &  &  &  &  &  \\
+\hline
+D73 & Reg MoN on wrapped pipeline registers & N=7, M=4, margin=3, strict majority & Poisson 100 Hz \textbar{} REG-only & Maximum correction at N=7 &  &  &  &  &  &  &  \\
+\hline
+D74 & Reg MoN on wrapped pipeline registers & N=7, M=6, margin=1, above majority & Poisson 100 Hz \textbar{} REG-only & Near-unanimous policy at N=7 &  &  &  &  &  &  &  \\
+\hline
+D75 & Reg MoN on wrapped pipeline registers & N=7, M=7, margin=0, unanimous & Poisson 100 Hz \textbar{} REG-only & Maximum detection sensitivity at N=7 &  &  &  &  &  &  &  \\
+\hline
+D76 & Logic MoN on IF stage + controller + decoder + LSU + ALU & N=3, M=3, margin=0, unanimous & Poisson 100 Hz \textbar{} CFG-only & Pure detection for Logic MoN at N=3 &  &  &  &  &  &  &  \\
+\hline
+D77 & Logic MoN on IF stage + controller + decoder + LSU + ALU & N=5, M=3, margin=2, strict majority & Poisson 100 Hz \textbar{} CFG-only & Maximum correction for Logic MoN at N=5 &  &  &  &  &  &  &  \\
+\hline
+D78 & Logic MoN on IF stage + controller + decoder + LSU + ALU & N=5, M=4, margin=1, above majority & Poisson 100 Hz \textbar{} CFG-only & Tighter threshold for Logic MoN at N=5 &  &  &  &  &  &  &  \\
+\hline
+D79 & Logic MoN on IF stage + controller + decoder + LSU + ALU & N=5, M=5, margin=0, unanimous & Poisson 100 Hz \textbar{} CFG-only & Extreme detection threshold for Logic MoN at N=5 &  &  &  &  &  &  &  \\
+\hline
+D80 & Logic MoN on IF stage + controller + decoder + LSU + ALU & N=7, M=4, margin=3, strict majority & Poisson 100 Hz \textbar{} CFG-only & Maximum correction for Logic MoN at N=7 &  &  &  &  &  &  &  \\
+\hline
+D81 & Logic MoN on IF stage + controller + decoder + LSU + ALU & N=7, M=6, margin=1, above majority & Poisson 100 Hz \textbar{} CFG-only & Near-unanimous policy for Logic MoN at N=7 &  &  &  &  &  &  &  \\
+\hline
+D82 & Logic MoN on IF stage + controller + decoder + LSU + ALU & N=7, M=7, margin=0, unanimous & Poisson 100 Hz \textbar{} CFG-only & Maximum detection sensitivity for Logic MoN at N=7 &  &  &  &  &  &  &  \\
+\hline
+\end{longtable}

@@ -1,0 +1,95 @@
+% #############################################################################
+% This is Appendix B
+% !TEX root = ../main.tex
+% #############################################################################
+\chapter{Appendix B: System Dictionary File}
+\label{app_c:system_dict}
+
+This is an example System Dictionary \texttt{.yaml} file. It is used by the \ac{FI} System (see \cref{chap8:fatori_fi}) to describe the device bounds, each target module pblock, and the register IDs that belong to each module.
+
+The file is meant to be created by users detailing the \ac{RTL} where they will be using the \ac{FI} System on. For the IOb-SoC-Ibex \cite{iob-soc-ibex} architecture, \ac{Fatori-V} uses the Pblock Assigning Model (\cref{chap7:pblock}) to dynamically size pblocks depending on input features, then the tool merges the output coordinates with the config file \texttt{fatori\_registers.yaml} (\cref{chap3:ui_config}) and automatically generates System Dictionary dependent on the user requested configuration.
+
+\begingroup
+\setlength{\columnsep}{28pt}     % two-column layout (more separation)
+\begin{multicols}{2}
+\raggedcolumns
+
+\begin{lstlisting}[language=simpleyaml,style=yamlcompact,breaklines=true,aboveskip=4pt,belowskip=0pt]
+# Board Name
+xcku040:
+
+  device: # Full device coordinates
+    min_x: 0
+    max_x: 358
+    min_y: 0
+    max_y: 310
+    wf: 123
+
+  targets: # Valid modules
+  
+    csr:
+      x_lo: 1
+      y_lo: 4
+      x_hi: 58
+      y_hi: 56
+      module: ibex_csr
+      registers: [1,2,3,4,5,6]
+      
+    core:
+      x_lo: 4
+      y_lo: 8
+      x_hi: 98
+      y_hi: 112
+      module: ibex_core
+      registers: [7,8,9,10,11,12]
+      
+    alu:
+      x_lo: 0
+      y_lo: 56
+      x_hi: 5
+      y_hi: 71
+      module: ibex_alu
+      registers: [13,14,15,16,17,18]
+
+      
+    decoder:
+      x_lo: 24
+      y_lo: 78
+      x_hi: 120
+      y_hi: 154
+      module: ibex_decoder
+      registers: [19,20,21,22,23,24]
+
+
+  registers: # Register dictionary 
+    1:{name: "memint_pend_q", module: "ibex_csr"}
+    2:{name: "memint_addr_q", module: "ibex_csr"}
+    3:{name: "dbg_cause_q",   module: "ibex_csr"}
+    4:{name: "ctrl_fsm_q",    module: "ibex_csr"}
+    5:{name: "nmi_mode_q",    module: "ibex_csr"}
+    6:{name: "step_q",        module: "ibex_csr"}
+
+    7:{name: "fetch_en_q",   module: "ibex_core"}
+    8:{name: "pc_dis_q",     module: "ibex_core"}
+    9:{name: "rvfi_wb_q",    module: "ibex_core"}
+    10:{name: "cap_v_q",     module: "ibex_core"}
+    11:{name: "cap_mip_q",   module: "ibex_core"}
+    12:{name: "cap_nmi_q",   module: "ibex_core"}
+
+    13:{name: "mstat_q",      module: "ibex_alu"}
+    14:{name: "mie_q",        module: "ibex_alu"}
+    15:{name: "mtvec_q",      module: "ibex_alu"}
+    16:{name: "mepc_q",       module: "ibex_alu"}
+    17:{name: "mcause_q",     module: "ibex_alu"}
+    18:{name: "dcsr_q",       module: "ibex_alu"}
+
+    19:{name: "op_q",     module: "ibex_decoder"}
+    20:{name: "f3_q",     module: "ibex_decoder"}
+    21:{name: "f7_q",     module: "ibex_decoder"}
+    22:{name: "imm_q",    module: "ibex_decoder"}
+    23:{name: "aluop_q",  module: "ibex_decoder"}
+    24:{name: "csrop_q",  module: "ibex_decoder"}
+\end{lstlisting}
+
+\end{multicols}
+\endgroup

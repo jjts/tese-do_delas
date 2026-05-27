@@ -1,0 +1,176 @@
+% #############################################################################
+% This is Chapter 6
+% !TEX root = ../main.tex
+% #############################################################################
+\fancychapter{Py2HWSW Layer}
+\label{chap6:fatori_hardware}
+
+% #############################################################################
+\section{Fault Tolerance Support Infrastructure}
+\label{chap6:starting}
+
+This section introduces the build-time macro file interface used throughout \ac{Fatori-V} and the support infrastructure implemented in \cref{chap5:iob-soc-ibex}'s IOb-SoC-Ibex (macros, gating and configuration knobs), followed by the register-wrapping effort that centralizes pipeline registers behind a uniform wrapper for both compliance with industry standards and later extensions.
+
+Before introducing new \acp{FTM}, a preparation phase took place. First, Ibex’s native clock-gating cell was removed from the top module, and the internal clock was wired directly to \texttt{clk\_i}. This was necessary for the architecture to meet timing constraints.
+
+The original single SecureIbex flag, which gated native \acp{FTM} as a single block, was replaced by per-feature macros in \texttt{fatori\_ftm.svh}, so each mechanism (Dummy Instructions, DIT, Lockstep, \ac{PC} hardening, \ac{ECC} enables, and others) can be enabled independently. In the same way, non-\acp{FTM} architectural features (e.g., ICache, Branch Predictor options, Writeback Stage, \ac{ISA} extension variants) are also gated by macros in \texttt{fatori\_features.svh}.
+
+\texttt{fatori\_ftm.svh} and \texttt{fatori\_features.svh} can now be used to configure Ibex.
+
+Ibex contains 186 pipeline registers implemented as explicit "\texttt{always\_ff @(posedge clk\_i or negedge rst\_ni) begin}" blocks, which forces any modification to the register infrastructure to be repeated across many scattered instances. Additionally, each register's enable signal relies on cascaded conditional gating (\texttt{if} statements) or complex state machines.
+
+Every register was manually wrapped behind the developed \texttt{FATORI\_REG()} and \texttt{FATORI\_REG\_ENUM()} macros (in \texttt{fatori\_macro\_functions.svh}), and the enable ports were wired to a single-bit signal per register. \texttt{FATORI\_REG()} targets plain logic vectors, while \texttt{FATORI\_REG\_ENUM()} targets typed registers by packing values into a logic vector sized with \texttt{\$bits()} and casting back on output.
+
+Each wrapped register is assigned a unique prefix used to derive internal signal names and identifiers. \texttt{fatori\_registers.yaml} (\cref{chap3:ui_config}), records the prefix, hierarchical path, and \ac{FI} ID for every wrapped register. This turns future work into local wrapper updates instead of repeated edits across the pipeline. The wrapper interface also keeps two unused placeholder ports which Synthesis removes, but keeping them avoids having to update hundreds of call sites if the interface grows later.
+
+The wrapper allows each register to have multiple implementations. By the end of this work, each register could be implemented as either the default register (\texttt{iob\_reg.v}), an M-of-N register (\cref{chap6:mofn_reg}), or an \ac{FI} register required by the \ac{FI} flow (\cref{chap8:fatori_fi}).
+
+% #############################################################################
+\section{Hardware Redundancy}
+\label{chap6:mon}
+
+\Cref{tab:new_ftm_background} summarizes each mechanism and the key idea it contributes to the platform.
+Although \ac{Fatori-V} is meant as platform to evaluate \acp{FTM}, it also introduces two new \acp{FTM} in Ibex: M-of-N Systems (with Scrubbing) and Self-Test, both carried out through multiple target-specific implementations (one per protected block). \Cref{chap6:concept_new_ftms} provides background on the concepts, while \cref{chap6:impl_new_ftms} details the implementations and the per-target specifics.
+
+
+\begin{table}[H]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.2}
+\begin{tabularx}{\textwidth}{|l|X|}
+\hline
+Mechanism & Definition and role \\
+\hline
+M-of-N redundancy &
+Implements spatial redundancy by replicating a module $N$ times and using a voter that accepts an output only when at least $M$ replicas agree. The masking margin is $N-M$, which is the number of faulty replicas that can be tolerated while still producing a valid output. Choosing $M$ at strict majority prioritizes correction capacity, choosing $M$ above strict majority prioritizes earlier detection, and choosing $M$ below strict majority does not produce a valid output and can only be used for detection. \\
+\hline
+Scrubbing &
+Restores corrupted data, when errors occur. While \ac{SEM} supports native scrubbing, this version of \ac{Fatori-V} uses scrubbing as part of the M-of-N flow by triggering corrective actions when faults are detected. \\
+\hline
+Self-testing &
+Uses idle or scheduled opportunities during execution to run predefined computations with known results, allowing the \ac{CPU} to check whether specific modules behave correctly. This can be triggered only during idle periods or periodically, trading overhead for improved detection coverage. \\
+\hline
+\end{tabularx}
+\caption{Background on the new \acp{FTM} introduced in \ac{Fatori-V}.}
+\label{tab:new_ftm_background}
+\end{table}
+
+
+%\subsection{Register-Level M-of-N}
+%\label{chap6:mofn_reg}
+
+The register-level M-of-N mechanism extends the wrapper described in \cref{chap6:reg_wrap} so that pipeline registers can be replicated and voted. Each protected register is configured (per-instance) by build-time macros in \texttt{fatori\_reg\_mon.svh}: \texttt{*\_MON\_N} selects the number of replicas $N$, \texttt{*\_MON\_M} selects the quorum $M$ (with \texttt{M=0} mapped to strict majority $|N/2|+1$), and \texttt{\_HOLD} enables scrubbing. This granularity allows different registers to use different $N/M$ (and hold policy) in the same build.
+
+The wrapper uses the \texttt{generate} syntax of Verilog to create $N$ physical register replicas, ensuring that the hardware cost is actually dependent on $N$, and a newly developed voter compares their values. If a unique value reaches quorum $M$, that value is forwarded. If replicas disagree while a quorum winner still exists, the wrapper raises \texttt{*\_min\_err\_o} (and a one-cycle \texttt{*\_new\_min\_err\_o} pulse for counting), and the winner is forwarded. If no unique quorum exists (tie), it raises \texttt{*\_maj\_err\_o} (and \texttt{*\_new\_maj\_err\_o}), and the first is forwarded. The fifth output, \texttt{*\_err\_loc\_o}, marks which replicas disagree with the forwarded value.
+
+When scrubbing is enabled and the voter reaches a correctable quorum, the voted value is written back into disagreeing replicas. Each scrub emits a one-cycle \texttt{scrub\_occurred\_o} pulse that can be counted as a corrected-fault event.
+
+
+
+% -------------------------------------------------------------
+%\subsection{Logic-Level M-of-N}
+%\label{chap6:mofn_logic}
+
+Logic M-of-N differs from register M-of-N (\cref{chap6:mofn_reg}) because registers share a single uniform wrapper, while logic blocks require per-target wrappers. In this work, wrappers were developed for \texttt{ibex\_if\_stage}, \texttt{ibex\_controller}, \texttt{ibex\_decoder}, \texttt{ibex\_lsu}, and \texttt{ibex\_alu}. Each wrapper is instantiated only when the corresponding \texttt{*\_MON\_N} is greater than 1 (otherwise the native module is used), and is configured by the same three parameters as the register mechanism (\texttt{*\_MON\_N}, \texttt{*\_MON\_M}, and \texttt{*\_MON\_HOLD}). \texttt{*\_MON\_HOLD} allows the wrapper to forward the last valid voted output during major error conditions. 
+
+Replication is implemented with a \texttt{generate-for} that instantiates exactly \texttt{N} replicas sharing the same inputs, so resource usage scales with \texttt{N}. Each replica output is packed into a module-specific struct (for example \texttt{alu\_out\_t}), flattened with \texttt{\$bits()}, and voted as one object by \texttt{fatori\_mon\_voter}. When a unique quorum exists, the voter forwards the winning value and asserts \texttt{*\_min\_error} on disagreement, while \texttt{*\_maj\_error} is asserted when no unique winner exists. The signals \texttt{*\_new\_min\_error} and \texttt{*\_new\_maj\_error} are one-cycle pulses that mark new occurrences of the corresponding error classes, and \texttt{*\_hold\_occurred\_error} pulses when an held value was forwarded.
+
+Optional \ac{FI} inputs are broadcast to all replicas when \ac{FI} is enabled (see \cref{chap8:fatori_fi}). Since each replica may include its own \acp{FTM}, it already exports the standard five-signal error interface (\cref{chap6:control_report}), and the MoN wrapper itself also generates the same five signals from its voter and any hold behaviour. Each wrapper ORs each error signal across the replicas and itself, and outputs only one five-signal set.
+
+
+% -------------------------------------------------------------
+\section{Self-Testing Hardware}
+\label{chap6:self_test}
+
+As explained in \cref{chap6:concept_new_ftms}, the developed \ac{ST} \ac{FTM} checks a module by running small computations with known results when that module would otherwise be unused. In \ac{Fatori-V}, \ac{ST} is implemented with one wrapper per target that exposes the same interface as the native block to the rest of the core. Each wrapper internally instantiates both the native module and a developed \ac{ST} Core that drives test patterns into the native inputs through a multiplexer. Four wrappers were developed, for the following targets: \texttt{ibex\_alu}, \texttt{ibex\_multdiv\_*}, \texttt{ibex\_load\_store\_unit}, and the PC adder.
+
+The \ac{ST} Core holds a small, hardcoded table of test patterns and expected results. The patterns are target-specific, and include identity checks for the \ac{ALU} (such as $X+0=X$ and $X\oplus 0=X$), invariants for mult/div (such as $0\times X=0$ and $X/1=X$), \ac{LSU} alignment and byte-enable cases that avoid unsafe external writes, and \ac{PC} step checks for +2 and +4. The core is controlled through \texttt{enable}, \texttt{kick} (force an immediate test), and an \texttt{idle} signal provided by the wrapper. When \texttt{idle} is high, it issues a pattern, waits for the result, compares it, and computes the error signals. The \texttt{*\_ST\_SPACING} macro sets the minimum number of clock cycles between consecutive tests for that target.
+
+Each wrapper computes \texttt{idle} from native Ibex signals. The \ac{ALU} wrapper reports it during \ac{CSR}, branch, or jump instructions if there is no \ac{LSU} request. The mult/div wrapper uses the \texttt{inflight} signal that reports mult/div usage. The \ac{LSU} wrapper reports idle when the \ac{LSU} displays no active requests and no pending completions. The \ac{PC} increment wrapper reports idle when the IF stage is stalled.
+
+If a real instruction arrives at a target that is executing a test, \texttt{*\_ST\_POLICY} selects how the conflict is handled: avoid only runs tests in cycles where the target is clearly unused; abort may start a test, but cancels it as soon as a real instruction needs the target; and hold lets a test complete by stalling the pipeline when a conflict occurs. Any mismatch is reported through the standard Ibex error classes (\cref{chap5:ibex_ft}).
+
+% #############################################################################
+\section{Fault Monitoring and Control Hardware}
+\label{chap6:control_report}
+
+This section defines the error and metrics interface used by \ac{Fatori-V}. It shows how native and added \acp{FTM} signals are merged and counted in hardware, then exposed through custom \acp{CSR} for firmware and the Software Layer to read.
+
+% -------------------------------------------------------------
+\subsection{Fault Monitor Hardware}
+\label{chap6:metrics_hw}
+
+\ac{Fatori-V} extends Ibex's native Error Interface detailed in \cref{chap5:ibex_ft}, providing a 5 signal interface containing:
+(i) the native Ibex \texttt{minor} and \texttt{major} error channels report a continuous system-health signal, (ii) two new pulses, \texttt{new\_min} and \texttt{new\_maj}, that pulse each new error, and (iii) a \texttt{scrub\_occurred} pulse that reports corrections performed by replication voters. The other signals of \cref{chap5:ibex_ft} still remain.
+
+All error signals are aggregated (via the OR operator) progressively as they propagate upwards. At each hierarchy level, locally generated events (e.g., a voter disagreement) are merged with events coming from below (e.g., errors produced inside a replicated module, including those raised by wrapped registers within that module). Merging is done per clock cycle: multiple pulses of the same class in the same cycle collapse into a single pulse.
+
+The Hardware Layer implements monitors used to evaluate \ac{FT} experiments by reusing the native Ibex performance \acp{CSR} (\cref{chap5:ibex_overview}) and extending them with \ac{FT}-specific hardware counters. The exported monitoring \acp{CSR} added in this work are listed in \cref{tab:fatori_ft_csrs}.
+
+\begin{table}[H]
+\centering
+\begin{tabularx}{\textwidth}{|l|l|X|}
+\hline
+New \ac{CSR} name & \ac{CSR} Addr & Counts\\
+\hline
+\texttt{CSR\_FATORI\_MINOR\_CNT}          & \texttt{0xBC1} & minor error count\\
+\hline
+\texttt{CSR\_FATORI\_MAJOR\_CNT}          & \texttt{0xBC2} & major error count\\
+\hline
+\texttt{CSR\_FATORI\_REG\_INJ\_CNT}       & \texttt{0xBC3} & register fault injection count\\
+\hline
+\texttt{CSR\_FATORI\_LOGIC\_INJ\_CNT}     & \texttt{0xBC4} & logic fault injection count\\
+\hline
+\texttt{CSR\_FATORI\_CORRECTED\_CNT}      & \texttt{0xBC5} & corrected (scrub) count\\
+\hline
+\texttt{CSR\_FATORI\_MAJOR\_INTERNAL\_CNT}& \texttt{0xBC6} & internal-major error count\\
+\hline
+\texttt{CSR\_FATORI\_MAJOR\_BUS\_CNT}     & \texttt{0xBC7} & bus-major error count\\
+\hline
+\texttt{CSR\_FATORI\_DOUBLE\_FAULT\_CNT}  & \texttt{0xBC8} & double-fault count\\
+\hline
+\texttt{CSR\_FATORI\_CYCLES\_MIN}         & \texttt{0xBC9} & cycles to first minor\\
+\hline
+\texttt{CSR\_FATORI\_CYCLES\_MAJ}         & \texttt{0xBCA} & cycles to first major\\
+\hline
+\texttt{CSR\_FATORI\_DETECT\_LATENCY}     & \texttt{0xBCB} & last injection-to-detection latency\\
+\hline
+\texttt{CSR\_FATORI\_LATENCY\_SUM}        & \texttt{0xBCC} & detection-latency sum\\
+\hline
+\texttt{CSR\_FATORI\_LATENCY\_CNT}        & \texttt{0xBCD} & detection-latency count\\
+\hline
+\end{tabularx}
+\caption{\ac{Fatori-V} new \acp{CSR} counters implemented in this work.}
+\label{tab:fatori_ft_csrs}
+\end{table}
+
+All \ac{FT} hardware monitors are implemented in the developed Fault Manager (\cref{chap6:fault_mgr}). Aggregated error and correction pulses (\cref{chap6:error_agg}) increment counters when asserted. Injection counting uses the one-cycle injection pulses from \texttt{fi\_coms} (\cref{chap8:fi_coms}). Time-to-first-event latches capture the cycle count on the first occurrence after reset. Detection latency subtracts the last injection timestamp from the first subsequent error observation, and latencies are also accumulated into a sum and count. All monitors are exposed to firmware through custom read-only \acp{CSR} in the \texttt{0xBC0} range, read via \texttt{csrr}.
+
+The amount of monitoring hardware included is configurable through five Metric Levels defined via \texttt{fatori\_features.svh}. Level 1 exports only native Ibex HPM counters. Level 2 adds basic fault counters and, when \ac{FI} is enabled, injection counts. Level 3 adds corrected count and the major-fault breakdown. Level 4 adds time to first event and per-injection detection latency. Level 5 adds latency statistics.
+
+After the hardware monitors are published to \acp{CSR}, firmware uses the \texttt{csrr} instruction to read them. This is actually considered to be part of \ac{Fatori-V}'s Software Layer (see \cref{chap7:fatori_software}), but in order to keep metrics measuring and computing explained together, this section details how the hardware metrics reach the result tables.
+
+Each \ac{CSR} in \cref{tab:fatori_ft_csrs} is read by a dedicated function in the firmware, implemented through the created \texttt{iob\_csr.h} file and gated by the active Metrics Level. The full set is serialized into a static buffer, called twice in the firmware wrapper: once before the benchmark (\texttt{[pre]} stage) and once after (\texttt{[post]} stage). The resulting buffer contains the \texttt{pre}, \texttt{post} and \texttt{benchmark} (added by each benchmark's wrapper) metrics:
+
+\begin{lstlisting}[style=iob_python]
+[pre]  mcycle,0x000000000001A2B3
+[pre]  fatori_minor_cnt,0
+[benchmark]  coremark_size,36
+[post] mcycle,0x000000000008F4C1
+[post] fatori_minor_cnt,7
+\end{lstlisting}
+
+Once populated, the firmware transmits the buffer over \ac{UART} using the functions by IOBundle. The Py2HWSW console, running in the host, converts the buffer into a text file, naming it \texttt{metrics.txt}. On the host, the IOb-Console script intercepts this transfer and writes the file to disk under the \ac{FPGA} build directory. This is the only point at which \texttt{metrics.txt} is created as a physical file, the \ac{FPGA} itself never accesses the filesystem.
+
+The \texttt{metrics.txt} file is considered a raw metrics file. The Results Stage of the Software Layer (\cref{chap7:results_stage}) will use these raw metrics as operands in the formulas defined centrally in the configuration files (see \cref{chap3:ui_config}), creating the results tables that are displayed in \cref{chap3:ui_results}.
+
+% -------------------------------------------------------------
+\subsection{Fault Manager Hardware Module}
+\label{chap6:fault_mgr}
+
+The \texttt{fatori\_fault\_mgr} hardware module designed and implemented in this work is the main \ac{FT} hardware controller in \ac{Fatori-V}. It receives the aggregated error interface described in \cref{chap5:ibex_ft,chap6:error_agg} and drives the system control outputs that affect instruction fetch and reset. Depending on the selected Metric Level (\cref{chap6:metrics_hw_impl}), it also implements the hardware monitors later published as custom \acp{CSR}. Its interface includes the aggregated error inputs, \texttt{core\_sleep\_i} to indicate when the core is idle, \texttt{fetch\_enable\_o} to freeze or enable fetch, and \texttt{core\_reset\_req\_o} to request reset. Additional monitor inputs and counter outputs are present when \ac{FI} and higher Metric Levels are enabled.
+
+Inside the block, all incoming error signals are merged into two internal event pulses: one for minor-class events and one for major-class events. These pulses are then used as the increment and latch enables for the exported counters and timing registers, for example, they increment the minor and major counters and, on the first occurrence after reset, they latch the current cycle count to record time-to-first-event. Ibex fetch control uses a multi-bit encoded signal to reduce the chance that a single-bit upset flips the enable state. The manager drives that signal to disable fetch on major events and drain the pipeline. 
+
+The block is configurable through build-time macros defined in \texttt{fatori\_features.svh}. Reset is controlled by a small \ac{FSM}, controlled by: \texttt{FATORI\_RESET\_ON\_MAJOR} that requests a reset after a major event, and \texttt{FATORI\_WAIT\_SLEEP\_BEFORE\_RESET} that delays that request until \texttt{core\_sleep\_i} confirms the core is idle. Other macros define the Metric Level and whether \ac{FI} is enabled. The monitors themselves are implemented as event-driven counters and latches, using the aggregated error pulses (\cref{chap6:error_agg}) and the single-cycle injection pulses from the \ac{FI} router (\cref{chap8:fi_coms}). Most monitors follow the same pattern: a pulse increments a counter, and selected events latch the current cycle count once. Measurements that depend on time use an internal cycle counter and stored timestamps, for example injection-to-detection latency is computed from the last injection timestamp and the next observed error pulse, and optional latency statistics accumulate a sum and count. All internal registers follow the same wrapping approach described in \cref{chap6:reg_wrap}. The resulting monitor values are wired into \texttt{ibex\_cs\_registers} and exposed as custom read-only \acp{CSR} in the \texttt{0xBC0} address range (\cref{chap6:metrics_hw_impl}), so firmware can read them with \texttt{csrr} and the Software Layer (\cref{chap7:fatori_software}) can build the results tables.

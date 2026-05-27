@@ -1,0 +1,707 @@
+% #############################################################################
+% This is Chapter 7
+% !TEX root = ../main.tex
+% #############################################################################
+\fancychapter{Fatori-V Layer}
+\label{chap7:fatori_software}
+
+% #############################################################################
+\section{Fatori-V Operation Sequence}
+\label{chap7:software_overview}
+
+\begin{figure}[H]
+\centering
+    \includegraphics[width=0.9\textwidth]{Images/chap3_layers.jpg}
+    \caption{Fatori-V Complete Overview}
+    \label{fig:fatori_overview}
+\end{figure}
+
+
+The Software Layer is the upper layer of \ac{Fatori-V} shown in \cref{fig:fatori_overview}. It reads the user-provided run files in \texttt{runs/*.yaml} (\cref{chap3:ui_yaml}), validates and normalizes them, generates and allocates the interface files that configure the Hardware Layer (SystemVerilog headers and Vivado Tcl hooks, \cref{chap3:hwvssw}), launches the build to produce the bitstream and reports, executes the selected benchmark sessions, and packages logs, generated tables, and metrics into \texttt{results/}. It is split into the orchestrator, which drives the run and session workflow, and the \ac{FI} console (\cref{chap8:fatori_fi}). When \ac{FI} is enabled, the orchestrator generates the \ac{FI} console \ac{CLI} command per session, runs it as a subprocess, and synchronizes it with benchmark execution using the handshake described in \cref{chap7:handshake}.
+
+The top script file is \texttt{fatori-v.py}. It iterates through all run files (see \cref{chap3:ui_yaml}) found in \texttt{runs/} (or a user-selected subset) and applies the same phased algorithm to each one, which allows users to prepare multiple experiments up front and run them sequentially with one invocation.
+
+\ac{Fatori-V} executes each run through a fixed staged workflow. Each stage transforms the Run \texttt{.yaml} filw \cref{chap3:ui_yaml} into concrete configuration files, build inputs, benchmark sessions, and final result tables. \Cref{tab:fatori_workflow_stages} summarizes the role and output of each stage.
+
+\begin{table}[htbp]
+\centering
+\caption{Main stages of the \ac{Fatori-V} run workflow.}
+\label{tab:fatori_workflow_stages}
+\small
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.25}
+\begin{tabularx}{\textwidth}{|>{\raggedright\arraybackslash}p{0.17\textwidth}|>{\raggedright\arraybackslash}p{0.39\textwidth}|>{\raggedright\arraybackslash}X|}
+\hline
+Stage & Main role & Main outputs \\
+\hline
+Validation & Checks the run \texttt{.yaml}, applies allowed corrections, and aborts invalid configurations. & Verified run file, normalized configuration, validation warnings or errors. \\
+\hline
+Generation & Translates the verified run configuration into hardware, firmware, benchmark, and Vivado Tcl files. & Generated \texttt{.svh}, \texttt{.h}, and \texttt{.tcl} files under \texttt{tmp/}. \\
+\hline
+File movement & Copies generated and user-provided files into the lower-layer architecture and benchmark trees. & Staged IOb-SoC-Ibex and benchmark repositories, with backups of overwritten files. \\
+\hline
+Build & Runs the required Makefile targets to build the configured hardware and prepare the selected benchmark sessions. & \ac{FPGA} image, build reports, benchmark build configuration, and \ac{FI} console command when enabled. \\
+\hline
+Execution & Runs the enabled benchmark sessions and, when enabled, launches the \ac{FI} campaign in parallel. & Session logs, benchmark output, \texttt{metrics.txt}, and \ac{FI} logs. \\
+\hline
+Results & Parses benchmark metrics and Vivado reports, computes derived metrics, and creates consolidated result tables. & Per-session metrics, parsed build metrics, CSV tables, and XLSX tables. \\
+\hline
+\end{tabularx}
+\end{table}
+
+The Validation Stage is implemented through checks defined in \texttt{config/validation\_checks.py}, and provided by the user. One example is displayed in \cref{lst:check}. Each check inspects selected \texttt{.yaml} fields and either applies a deterministic correction or aborts the run. In strict mode, warnings without auto-corrections also abort the run. After all checks are applied, \ac{Fatori-V} writes \texttt{verified\_yaml.yaml}, which replaces the user-provided run file for the remaining stages and is stored in the final results folder.
+
+\begin{lstlisting}[language=matlabfloz,caption={Example check in validation\_checks.py},label=lst:check]
+  {'type': 'warning',
+  'logic': lambda cfg: cfg['...']['icache_ecc'] and not cfg['...']['icache'],
+  'message': 'ICache ECC enabled but ICache is disabled. Disabling ICache ECC.',
+  'correction': lambda cfg: cfg['...'].update({'icache_ecc': 'off'})}
+\end{lstlisting}
+
+The Generation Stage creates the interface files consumed by the Hardware Layer. These include SystemVerilog headers such as \texttt{fatori\_features.svh}, \texttt{fatori\_ftm.svh}, \texttt{fatori\_logic\_mon.svh}, \texttt{fatori\_reg\_mon.svh}, \texttt{fatori\_selftest.svh}, and \texttt{fatori\_pblocks.svh}, firmware headers that allow the firmware wrapper to run only the enabled benchmarks and the Vivado \texttt{.tcl} scripts that configure the Vivado fllow. The generated files are first written under \texttt{tmp/} and are then copied into the lower-layer repositories during File Movement.
+
+Generated files are copied according to \texttt{gen\_locations.yaml}, while user-provided hardware and software inputs are copied according to the corresponding \texttt{locations.yaml} files. Before any destination file is overwritten, the original file is backed up so the architecture tree can be restored after the run. Once the files are staged, the Build Stage runs the required Makefile targets and, when \ac{FI} is enabled, prepares the \ac{FI} console command used during execution.
+
+The Execution Stage runs each enabled benchmark as a separate session. A session is considered valid only if the process exits cleanly, the benchmark succeeds, and a valid \texttt{metrics.txt} file is produced. When \ac{FI} is enabled, the session controller also launches the \ac{FI} console as a parallel subprocess and relies on the synchronization mechanism described in \cref{chap7:handshake}.
+
+The Results Stage converts raw measurements into result tables. Benchmark data is extracted from \texttt{metrics.txt}, while implementation data is parsed from Vivado reports. Direct metrics are copied or differenced from raw values, and indirect metrics are computed from formulas defined by the user in \texttt{config/metrics\_definitions.py}. The full list of direct and indirect metrics is provided in \cref{chap9:computed_metrics}. A metric definition example is displayed in \cref{lst:metrics}.
+
+\begin{lstlisting}[language=matlabfloz,caption={Example metric definitions in \texttt{metrics\_definitions.py}},label=lst:metrics]
+{'id': 'mcycle',
+ 'type': 'direct', 
+ 'benchmarks': 'GENERAL', 
+ 'compute': 'diff', 
+ 'value_type': 'hex'},
+
+{'id': 'instructions_per_cycle',
+ 'type': 'indirect',
+ 'benchmarks': 'GENERAL',
+ 'formula': lambda m: round(m.get('minstret', 0) / m.get('mcycle', 1), 2) 
+    if m.get('mcycle', 0) > 0 else 0},
+\end{lstlisting}
+
+
+
+
+
+% #############################################################################
+\section{Pblock Sizing Model}
+\label{chap7:pblock}
+
+To inject faults into a specific hardware module, the \ac{FI} tool must know where that module is placed in the \ac{FPGA}. \ac{Fatori-V} solves this by constraining each injectable target to a pblock and storing its bounds in the System Dictionary used by the \ac{FI} tool. These bounds are later used to select configuration memory addresses that belong to the target region, as described in \cref{chap8:fi_acme_impl}.
+
+The size of each hardware module depends on the active Ibex configuration, including \ac{ISA} extensions, multiplier type, bit manipulation variant, cache support, branch logic, writeback stage, \ac{FI} instrumentation, and enabled \acp{FTM}. A static table would not cover all possible combinations, especially for parameters such as the M-of-N replication factor, which can be virtually any integer number. The Pblock Sizing Model estimates the required area of each target from the configuration used in each run.
+
+The model is used for the following pblock targets: \ac{ALU}, \ac{LSU}, Controller, Decoder, IF Stage, ID Stage, Multiplier, Prefetch Buffer, WB Stage, Branch Predictor, and Fault Manager.
+
+
+
+
+
+
+
+% -----------------------------------------------------------------------------
+\subsection{Sizing Model}
+\label{chap7:pblock_sizing_model}
+
+The model estimates the \ac{LUT} and \ac{FF} usage of each pblock target. Each target starts from a measured baseline and adds the overhead of the active hardware features. The baseline with architectural features is defined in \cref{eq:pblock_target_base}.
+
+\begin{equation}
+A_t =
+B_t
++
+\sum \Delta^{\text{feat}}_t
+\label{eq:pblock_target_base}
+\end{equation}
+
+In \cref{eq:pblock_target_base}, \(B_t\) is the measured \ac{LUT} baseline of target \(t\), and \(\sum \Delta^{\text{feat}}_t\) is the sum of the enabled architectural feature overheads. Negative feature effects are set to zero, preventing the model from estimating  pblock sizes below the measured baseline.
+
+Logic M-of-N replicates the complete target. This includes the combinational logic and the registers inside the target. Register M-of-N overhead, if the \ac{FTM} is enabled, is included within each logic replica. The \ac{LUT} estimate is computed with \cref{eq:pblock_lut_model}.
+
+\begin{equation}
+\text{LUT}_t =
+N_{\text{logic}}
+\left(
+A_t
++
+\Delta^{\text{RegMon}}_t(N_{\text{reg}})
+\right)
++
+V_t(N_{\text{logic}})
+\label{eq:pblock_lut_model}
+\end{equation}
+
+In \cref{eq:pblock_lut_model}, \(N_{\text{logic}}=1\) when Logic M-of-N is disabled. \(V_t(N_{\text{logic}})\) is the voter cost of the Logic M-of-N wrapper and is set to zero when Logic M-of-N is disabled.
+
+Register M-of-N mainly increases the number of \acp{FF}, because it replicates stored state. However, the generated wrappers, voters, correction logic, and control logic can also use \acp{LUT}. For this reason, the model includes a Register M-of-N \ac{LUT} term when measured data showed a relevant \ac{LUT} cost. This term is computed with \cref{eq:pblock_reg_mon}.
+
+\begin{equation}
+\Delta^{\text{RegMon}}_t(N_{\text{reg}})
+=
+P_t(N_{\text{reg}})
+-
+A_t
+\label{eq:pblock_reg_mon}
+\end{equation}
+
+In \cref{eq:pblock_reg_mon}, \(P_t(N_{\text{reg}})\) is the measured or fitted total \ac{LUT} count of target \(t\) with Register M-of-N enabled. When Register M-of-N is disabled, or when the measured \ac{LUT} overhead was not relevant, \(\Delta^{\text{RegMon}}_t(N_{\text{reg}})=0\).
+
+The \ac{FF} model follows the same structure. The model starts from the measured \ac{FF} baseline, adds the \ac{FF} effects of the enabled architectural features, and applies the \ac{FF} cost of Register M-of-N when enabled. Since XCKU040 slices contain 8 \acp{LUT} and 16 \acp{FF}, the final pblock size is set by the most restrictive resource, as shown in \cref{eq:pblock_slice_binding}.
+
+\begin{equation}
+\text{Slices}_{t}
+=
+\left\lceil
+M_t
+\cdot
+\max
+\left(
+\left\lceil \frac{\text{LUT}_{t}}{8} \right\rceil,
+\left\lceil \frac{\text{FF}_{t}}{16} \right\rceil
+\right)
+\right\rceil
+\label{eq:pblock_slice_binding}
+\end{equation}
+
+\(M_t\) is the safety margin used to account for placement and routing constraints. 
+
+
+
+
+
+% -----------------------------------------------------------------------------
+\subsection{Parameter Extraction}
+\label{chap7:pblock_study}
+
+The model parameters were extracted from implementation reports generated for the XCKU040 \ac{FPGA}. Each experiment enabled a controlled hardware configuration, implemented the design, and parsed the utilization reports to measure the \ac{LUT} and \ac{FF} usage of each pblock target.
+
+The experiments were organized to isolate the terms defined in \cref{eq:pblock_target_base,eq:pblock_lut_model,eq:pblock_reg_mon}. Baseline experiments measured each target with optional features and \acp{FTM} disabled. Feature experiments enabled one parameter at a time, including RV32B, RV32M, instruction cache, branch prediction, branch target \ac{ALU}, and writeback stage. M-of-N experiments varied \(N\) for Logic M-of-N and Register M-of-N. Combined experiments checked whether the extracted terms still produced usable pblock sizes when features and \acp{FTM} were enabled together.
+
+\Cref{tab:pblock_feature_params} reports the baseline and feature parameters used in \(A_t\). RV32M values are ordered as none, single-cycle, fast, and slow. RV32B values are ordered as none, balanced, full, and OTEarlGrey. Empty entries mean that no positive measured contribution was kept.
+
+\begin{table}[h]
+\centering
+\scriptsize
+\setlength{\tabcolsep}{2.8pt}
+\renewcommand{\arraystretch}{1.20}
+\begin{tabularx}{\textwidth}{|p{0.16\textwidth}|p{0.18\textwidth}|p{0.24\textwidth}|p{0.24\textwidth}|X|}
+\hline
+Target &
+Baseline &
+RV32M \(\Delta\ac{LUT}\) &
+RV32B \(\Delta\ac{LUT}\) &
+Notes \\
+\hline
+\hline
+\ac{ALU} &
+96 \acp{LUT}, 0 \acp{FF} &
+0, 7, 10, 51 &
+0, 27, 27, 29 &
+Pure \ac{ALU} has no registers. \\
+\hline
+Multiplier &
+0, 326, 317, 357 \acp{LUT}; 0, 74, 75, 76 \acp{FF} &
+Set by RV32M mode &
+ &
+DSP count is also stored per RV32M mode. \\
+\hline
+Controller &
+331 \acp{LUT}, 14 \acp{FF} &
+0, 10, 1, 51 &
+ &
+RV32B effects are set to zero. \\
+\hline
+Decoder &
+257 \acp{LUT}, 1 \ac{FF} &
+ &
+0, 40, 38, 40 &
+RV32M has no measured effect. \\
+\hline
+\ac{LSU} &
+103 \acp{LUT}, 68 \acp{FF} &
+0, 16, 9, 7 &
+0, 45, 42, 44 &
+Used by load/store logic. \\
+\hline
+IF Stage &
+1667 \acp{LUT}, 284 \acp{FF} &
+0, 305, 235, 361 &
+0, 930, 1802, 1750 &
+Largest feature variation. \\
+\hline
+ID Stage &
+334 \acp{LUT}, 17 \acp{FF} &
+0, 5, 32, 97 &
+0, 0, 86, 0 &
+\ac{FF} effects are also fitted. \\
+\hline
+WB Stage &
+135 \acp{LUT}, 75 \acp{FF} &
+ &
+ &
+Only when enabled. \\
+\hline
+Prefetch Buffer &
+486 \acp{LUT}, 199 \acp{FF} &
+0, 0, 13, 0 &
+ &
+Disabled when instruction cache is enabled. \\
+\hline
+Branch Predictor &
+38 \acp{LUT}, 0 \acp{FF} &
+ &
+ &
+Only when enabled. \\
+\hline
+Fault Manager &
+5 \acp{LUT}, 114 \acp{FF} &
+ &
+ &
+Metrics included. \\
+\hline
+\end{tabularx}
+\caption{Baseline and feature parameters used by the Pblock Sizing Model.}
+\label{tab:pblock_feature_params}
+\end{table}
+
+\Cref{tab:pblock_redundancy_params} reports the redundancy parameters used after \(A_t\) is computed. Logic M-of-N terms are used inside \cref{eq:pblock_lut_model}. Register M-of-N terms are used to compute \(\Delta^{\text{RegMon}}_t(N_{\text{reg}})\) in \cref{eq:pblock_reg_mon}.
+
+\begin{table}[h]
+\centering
+\scriptsize
+\setlength{\tabcolsep}{2.8pt}
+\renewcommand{\arraystretch}{1.22}
+\begin{tabularx}{\textwidth}{|p{0.16\textwidth}|p{0.38\textwidth}|p{0.30\textwidth}|X|}
+\hline
+Target &
+Logic M-of-N \ac{LUT} term &
+Register M-of-N term &
+Notes \\
+\hline
+\hline
+\ac{ALU} &
+\((N_{\text{logic}}-1)A_{\text{ALU}} + 26.63N_{\text{logic}}^2 + 1249.09N_{\text{logic}} - 97.21\) &
+0 &
+No registers. \\
+\hline
+Controller &
+\(30N_{\text{logic}}^2 + 800N_{\text{logic}}\) &
+\(P(N_{\text{reg}})=70.38N_{\text{reg}}+68.03\), \(\text{FF}=15N_{\text{reg}}\) &
+Register term is inside each logic replica. \\
+\hline
+Decoder &
+\((N_{\text{logic}}-1)A_{\text{DEC}} + 1594N_{\text{logic}}\) &
+\(\text{FF}=N_{\text{reg}}\) &
+One baseline \ac{FF}. \\
+\hline
+\ac{LSU} &
+\((N_{\text{logic}}-1)A_{\text{LSU}} + 89.61N_{\text{logic}}^2 - 645.61N_{\text{logic}} + 1609.00\) &
+\(P(N_{\text{reg}})=280.47N_{\text{reg}}-510.13\), \(\text{FF}=66N_{\text{reg}}+2\) &
+Fitted from register runs. \\
+\hline
+IF Stage &
+\((N_{\text{logic}}-1)A_{\text{IF}} + 23.93N_{\text{logic}}^2 - 1860.13N_{\text{logic}} + 2164.80\) &
+\(P(N_{\text{reg}})=1465.65N_{\text{reg}}-548.46\), \(\text{FF}=321N_{\text{reg}}\) &
+Fitted from register runs. \\
+\hline
+ID Stage &
+Logic Redundancy not implemented &
+\(P(N_{\text{reg}})=367.97N_{\text{reg}}-441.69\), \(\text{FF}=87N_{\text{reg}}\) &
+No standalone Logic M-of-N target. \\
+\hline
+Prefetch Buffer &
+Logic Redundancy not implemented &
+\(\text{FF}=199N_{\text{reg}}\) &
+Only without instruction cache. \\
+\hline
+\end{tabularx}
+\caption{Redundancy parameters used by the Pblock Sizing Model.}
+\label{tab:pblock_redundancy_params}
+\end{table}
+
+Negative measured contributions are kept at zero. This prevents synthesis optimizations from reducing the predicted pblock size below the measured baseline. The slice conversion from \cref{eq:pblock_slice_binding} is applied after the \ac{LUT} and \ac{FF} estimates are computed.
+
+
+
+
+
+% #############################################################################
+\section{Benchmark Porting}
+\label{chap7:benchmarks}
+\ac{Fatori-V} natively integrates four benchmark programs than can be executed sequentially in the same run: IObundle's Hello World, CoreMark \cite{coremark}, Embench-IoT \cite{embench-iot}, and Fatori Stress (designed in this work to stress the exact Ibex targets that \ac{Fatori-V} can inject into). All benchmarks follow the same interface and folder format under \texttt{benchmarks/}: a folder whose name matches the benchmark key in the run \texttt{.yaml}, a \texttt{benchmark.h} that exposes the benchmark entry point as \texttt{BENCHMARK\_MAIN} (called by the firmware wrapper, see \cref{chap5:iob-soc-ibex}), the \texttt{repo/} directory containing a clone of the official benchmark repository (when applicable), a \texttt{Makefile} with a \texttt{prepare/setup} target that copies the required upstream sources into \texttt{code/} for compilation, an optional \texttt{requirements.yaml} that declares extra build/link flags, and the benchmark-specific wrapper/port files required to run in a baremetal environment (e.g., local \texttt{printf} implementation instead of OS/stdio).  
+
+
+% -------------------------------------------------------------
+\subsection{CoreMark Benchmark}
+\label{chap7:coremark}
+CoreMark \cite{coremark} is an industry-standard \ac{CPU} benchmark commonly reported in the state of the art, so including it gives \ac{Fatori-V} a reference workload that is easy to compare against other \ac{RISC-V} results. 
+
+In \ac{Fatori-V}, CoreMark is configured by a single \texttt{.yaml} iterations parameter  compiled into \texttt{bench\_config.h} as \texttt{ITERATIONS}. The Results Phase exports the standard CoreMark report fields, such as  \texttt{coremark\_size}, \texttt{total\_ticks}, \texttt{total\_time\_secs}, \texttt{iterations\_per\_sec}, \texttt{iterations}, \texttt{memory\_location}, and the \ac{CRC} fields \texttt{seedcrc}, \texttt{crclist}, \texttt{crcmatrix}, \texttt{crcstate}, and \texttt{crcfinal}. These fields are used to calculate the CoreMark Score and are merged with the remaining measured metrics to generate the results tables.
+
+CoreMark runs four kernels: linked-list processing, matrix operations, a small state machine, and \ac{CRC} computation. The official porting point for new platforms is \texttt{core\_portme.c/h}, which must define the \texttt{ee\_*} datatypes, configuration constants such as \texttt{MEM\_METHOD}, \texttt{SEED\_METHOD}, \texttt{HAS\_STDIO}, \texttt{HAS\_PRINTF}, and \texttt{MULTITHREAD}, and the timing interface. In the \ac{Fatori-V} integration, \texttt{core\_portme.h} configures the software by choosing static memory with \texttt{MEM\_STATIC} and disabling floats with \texttt{HAS\_FLOAT}. The \texttt{core\_portme.c} file sizes the native volatile seeds to select a \texttt{PERFORMANCE\_RUN} and redirects \texttt{ee\_printf} to a locally implemented version. The developed \texttt{coremark\_main.c} file resolves the dual-main issue by renaming CoreMark's main through a preprocessor alias before including the upstream \texttt{core\_main.c}. The locally developed \texttt{coremark\_metrics.c/h} files implement \texttt{coremark\_printf} as a dual-sink logger, parse the captured CoreMark report lines, and export the extracted fields as \texttt{"[benchmark] key,value"} lines appended to \texttt{metrics.txt}.
+
+
+% -------------------------------------------------------------
+\subsection{Embench-IoT Benchmark}
+\label{chap7:embench-iot}
+Embench-IoT \cite{embench-iot} is a modern embedded benchmark suite designed for baremetal use and for producing a single consistent score from a diverse set of small programs.
+
+In \ac{Fatori-V}, Embench is configured through the run \texttt{.yaml} file by selecting which sub-benchmarks are enabled. This selection is compiled into \texttt{bench\_config.h} as one 0/1 macro per sub-benchmark. The Results Phase exports \texttt{total\_benchmarks}, \texttt{total\_passed}, \texttt{embench\_score}, and, for each executed sub-benchmark, its cycles, pass flag, and ratio. The current IOb-SoC-Ibex software memory budget cannot link the full suite simultaneously, so a validation check (see \cref{chap7:validation_stage}) enforces a limit of at most 10 enabled sub-benchmarks and automatically disables the excess to keep the build runnable.
+
+Each Embench-IoT program follows an initialize, benchmark, and verify structure. The suite score is computed by comparing each program's measured cycle count against the baseline cycle counts distributed with Embench. To implement it in \ac{Fatori-V}, the \texttt{embench\_benchmarks.c} wrapper pulls the selected Embench programs into the build and renames their entry functions so multiple sub-benchmarks can be linked together without symbol collisions. The \texttt{embench\_main.c} wrapper runs each enabled sub-benchmark through its renamed \texttt{initialise\_benchmark\_*} and \texttt{benchmark\_*} functions, measures cycles with \texttt{mcycle}/\texttt{mcycleh} reads, verifies results with \texttt{verify\_benchmark\_*}, computes ratios against \texttt{baseline\_cycles} from \texttt{embench\_data.h}, and exports all values to \texttt{metrics.txt}. The \texttt{boardsupport.c/h} files provide the minimal hooks expected by the upstream suite, and \texttt{requirements.yaml} declares the required \texttt{-lm} link flag and compile ordering so math-heavy programs can run under soft-float.
+
+
+% -------------------------------------------------------------
+\subsection{Fatori Fault Tolerance Benchmark}
+\label{chap7:fatori_stress}
+Fatori Stress was developed specifically for this thesis to create deterministic, self-validating workloads that can be aligned with \ac{FI} campaigns (see \cref{chap8:fatori_fi}) while stressing specific Ibex targets. The benchmark executes the same operations twice: a forward run from iteration $0\rightarrow (N-1)$ followed by a backward run from $(N-1)\rightarrow 0$. At each iteration, it computes a per-iteration value and XORs it into a running checksum. XOR is self-inverse, which means that a fault-free execution returns exactly to the initial checksum after the backward pass, while any corruption breaks reversibility and flags the run as FAIL. Operands are derived only from the iteration index, so the workload changes with the requested iteration count but remains fully reproducible.
+
+The user-requested configuration is compiled through the generated \texttt{bench\_config.h}: \texttt{FATORI\_ITERATIONS} selects $N$, and per-target macros select which module workloads are executed. This version implements seven targets: the \ac{ALU}, Multiplier/Divider, Decoder, Controller, \ac{LSU}, Branch Predictor, and the Instruction Decompressor. \ac{Fatori-V}'s Results Phase (see \cref{chap7:results_stage}) records benchmark-specific fields: enabled target list, iteration count, initial, forward, and backward checksum values, validation status (\texttt{PASS}, \texttt{FAIL}, or \texttt{SKIPPED}), and the first iteration where a mismatch is detected.
+
+Each Fatori Stress iteration calls a dispatcher that invokes one stress function per enabled target and XOR-accumulates their return values. \texttt{alu\_stress} mixes independent arithmetic and logic operations with dependent chains, variable shifts, and signed/unsigned comparisons. \texttt{multiplier\_stress} uses \texttt{mul}/\texttt{div} operations when the toolchain \ac{ISA} enables RV32M. Otherwise, it executes a shift-and-add multiply and a long-division loop. \texttt{decoder\_stress} alternates instruction shapes by combining register-register operations, immediate operations, and volatile array accesses. \texttt{controller\_stress} stresses control flow with nested conditionals, backward-branch loops, and noinline helper calls. \texttt{lsu\_stress} writes a known word pattern into a static buffer and reads it back as byte, halfword, and word accesses. \texttt{branch\_predict\_stress} generates predictable branch patterns. \texttt{compressed\_stress} is used when the firmware is compiled with RV32C enabled, forcing the fetch stream to contain mixed 16-bit and 32-bit encodings.
+
+
+% -------------------------------------------------------------
+\section{Synchronization, Logging and Metrics Computing}
+\label{chap7:sw_logging}
+
+\ac{Fatori-V} uses a file-based handshake to align the firmware’s “start of benchmark” with the \ac{FI} console’s “start of campaign”. The firmware wrapper creates a small sync file (using the provided \ac{UART} file-transfer functions) containing the string "WAIT", the orchestrator passes the path of that file to the \ac{FI} console command line, and the \ac{FI} console freezes until the file appears and then overwrites its content with "READY". Firmware execution is held in a polling loop that repeatedly reads the file and only proceeds once "WAIT" becomes "READY", at which point the benchmark body starts.
+
+To mitigate \ac{UART} induced delays, the firmware wrapper executes all setup work (\ac{UART} init, metric pre-sampling, and any preliminary reads) before entering the "WAIT"/"READY" protocol loop. 
+
+From the \ac{FI} perspective, the campaign begins as soon as "READY" is written, because all \ac{FI} setup (TargetPool building, ACME algorithms, and preflight tests) is completed before the handshake protocol. Since the firmware only observes that update on the next polling iteration, there can be a small propagation delay between “\ac{FI} starts” and “benchmark begins”, so the first few injections may occur before the benchmark actually begins executing. In practice, campaigns should use sufficiently large injection pools (typically $>500$ injections) so that this initial misalignment has less impact on the overall statistics.
+
+
+Logging is implemented as a centralized event system under \texttt{scripts/logging/} and configured by two config files (see \cref{chap3:ui_config}): \texttt{log\_levels.py} selects which events are printed for each verbosity level (minimal/normal/verbose), and \texttt{messages\_formats.py} defines the displayed messages. Scripts do directly print strings, they emit an event ID plus a small set of fields, and the logger decides whether to print the event and how to format it. This keeps timestamps, prefixes, and sinks consistent across the project and implements increased system customization. Each event is associated with a verbosity level, so users can precisely choose which events are shown on the terminal and written to the log for minimal, normal, and verbose runs. An example is provided in \cref{lst:log}.
+
+\begin{lstlisting}[language=matlabfloz,caption={Example log event implementation},label=lst:log]
+from scripts.logging.logger import log_event
+log_event('DEBUG', 'FILE\_ALLOCATION', num\_alloc\_files")
+\end{lstlisting}
+
+
+For each run, \ac{Fatori-V} extracts \texttt{metrics.txt}, produced by the firmware, which contains the RAW measured data: (i) snapshots of Ibex native hardware-performance-monitoring counters (see \cref{chap5:ibex_overview}) and the added \ac{Fatori-V} \acp{CSR} (see \cref{chap6:metrics_hw}), sampled both before and after each benchmark, and (ii) benchmark-specific values reported by the benchmark itself (through per-benchmark parsers/wrappers implemented for \ac{Fatori-V}, see \cref{chap7:benchmarks}).
+
+In the Results Stage, higher-level metrics are computed from this raw data using the user-provided metric definitions in \texttt{config/metrics\_definitions.py} (see \cref{chap3:ui_results}), which include a set of default definitions and can be extended with additional formulas. \ac{Fatori-V} builds the results tables, by appending all raw and computed metrics, along with the extracted data from Vivado reports. \Cref{tab:metrics_all} lists all metrics exported by \ac{Fatori-V} in all experiments.
+
+
+
+
+
+\begin{table}[h]
+\centering
+\small
+\setlength{\tabcolsep}{3.2pt}
+\renewcommand{\arraystretch}{1.25}
+\begin{tabularx}{\textwidth}{|p{0.23\textwidth}|p{0.12\textwidth}|p{0.26\textwidth}|X|}
+\hline
+Metric Name &
+Kind &
+Computation &
+What it Measures \\
+\hline
+\hline
+Number of Cycles &
+Measured &
+Post\,$-$\,Pre snapshot &
+Total benchmark execution cycles. \\
+\hline
+Instructions Retired &
+Measured &
+Post\,$-$\,Pre snapshot &
+Total instructions committed. \\
+\hline
+LSU Busy Cycles &
+Measured &
+Post\,$-$\,Pre snapshot &
+Cycles with active memory transaction. \\
+\hline
+I-Fetch Stall Cycles &
+Measured &
+Post\,$-$\,Pre snapshot &
+Cycles stalled on instruction fetch. \\
+\hline
+Load Count &
+Measured &
+Post\,$-$\,Pre snapshot &
+Memory-read operations retired. \\
+\hline
+Store Count &
+Measured &
+Post\,$-$\,Pre snapshot &
+Memory-write operations retired. \\
+\hline
+Jump Count &
+Measured &
+Post\,$-$\,Pre snapshot &
+Unconditional jumps retired. \\
+\hline
+Branch Count &
+Measured &
+Post\,$-$\,Pre snapshot &
+Conditional branches evaluated. \\
+\hline
+Taken Branch Count &
+Measured &
+Post\,$-$\,Pre snapshot &
+Conditional branches taken. \\
+\hline
+Compr. Instruction Count &
+Measured &
+Post\,$-$\,Pre snapshot &
+RV32C instructions retired. \\
+\hline
+Multiply Stall Cycles &
+Measured &
+Post\,$-$\,Pre snapshot &
+Cycles stalled on multiplier. \\
+\hline
+Divide Stall Cycles &
+Measured &
+Post\,$-$\,Pre snapshot &
+Cycles stalled on divider. \\
+\hline
+CoreMark Score &
+Measured &
+Directly from benchmark &
+Iterations per second throughput. \\
+\hline
+CoreMark Integrity CRCs &
+Measured &
+Directly from benchmark &
+Per-kernel output correctness check. \\
+\hline
+CoreMark Auxiliary Metrics &
+Measured &
+Directly from benchmark &
+Code size, time, and iteration metadata. \\
+\hline
+Embench Aggregate Score &
+Measured &
+Directly from benchmark &
+Overall Embench-IoT score. \\
+\hline
+Embench Per-Test Metrics &
+Measured &
+Directly from benchmark &
+Per-program cycles, pass flag, and ratio. \\
+\hline
+Fatori Stress Checksums &
+Measured &
+Directly from benchmark &
+Total correct checksums. \\
+\hline
+Fatori Stress Result &
+Measured &
+Directly from benchmark &
+Pass or fail result and mismatch descriptor. \\
+\hline
+Instructions per Cycle &
+Computed &
+\(\mathrm{minstret}/\mathrm{mcycle}\) &
+Average instruction throughput per cycle. \\
+\hline
+Taken-Branch Rate &
+Computed &
+\(100\cdot\mathrm{hpm\_branches\_taken}/\mathrm{hpm\_branches}\) &
+Percentage of branches taken. \\
+\hline
+Compr. Instruction Rate &
+Computed &
+\(100\cdot\mathrm{hpm\_compressed}/\mathrm{minstret}\) &
+Share of retired RV32C instructions. \\
+\hline
+\end{tabularx}
+\caption{Performance metrics automatically extracted and computed by \ac{Fatori-V} for every run.}
+\label{tab:metrics_performance}
+\end{table}
+
+
+
+
+
+\begin{table}[h]
+\centering
+\small
+\setlength{\tabcolsep}{3.2pt}
+\renewcommand{\arraystretch}{1.25}
+\begin{tabularx}{\textwidth}{|p{0.23\textwidth}|p{0.12\textwidth}|p{0.26\textwidth}|X|}
+\hline
+Metric Name &
+Kind &
+Computation &
+What it Measures \\
+\hline
+\hline
+LUT Count &
+Measured &
+Vivado utilization report &
+Total look-up tables used. \\
+\hline
+LUT Utilization &
+Measured &
+Vivado utilization report &
+LUT count as device percentage. \\
+\hline
+Flip-Flop Count &
+Measured &
+Vivado utilization report &
+Total register flip-flops used. \\
+\hline
+FF Utilization &
+Measured &
+Vivado utilization report &
+FF count as device percentage. \\
+\hline
+Block RAM Tiles &
+Measured &
+Vivado utilization report &
+On-chip BRAM tiles consumed. \\
+\hline
+DSP Blocks &
+Measured &
+Vivado utilization report &
+Dedicated DSP48E2 slices used. \\
+\hline
+Worst Negative Slack &
+Measured &
+Vivado timing report &
+Critical setup-timing margin, in ns. \\
+\hline
+Total On-Chip Power &
+Measured &
+Vivado power report &
+Estimated dynamic and static power. \\
+\hline
+\end{tabularx}
+\caption{Hardware cost metrics automatically extracted by \ac{Fatori-V} for every run.}
+\label{tab:metrics_hardware}
+\end{table}
+
+
+
+
+
+
+\begin{table}[h]
+\centering
+\small
+\setlength{\tabcolsep}{3.2pt}
+\renewcommand{\arraystretch}{1.25}
+\begin{tabularx}{\textwidth}{|p{0.23\textwidth}|p{0.12\textwidth}|p{0.26\textwidth}|X|}
+\hline
+Metric Name &
+Kind &
+Computation &
+What it Measures \\
+\hline
+\hline
+Minor Event Count &
+Measured &
+Post\,$-$\,Pre snapshot &
+Cumulative recoverable faults detected. \\
+\hline
+Major Event Count &
+Measured &
+Post\,$-$\,Pre snapshot &
+Cumulative non-recoverable faults detected. \\
+\hline
+Internal Major Count &
+Measured &
+Post\,$-$\,Pre snapshot &
+Major faults originating from internal CPU logic. \\
+\hline
+Bus Major Count &
+Measured &
+Post\,$-$\,Pre snapshot &
+Major faults originating from bus or memory. \\
+\hline
+Double Fault Count &
+Measured &
+Post\,$-$\,Pre snapshot &
+Number of double faults detected. \\
+\hline
+Corrected Event Count &
+Measured &
+Post\,$-$\,Pre snapshot &
+Faults corrected by M-of-N scrubbing. \\
+\hline
+Register Injection Count &
+Measured &
+Post\,$-$\,Pre snapshot &
+Register injections issued by the \ac{FI} system. \\
+\hline
+Logic Injection Count &
+Measured &
+Post\,$-$\,Pre snapshot &
+Logic injections issued by the \ac{FI} system. \\
+\hline
+\ac{EBD} Count &
+Measured &
+Directly from the generated \ac{EBD} data &
+Number of \ac{EBD} bits contained in each target region, including the full \ac{SoC}. \\
+\hline
+Cycles to First Minor Event &
+Measured &
+Post\,$-$\,Pre snapshot &
+Cycles from reset until first recoverable fault. \\
+\hline
+Cycles to First Major Event &
+Measured &
+Post\,$-$\,Pre snapshot &
+Cycles from reset until first non-recoverable fault. \\
+\hline
+Last Detection Latency &
+Measured &
+Post\,$-$\,Pre snapshot &
+Injection-to-detection cycles for last detection. \\
+\hline
+Detection Latency Sum &
+Measured &
+Post\,$-$\,Pre snapshot &
+Sum of per-injection detection latencies. \\
+\hline
+Detection Latency Count &
+Measured &
+Post\,$-$\,Pre snapshot &
+Number of latency samples accumulated. \\
+\hline
+Total Injection Count &
+Computed &
+\(\mathrm{reg\_inj\_cnt} + \mathrm{logic\_inj\_cnt}\) &
+Total fault injections issued. \\
+\hline
+Total Fault Detection &
+Computed &
+\(\mathrm{minor\_cnt} + \mathrm{major\_cnt}\) &
+Total fault events detected. \\
+\hline
+Correction Efficacy &
+Computed &
+\(\mathrm{corrected\_cnt}/\mathrm{minor\_cnt}\) &
+Fraction of detected minor faults corrected. \\
+\hline
+Average Detection Latency &
+Computed &
+\(\mathrm{latency\_sum}/\mathrm{latency\_cnt}\) &
+Mean injection-to-detection latency. \\
+\hline
+Observability &
+Computed &
+\((\mathrm{minor\_cnt} + \mathrm{major\_cnt})/\mathrm{total\_inj\_cnt}\) &
+Fraction of injections detected. \\
+\hline
+Masking Rate &
+Computed &
+\(1 - \mathrm{fault\_sensitivity}\) &
+Fraction of injections undetected. \\
+\hline
+Fault Sensitivity &
+Computed &
+\(\mathrm{major\_cnt}/\mathrm{total\_inj\_cnt}\) &
+Fraction of injections that caused system failure. \\
+\hline
+\end{tabularx}
+\caption{\ac{FT} metrics automatically extracted and computed by \ac{Fatori-V} for every run.}
+\label{tab:metrics_ft}
+\end{table}

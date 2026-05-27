@@ -1,0 +1,11 @@
+% #############################################################################
+% RESUMO em Português
+% !TEX root = ../main.tex
+% #############################################################################
+% use \noindent in firts paragraph
+% reset acronyms
+\acresetall
+
+\Acp{FPGA} são cada vez mais úteis em contextos espaciais, onde \acp{SEU} induzidos pela radiação solar podem corromper memórias, nomeadamente a memória de configuração (onde é guardado o próprio circuito da placa). Embora já existam muitos \acp{FTM}, realizar análises comparativas entre mecanismos continua a ser difícil, não existe uma plataforma prática que ajude o seu desenvolvimento, capaz de executar programas de software reais, injetar falhas de forma reprodutível e reportar métricas comparáveis.
+
+Esta tese apresenta \ac{Fatori-V}, uma plataforma open-source concebida para suportar a implementação e a avaliação de \acp{FTM} num \ac{SoC} \ac{RISC-V} configurável. O \ac{Fatori-V} é construído em torno de um \ac{SoC} baseado no Ibex \cite{ibex} integrado no IOb-SoC \cite{iob-soc}, configurável através de uma interface \texttt{.yaml} que parametriza toda a "run" (funcionalidades de hardware, \acp{FTM}, injeção de falhas, benchmarks e resultados medidos). O \ac{Fatori-V} emula \acp{SEU} recorrendo à ferramenta de \ac{FI}, também desenvolvida neste trabalho. Esta ferramenta unifica a injeção na memória de configuração (via Xilinx \ac{SEM} e ACME \cite{SEM,ACME}) e a injeção em registos/\acp{FF} (via um sistema de injeção no próprio hardware), numa só interface que permite, de forma fácil e reprodutível, configurar onde e quando as injeções devem ocorrer.

@@ -1,0 +1,44 @@
+% #############################################################################
+% This is Appendix D
+% !TEX root = ../main.tex
+% #############################################################################
+\chapter{Appendix C: Time Profile Template}
+\label{app_d:time_prof}
+
+This is an example Time Profile implementation. An external implementation needs to follow the Time Profile interface described in \cref{chap8:fi_time_iface} and implement an injection scheduller. The input profile can be chosen to point to an external implementation.
+
+\begin{lstlisting}[caption={Minimal template for an external time profile compatible with \texttt{--time input}.},label={lst:fi_time_external_template}]
+PROFILE_KIND = "time", PROFILE_NAME = "my_profile"
+def describe(): return "My custom schedule."
+def default_args(): return {"module_path": None, "duration_s": None}
+
+class MyProfile:
+    def __init__(self, duration_s=None):
+        self.duration_s = duration_s
+
+    def run(self, controller):
+        # Example: inject as fast as possible for duration_s seconds
+        import time
+        t0 = time.monotonic()
+        while True:
+            if controller.should_stop():
+                controller.set_termination_reason("Stop requested")
+                return
+            if self.duration_s is not None and (time.monotonic() - t0) >= self.duration_s:
+                controller.set_termination_reason("Duration limit reached")
+                return
+            tgt = controller.next_target()
+            if tgt is None:
+                controller.set_termination_reason("Target pool exhausted")
+                return
+            controller.inject_target(tgt)
+
+def make_profile(args, *, global_seed, settings):
+    # args values are strings; parse as needed
+    duration_s = args.get("duration_s")
+    duration_s = float(duration_s) if duration_s not in (None, "") else None
+    return MyProfile(duration_s=duration_s)
+\end{lstlisting}
+
+
+
