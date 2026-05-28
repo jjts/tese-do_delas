@@ -11,7 +11,7 @@
 
 \begin{figure}[h]
 \centering
-    \includegraphics[width=0.9\textwidth]{Images/chap3_layers.jpg}
+    \includegraphics[width=0.9\textwidth]{Images/chap3_layers.png}
     \caption{\ac{Fatori-V} run flow from input run files to result tables.}
     \label{fig:fatori_overview}
 \end{figure}
@@ -23,7 +23,7 @@ During a run, \ac{Fatori-V} validates the user configuration, generates the requ
 
 The Validation Stage checks the run \texttt{.yaml} before any file is generated. The checks are defined in \texttt{config/validation\_checks.py}. Each check inspects selected fields and either applies a deterministic correction or aborts the run. In strict mode, warnings without automatic corrections also abort the run. After validation, \ac{Fatori-V} writes \texttt{verified\_yaml.yaml}, which is used by the remaining stages and stored in the final results folder. Users can add custom checks to \texttt{config/validation\_checks.py}.
 
-The Generation Stage translates the verified configuration into the interface MACRO files required by the build flow. These include SystemVerilog headers such as \texttt{fatori\_features.svh}, \texttt{fatori\_ftm.svh}, \texttt{fatori\_logic\_mon.svh}, \texttt{fatori\_reg\_mon.svh}, \texttt{fatori\_selftest.svh}, and \texttt{fatori\_pblocks.svh}. It also generates firmware headers for benchmark selection and Vivado \texttt{.tcl} scripts for the build flow.
+The Generation Stage translates the verified configuration into the interface macro files required by the build flow. These include SystemVerilog headers such as \texttt{fatori\_features.svh}, \texttt{fatori\_ftm.svh}, \texttt{fatori\_logic\_mon.svh}, \texttt{fatori\_reg\_mon.svh}, \texttt{fatori\_selftest.svh}, and \texttt{fatori\_pblocks.svh}. It also generates firmware headers for benchmark selection and Vivado \texttt{.tcl} scripts for the build flow.
 
 The File Movement Stage copies generated files according to \texttt{gen\_locations.yaml}. User-provided hardware and software inputs are copied according to the corresponding \texttt{locations.yaml} files. Before overwriting a destination file, \ac{Fatori-V} creates a backup so the repository can be restored after the run.
 

@@ -71,57 +71,24 @@ CSR name (platform) & Ibex CSR & Counts\\
 \end{table}
 
 
+
+
+
 % #############################################################################
 \section{Ibex and Fault Tolerance}
-\label{chap5:ibex_ft}
+\label{chap4:ibex_ft}
 
-Ibex was selected partly because it includes native \ac{FT}-related support, namely native \acp{FTM} and error-reporting signals. During the Ibex study, most of these mechanisms were found to target deliberate attacks rather than radiation-induced \acp{SEU}, often by adding randomness or reducing timing and power predictability. They therefore do not fully match the \ac{SEU}-focused goal of \ac{Fatori-V}, but they remain relevant comparison points and are included in the final \ac{FTM} analysis. \Cref{tab:ibex_native_ftm} lists the native Ibex \acp{FTM}.
+Ibex was selected partly because it includes native \ac{FT}-related support. This section introduces the native Ibex \acp{FTM} and detail native \ac{FT} features that are relevant for \ac{Fatori-V}'s development.
 
-\begin{table}[htbp]
-\centering
-\small
-\setlength{\tabcolsep}{4pt}
-\renewcommand{\arraystretch}{1.2}
-\begin{tabularx}{\textwidth}{|l|X|c|}
-\hline
-\ac{FTM} & Description & Error Type \\
-\hline
-\hline
-Data-Independent Timing &
-Forces instruction timing and switching activity to be less dependent on operand values, reducing timing and power side-channel leakage. In practice, branches execute with the same timing whether taken or not, and early completion paths for multiply and divide are removed. &
-Major \\
-\hline
-Dummy Instructions &
-Injects random dummy operations into the pipeline that do not change architectural state. This adds unpredictable timing and power noise, making code behaviour harder to infer and making precisely timed fault attacks harder to repeat. &
-None \\
-\hline
-Hardened \ac{PC} &
-Checks that sequential execution advances the \ac{PC} by the expected increment (2 or 4 bytes with C enabled, otherwise 4). A mismatch raises an alert to prevent unintended control-flow changes while still allowing legitimate jumps and branches. &
-Major \\
-\hline
-Shadow \acp{CSR} &
-Protects critical \acp{CSR} by keeping a complemented shadow copy and continuously checking consistency. Glitches or corruption that break the relation between the main and shadow values trigger an alert. &
-Major \\
-\hline
-Dual-Core Lockstep &
-Runs a delayed shadow instance of the core using delayed inputs, then compares its outputs against delayed main-core outputs. Any divergence triggers an alert, targeting faults that affect computation or control flow. &
-Major \\
-\hline
-ICache \ac{ECC} &
-Stores parity bits alongside each cache line so that single-bit errors can be corrected and multi-bit errors can be detected on read. This adds storage overhead and encode or decode logic, sometimes with small access latency impact. &
-Minor or Major \\
-\hline
-Bus integrity checking &
-Checks incoming instruction and load data against accompanying checkbits on the bus interface. A mismatch triggers an interrupt and a bus alert, targeting corruption in transfers between the core and the memory system. &
-Major \\
-\hline
-\end{tabularx}
-\caption{Native Ibex \acp{FTM}.}
-\label{tab:ibex_native_ftm}
-\end{table}
+The native SecureIbex configuration enables Ibex' \acp{FTM}, mostly already introduced in \cref{chap2:ftms}. Dual-Core Lockstep instantiates a shadow core, delays the inputs and outputs used for comparison, and raises an internal major alert when the compared outputs diverge. Shadow \acp{CSR} protect selected control registers by keeping complemented copies and checking consistency. Register-file \ac{ECC} widens register-file data with check bits and raises an internal major alert when corruption is detected. ICache \ac{ECC} protects cache tag and data banks and raises a minor alert on detected errors.
 
+Other native Ibex checks follow the same checksum principle. Bus integrity checking verifies instruction and data responses against integrity bits and raises a bus major alert on mismatch. Hardened \ac{PC} checks whether sequential execution advances the \ac{PC} by the expected instruction length, except after branches and reset. The register-file write-enable and read-address glitch checks protect register-file control signals against invalid changes. Secure Guards use multi-bit encodings and guarded control paths for selected control signals, reducing the chance that a single-bit fault turns into a valid control value.
 
-Ibex does not provide complete error handling hardware by default, but it exposes control and status ports that can be used by integration logic to detect faults and trigger recovery. These ports, listed in \cref{tab:ibex_error_ports}, include three alert outputs, a multi-bit fetch-enable input that can stop instruction fetching, a sleep indicator that reports core activity, and a double-fault flag.  Additional hardware is still required to use these signals for \ac{FT} evaluation. Ibex does not aggregate errors across the \ac{SoC}, and the signals are not connected by default outside the core. The alert outputs are also level signals, not event counters, so they may remain asserted until handled and cleared. Counting detections, extracting quantitative \ac{FT} metrics, and reacting to reported errors therefore require an external fault manager.
+Data Independent Timing removes selected data-dependent timing paths, such as branch timing differences and early completion in multiply or divide cases. Dummy Instructions insert random operations that do not change the program result. These mechanisms are not used for \ac{SEU}-related \ac{FT}. Their purpose is to reduce timing and power predictability and make external targetted attacks harder to perform.
+
+Ibex does not provide complete error handling hardware by default, but it exposes control and status ports that can be used by integration logic to detect faults and trigger recovery. These ports, listed in \cref{tab:ibex_error_ports}, include three alert outputs, a multi-bit fetch-enable input that can stop instruction fetching, a sleep indicator that reports core activity, and a double-fault flag.
+
+However, Ibex only exposes these ports. It does not aggregate errors across the \ac{SoC}, count error occurrences, or compute any \ac{FT}-related. Furthermore, alert outputs are status signals, not counters, meaning that they remain asserted until cleared. Counting detections, extracting quantitative \ac{FT} metrics, and reacting to reported errors requires the implementation of a fault manager.
 
 \begin{table}[h]
 \centering

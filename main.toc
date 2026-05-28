@@ -28,50 +28,51 @@
 \contentsline {subsection}{\numberline {5.3.3}AXI Bridge for Ibex}{29}{subsection.5.3.3}%
 \contentsline {chapter}{\numberline {6}Py2HWSW Layer}{32}{chapter.6}%
 \contentsline {section}{\numberline {6.1}Fault Tolerance Support Infrastructure}{32}{section.6.1}%
-\contentsline {section}{\numberline {6.2}Hardware Redundancy}{33}{section.6.2}%
-\contentsline {section}{\numberline {6.3}Self-Testing Hardware}{34}{section.6.3}%
-\contentsline {section}{\numberline {6.4}Fault Monitoring and Control Hardware}{35}{section.6.4}%
-\contentsline {subsection}{\numberline {6.4.1}Fault Monitor Hardware}{35}{subsection.6.4.1}%
-\contentsline {subsection}{\numberline {6.4.2}Fault Manager Hardware Module}{37}{subsection.6.4.2}%
-\contentsline {chapter}{\numberline {7}Fatori-V Layer}{39}{chapter.7}%
-\contentsline {section}{\numberline {7.1}Fatori-V Operation Sequence}{39}{section.7.1}%
-\contentsline {section}{\numberline {7.2}Pblock Sizing Model}{40}{section.7.2}%
-\contentsline {subsection}{\numberline {7.2.1}Sizing Equations}{40}{subsection.7.2.1}%
-\contentsline {subsection}{\numberline {7.2.2}Measured Model Parameters}{41}{subsection.7.2.2}%
-\contentsline {section}{\numberline {7.3}Benchmark Porting}{43}{section.7.3}%
-\contentsline {subsection}{\numberline {7.3.1}CoreMark Benchmark}{43}{subsection.7.3.1}%
-\contentsline {subsection}{\numberline {7.3.2}Embench-IoT Benchmark}{44}{subsection.7.3.2}%
-\contentsline {subsection}{\numberline {7.3.3}Fatori Native Benchmark}{44}{subsection.7.3.3}%
-\contentsline {section}{\numberline {7.4}Synchronization, Logging and Metrics Computing}{45}{section.7.4}%
-\contentsline {chapter}{\numberline {8}Fault Injection}{49}{chapter.8}%
-\contentsline {section}{\numberline {8.1}System Overview}{49}{section.8.1}%
-\contentsline {subsection}{\numberline {8.1.1}Injection Targets}{50}{subsection.8.1.1}%
-\contentsline {subsection}{\numberline {8.1.2}User Interface and System Inputs}{51}{subsection.8.1.2}%
-\contentsline {section}{\numberline {8.2}Fault Injection Software}{52}{section.8.2}%
-\contentsline {subsection}{\numberline {8.2.1}Spatial Fault Distributions}{52}{subsection.8.2.1}%
-\contentsline {subsection}{\numberline {8.2.2}Mapping Essential Bits to Injection Addresses}{53}{subsection.8.2.2}%
-\contentsline {subsection}{\numberline {8.2.3}Temporal Fault Distributions}{54}{subsection.8.2.3}%
-\contentsline {section}{\numberline {8.3}Implemented Fault Injection Hardware}{55}{section.8.3}%
-\contentsline {subsection}{\numberline {8.3.1}Flip-Flop and Register Injections}{55}{subsection.8.3.1}%
-\contentsline {subsection}{\numberline {8.3.2}Injection \ac {UART} Router}{56}{subsection.8.3.2}%
-\contentsline {section}{\numberline {8.4}Additional Features}{56}{section.8.4}%
-\contentsline {chapter}{\numberline {9}Experimental Results}{58}{chapter.9}%
-\contentsline {section}{\numberline {9.1}Experimental Setup}{58}{section.9.1}%
-\contentsline {section}{\numberline {9.2}Fatori-V Validation}{59}{section.9.2}%
-\contentsline {section}{\numberline {9.3}Comparison of Fault Tolerance Mechanisms}{61}{section.9.3}%
-\contentsline {subsection}{\numberline {9.3.1}Fault Tolerance}{62}{subsection.9.3.1}%
-\contentsline {subsection}{\numberline {9.3.2}Performance and Hardware Resources}{65}{subsection.9.3.2}%
-\contentsline {section}{\numberline {9.4}Register Redundancy}{66}{section.9.4}%
-\contentsline {subsection}{\numberline {9.4.1}Fault Tolerance}{66}{subsection.9.4.1}%
-\contentsline {subsection}{\numberline {9.4.2}Performance and Hardware Resources}{67}{subsection.9.4.2}%
-\contentsline {section}{\numberline {9.5}Logic Redundancy}{67}{section.9.5}%
-\contentsline {subsection}{\numberline {9.5.1}Fault Tolerance}{68}{subsection.9.5.1}%
-\contentsline {subsection}{\numberline {9.5.2}Performance and Hardware Resources}{69}{subsection.9.5.2}%
-\contentsline {chapter}{\numberline {10}Conclusion}{71}{chapter.10}%
-\contentsline {section}{\numberline {10.1}Summary}{71}{section.10.1}%
-\contentsline {section}{\numberline {10.2}Future Work}{72}{section.10.2}%
-\contentsline {chapter}{Bibliography}{72}{section.10.2}%
-\contentsline {chapter}{\numberline {A}Appendix A: Fatori-V Run File}{78}{appendix.A}%
-\contentsline {chapter}{\numberline {B}Appendix B: System Dictionary File}{80}{appendix.B}%
-\contentsline {chapter}{\numberline {C}Appendix C: Time Profile Template}{81}{appendix.C}%
-\contentsline {chapter}{\numberline {D}Appendix D: Area Profile Template}{82}{appendix.D}%
+\contentsline {section}{\numberline {6.2}Fault Tolerance Support Infrastructure}{33}{section.6.2}%
+\contentsline {section}{\numberline {6.3}Hardware Redundancy}{34}{section.6.3}%
+\contentsline {section}{\numberline {6.4}Self-Testing Hardware}{35}{section.6.4}%
+\contentsline {section}{\numberline {6.5}Fault Monitoring and Control Hardware}{36}{section.6.5}%
+\contentsline {subsection}{\numberline {6.5.1}Fault Monitor Hardware}{36}{subsection.6.5.1}%
+\contentsline {subsection}{\numberline {6.5.2}Fault Manager Hardware Module}{38}{subsection.6.5.2}%
+\contentsline {chapter}{\numberline {7}Fatori-V Layer}{40}{chapter.7}%
+\contentsline {section}{\numberline {7.1}Fatori-V Operation Sequence}{40}{section.7.1}%
+\contentsline {section}{\numberline {7.2}Pblock Sizing Model}{41}{section.7.2}%
+\contentsline {subsection}{\numberline {7.2.1}Sizing Equations}{41}{subsection.7.2.1}%
+\contentsline {subsection}{\numberline {7.2.2}Measured Model Parameters}{42}{subsection.7.2.2}%
+\contentsline {section}{\numberline {7.3}Benchmark Porting}{44}{section.7.3}%
+\contentsline {subsection}{\numberline {7.3.1}CoreMark Benchmark}{44}{subsection.7.3.1}%
+\contentsline {subsection}{\numberline {7.3.2}Embench-IoT Benchmark}{45}{subsection.7.3.2}%
+\contentsline {subsection}{\numberline {7.3.3}Fatori Native Benchmark}{45}{subsection.7.3.3}%
+\contentsline {section}{\numberline {7.4}Synchronization, Logging and Metrics Computing}{46}{section.7.4}%
+\contentsline {chapter}{\numberline {8}Fault Injection}{50}{chapter.8}%
+\contentsline {section}{\numberline {8.1}System Overview}{50}{section.8.1}%
+\contentsline {subsection}{\numberline {8.1.1}Injection Targets}{51}{subsection.8.1.1}%
+\contentsline {subsection}{\numberline {8.1.2}User Interface and System Inputs}{52}{subsection.8.1.2}%
+\contentsline {section}{\numberline {8.2}Fault Injection Software}{53}{section.8.2}%
+\contentsline {subsection}{\numberline {8.2.1}Spatial Fault Distributions}{53}{subsection.8.2.1}%
+\contentsline {subsection}{\numberline {8.2.2}Mapping Essential Bits to Injection Addresses}{54}{subsection.8.2.2}%
+\contentsline {subsection}{\numberline {8.2.3}Temporal Fault Distributions}{55}{subsection.8.2.3}%
+\contentsline {section}{\numberline {8.3}Implemented Fault Injection Hardware}{56}{section.8.3}%
+\contentsline {subsection}{\numberline {8.3.1}Flip-Flop and Register Injections}{56}{subsection.8.3.1}%
+\contentsline {subsection}{\numberline {8.3.2}Injection \ac {UART} Router}{57}{subsection.8.3.2}%
+\contentsline {section}{\numberline {8.4}Additional Features}{57}{section.8.4}%
+\contentsline {chapter}{\numberline {9}Experimental Results}{59}{chapter.9}%
+\contentsline {section}{\numberline {9.1}Experimental Setup}{59}{section.9.1}%
+\contentsline {section}{\numberline {9.2}Fatori-V Validation}{60}{section.9.2}%
+\contentsline {section}{\numberline {9.3}Comparison of Fault Tolerance Mechanisms}{62}{section.9.3}%
+\contentsline {subsection}{\numberline {9.3.1}Fault Tolerance}{63}{subsection.9.3.1}%
+\contentsline {subsection}{\numberline {9.3.2}Performance and Hardware Resources}{66}{subsection.9.3.2}%
+\contentsline {section}{\numberline {9.4}Register Redundancy}{67}{section.9.4}%
+\contentsline {subsection}{\numberline {9.4.1}Fault Tolerance}{67}{subsection.9.4.1}%
+\contentsline {subsection}{\numberline {9.4.2}Performance and Hardware Resources}{68}{subsection.9.4.2}%
+\contentsline {section}{\numberline {9.5}Logic Redundancy}{68}{section.9.5}%
+\contentsline {subsection}{\numberline {9.5.1}Fault Tolerance}{69}{subsection.9.5.1}%
+\contentsline {subsection}{\numberline {9.5.2}Performance and Hardware Resources}{70}{subsection.9.5.2}%
+\contentsline {chapter}{\numberline {10}Conclusion}{72}{chapter.10}%
+\contentsline {section}{\numberline {10.1}Summary}{72}{section.10.1}%
+\contentsline {section}{\numberline {10.2}Future Work}{73}{section.10.2}%
+\contentsline {chapter}{Bibliography}{73}{section.10.2}%
+\contentsline {chapter}{\numberline {A}Appendix A: Fatori-V Run File}{79}{appendix.A}%
+\contentsline {chapter}{\numberline {B}Appendix B: System Dictionary File}{81}{appendix.B}%
+\contentsline {chapter}{\numberline {C}Appendix C: Time Profile Template}{82}{appendix.C}%
+\contentsline {chapter}{\numberline {D}Appendix D: Area Profile Template}{83}{appendix.D}%

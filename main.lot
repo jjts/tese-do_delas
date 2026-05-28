@@ -18,25 +18,25 @@
 \contentsline {table}{\numberline {5.3}{\ignorespaces Ibex error control ports\relax }}{27}{table.caption.95}%
 \contentsline {table}{\numberline {5.4}{\ignorespaces \texttt {iob\_ibex2axi} interface summary. The notation \texttt {ibex\_*} expands to instruction and data ports, and \texttt {*bus} expands to both \texttt {ibus} and \texttt {dbus}.\relax }}{31}{table.caption.98}%
 \addvspace {10\p@ }
-\contentsline {table}{\numberline {6.1}{\ignorespaces Background on the new \acp {FTM} introduced in \ac {Fatori-V}.\relax }}{33}{table.caption.99}%
-\contentsline {table}{\numberline {6.2}{\ignorespaces \ac {Fatori-V} new \acp {CSR} counters implemented in this work.\relax }}{36}{table.caption.102}%
+\contentsline {table}{\numberline {6.1}{\ignorespaces Background on the new \acp {FTM} introduced in \ac {Fatori-V}.\relax }}{34}{table.caption.99}%
+\contentsline {table}{\numberline {6.2}{\ignorespaces \ac {Fatori-V} new \acp {CSR} counters implemented in this work.\relax }}{37}{table.caption.102}%
 \addvspace {10\p@ }
-\contentsline {table}{\numberline {7.1}{\ignorespaces Baseline and feature parameters used by the Pblock Sizing Model.\relax }}{42}{table.caption.104}%
-\contentsline {table}{\numberline {7.2}{\ignorespaces Redundancy parameters used by the Pblock Sizing Model.\relax }}{42}{table.caption.105}%
-\contentsline {table}{\numberline {7.3}{\ignorespaces Hardware cost metrics automatically extracted by \ac {Fatori-V} for every run.\relax }}{46}{table.caption.107}%
-\contentsline {table}{\numberline {7.4}{\ignorespaces Performance metrics automatically extracted and computed by \ac {Fatori-V} for every run.\relax }}{47}{table.caption.108}%
-\contentsline {table}{\numberline {7.5}{\ignorespaces \ac {FT} metrics automatically extracted and computed by \ac {Fatori-V} for every run.\relax }}{48}{table.caption.109}%
+\contentsline {table}{\numberline {7.1}{\ignorespaces Baseline and feature parameters used by the Pblock Sizing Model.\relax }}{43}{table.caption.104}%
+\contentsline {table}{\numberline {7.2}{\ignorespaces Redundancy parameters used by the Pblock Sizing Model.\relax }}{43}{table.caption.105}%
+\contentsline {table}{\numberline {7.3}{\ignorespaces Hardware cost metrics automatically extracted by \ac {Fatori-V} for every run.\relax }}{47}{table.caption.107}%
+\contentsline {table}{\numberline {7.4}{\ignorespaces Performance metrics automatically extracted and computed by \ac {Fatori-V} for every run.\relax }}{48}{table.caption.108}%
+\contentsline {table}{\numberline {7.5}{\ignorespaces \ac {FT} metrics automatically extracted and computed by \ac {Fatori-V} for every run.\relax }}{49}{table.caption.109}%
 \addvspace {10\p@ }
-\contentsline {table}{\numberline {8.1}{\ignorespaces Constants used by the \ac {ACME} implementations in the \ac {FI} tool.\relax }}{54}{table.caption.114}%
+\contentsline {table}{\numberline {8.1}{\ignorespaces Constants used by the \ac {ACME} implementations in the \ac {FI} tool.\relax }}{55}{table.caption.114}%
 \addvspace {10\p@ }
-\contentsline {table}{\numberline {9.1}{\ignorespaces Time profile validation scores obtained from the timestamp logs.\relax }}{61}{table.caption.122}%
-\contentsline {table}{\numberline {9.2}{\ignorespaces Whole Device injection scope \ac {FTM} comparison for the three register/configuration ratios.\relax }}{63}{table.caption.124}%
-\contentsline {table}{\numberline {9.3}{\ignorespaces Pblock targets injection scope \ac {FTM} comparison for the three register/configuration ratios.\relax }}{64}{table.caption.125}%
-\contentsline {table}{\numberline {9.4}{\ignorespaces General \ac {FTM} comparison in terms of hardware cost and timing.\relax }}{65}{table.caption.126}%
-\contentsline {table}{\numberline {9.5}{\ignorespaces Benchmark results and selected Observability values for the Register M-of-N Correction and $N$ studies.\relax }}{66}{table.caption.127}%
-\contentsline {table}{\numberline {9.6}{\ignorespaces Register M-of-N hardware cost and timing across the evaluated configurations.\relax }}{67}{table.caption.128}%
-\contentsline {table}{\numberline {9.7}{\ignorespaces Benchmark Pass results for the Logic M-of-N target study.\relax }}{68}{table.caption.129}%
-\contentsline {table}{\numberline {9.8}{\ignorespaces Logic M-of-N performance and hardware cost across the evaluated targets and replication factors.\relax }}{69}{table.caption.130}%
+\contentsline {table}{\numberline {9.1}{\ignorespaces Time profile validation scores obtained from the timestamp logs.\relax }}{62}{table.caption.122}%
+\contentsline {table}{\numberline {9.2}{\ignorespaces Whole Device injection scope \ac {FTM} comparison for the three register/configuration ratios.\relax }}{64}{table.caption.124}%
+\contentsline {table}{\numberline {9.3}{\ignorespaces Pblock targets injection scope \ac {FTM} comparison for the three register/configuration ratios.\relax }}{65}{table.caption.125}%
+\contentsline {table}{\numberline {9.4}{\ignorespaces General \ac {FTM} comparison in terms of hardware cost and timing.\relax }}{66}{table.caption.126}%
+\contentsline {table}{\numberline {9.5}{\ignorespaces Benchmark results and selected Observability values for the Register M-of-N Correction and $N$ studies.\relax }}{67}{table.caption.127}%
+\contentsline {table}{\numberline {9.6}{\ignorespaces Register M-of-N hardware cost and timing across the evaluated configurations.\relax }}{68}{table.caption.128}%
+\contentsline {table}{\numberline {9.7}{\ignorespaces Benchmark Pass results for the Logic M-of-N target study.\relax }}{69}{table.caption.129}%
+\contentsline {table}{\numberline {9.8}{\ignorespaces Logic M-of-N performance and hardware cost across the evaluated targets and replication factors.\relax }}{70}{table.caption.130}%
 \addvspace {10\p@ }
 \addvspace {10\p@ }
 \addvspace {10\p@ }

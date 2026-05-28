@@ -5,82 +5,67 @@
 \fancychapter{Py2HWSW Layer}
 \label{chap6:fatori_hardware}
 
+
+
+
 % #############################################################################
 \section{Fault Tolerance Support Infrastructure}
 \label{chap6:starting}
 
-This section introduces the build-time macro file interface used throughout \ac{Fatori-V} and the support infrastructure implemented in \cref{chap5:iob-soc-ibex}'s IOb-SoC-Ibex (macros, gating and configuration knobs), followed by the register-wrapping effort that centralizes pipeline registers behind a uniform wrapper for both compliance with industry standards and later extensions.
+The IOb-\ac{SoC}-Ibex described in \cref{chap4:iob-soc-ibex} was developed to stay as close to the native Ibex implementation as possible. In order to meet \ac{Fatori-V}'s requirements, preliminary support infrastructure was added to make the system externally configurable and easier to modify at the \ac{RTL} level.
 
-Before introducing new \acp{FTM}, a preparation phase took place. First, Ibex’s native clock-gating cell was removed from the top module, and the internal clock was wired directly to \texttt{clk\_i}. This was necessary for the architecture to meet timing constraints.
+As described in \cref{chap3:hwvssw}, \ac{Fatori-V} requires the \ac{RTL} to be configured through macro files. IOb-\ac{SoC}-Ibex was modified to use two macro files. The \texttt{fatori\_features.svh} file controls architectural features, such as the ICache, branch prediction, the Writeback Stage, and \ac{ISA} extensions. The \texttt{fatori\_ftm.svh} file controls native Ibex \acp{FTM}. In native Ibex, the SecureIbex flag enables all \acp{FTM} as one group. Through \texttt{fatori\_ftm.svh}, those mechanisms can be enabled independently.
 
-The original single SecureIbex flag, which gated native \acp{FTM} as a single block, was replaced by per-feature macros in \texttt{fatori\_ftm.svh}, so each mechanism (Dummy Instructions, DIT, Lockstep, \ac{PC} hardening, \ac{ECC} enables, and others) can be enabled independently. In the same way, non-\acp{FTM} architectural features (e.g., ICache, Branch Predictor options, Writeback Stage, \ac{ISA} extension variants) are also gated by macros in \texttt{fatori\_features.svh}.
+The native Ibex clock-gating cell was disabled from the Ibex top module, and the internal clock was wired directly to \texttt{clk\_i}, from the \ac{SoC}. This allowed the implemented architecture to meet timing constraints.
 
-\texttt{fatori\_ftm.svh} and \texttt{fatori\_features.svh} can now be used to configure Ibex.
+Ibex originally implemented 186 pipeline registers directly with \texttt{always\_ff} blocks spread across the source files, many times inside cascaded \texttt{if} conditions or complex \acp{FSM}. This made register-level modifications harder to implement. Register Redundancy, planned since the WeeRwolf EL2 work in \cref{chap4:el2}, requires a register to be replaced by multiple replicas and a voter, which cannot be done cleanly while each register is implemented as a separate \texttt{always\_ff} block.
 
-Ibex contains 186 pipeline registers implemented as explicit "\texttt{always\_ff @(posedge clk\_i or negedge rst\_ni) begin}" blocks, which forces any modification to the register infrastructure to be repeated across many scattered instances. Additionally, each register's enable signal relies on cascaded conditional gating (\texttt{if} statements) or complex state machines.
+Each pipeline register was replaced by a \texttt{FATORI\_REG()} or \texttt{FATORI\_REG\_ENUM()} macro call, developed for \ac{Fatori-V} and defined in \texttt{fatori\_macro\_functions.svh}. These macros act as register wrapper entry points. They keep the register call sites uniform and expand to the selected register hardware implementation. By default, the macro expands to IOBundle's \texttt{iob\_reg\_re}. Other register wrappers were implemented for \ac{Fatori-V}, and are described in subsequent sections.
 
-Every register was manually wrapped behind the developed \texttt{FATORI\_REG()} and \texttt{FATORI\_REG\_ENUM()} macros (in \texttt{fatori\_macro\_functions.svh}), and the enable ports were wired to a single-bit signal per register. \texttt{FATORI\_REG()} targets plain logic vectors, while \texttt{FATORI\_REG\_ENUM()} targets typed registers by packing values into a logic vector sized with \texttt{\$bits()} and casting back on output.
+\texttt{FATORI\_REG()} is used for logic vectors. \texttt{FATORI\_REG\_ENUM()} is used for typed registers by packing the input data into a logic vector with \texttt{\$bits()} and casting it back on output. Each register enable logic was also reduced to one explicit \texttt{enable} per-register signal.
 
-Each wrapped register is assigned a unique prefix used to derive internal signal names and identifiers. \texttt{fatori\_registers.yaml} (\cref{chap3:ui_config}), records the prefix, hierarchical path, and \ac{FI} ID for every wrapped register. This turns future work into local wrapper updates instead of repeated edits across the pipeline. The wrapper interface also keeps two unused placeholder ports which Synthesis removes, but keeping them avoids having to update hundreds of call sites if the interface grows later.
+Each wrapped register has a unique prefix used to derive internal signal names and identifiers. The file \texttt{fatori\_registers.yaml}, introduced in \cref{chap3:fatori-v}, stores the prefix, hierarchy path, and ID of every wrapped register.
 
-The wrapper allows each register to have multiple implementations. By the end of this work, each register could be implemented as either the default register (\texttt{iob\_reg.v}), an M-of-N register (\cref{chap6:mofn_reg}), or an \ac{FI} register required by the \ac{FI} flow (\cref{chap8:fatori_fi}).
+
+
+
+
 
 % #############################################################################
-\section{Hardware Redundancy}
+\section{Fault Tolerance Mechanisms}
+\label{chap6:ftms}
+
+Although Ibex already includes native \acp{FTM}, this work expanded that set to make \ac{Fatori-V} a broader evaluation platform. This section details the implementations of the M-of-N Redundancy and Self-Testing \acp{FTM}. 
+
+
+
+% #############################################################################
+\subsection{Hardware Redundancy}
 \label{chap6:mon}
 
-\Cref{tab:new_ftm_background} summarizes each mechanism and the key idea it contributes to the platform.
-Although \ac{Fatori-V} is meant as platform to evaluate \acp{FTM}, it also introduces two new \acp{FTM} in Ibex: M-of-N Systems (with Scrubbing) and Self-Test, both carried out through multiple target-specific implementations (one per protected block). \Cref{chap6:concept_new_ftms} provides background on the concepts, while \cref{chap6:impl_new_ftms} details the implementations and the per-target specifics.
+As introduced in \cref{chap2:ftms}, M-of-N Redundancy (or M-of-N Systems) replicates a block \(N\) times and accepts an output when at least \(M\) replicas agree. In \ac{Fatori-V}, this is applied to wrapped pipeline registers and to selected logic modules. When correction is enabled, the same flow also applies scrubbing by restoring replicas that disagree with the voted value.
 
+Register M-of-N extends the register wrapper introduced in \cref{chap6:starting}. Each register's M-of-N parameters are configured through a new single macro file, \texttt{fatori\_reg\_mon.svh}. The \texttt{*\_MON\_N} macro selects the number of replicas, \texttt{*\_MON\_M} selects the quorum threshold, and \texttt{*\_MON\_CORRECTION} enables correction. When \texttt{M=0}, the threshold is set to strict majority, \(\lfloor N/2 \rfloor + 1\), by the hardware.
 
-\begin{table}[H]
-\centering
-\small
-\setlength{\tabcolsep}{4pt}
-\renewcommand{\arraystretch}{1.2}
-\begin{tabularx}{\textwidth}{|l|X|}
-\hline
-Mechanism & Definition and role \\
-\hline
-M-of-N redundancy &
-Implements spatial redundancy by replicating a module $N$ times and using a voter that accepts an output only when at least $M$ replicas agree. The masking margin is $N-M$, which is the number of faulty replicas that can be tolerated while still producing a valid output. Choosing $M$ at strict majority prioritizes correction capacity, choosing $M$ above strict majority prioritizes earlier detection, and choosing $M$ below strict majority does not produce a valid output and can only be used for detection. \\
-\hline
-Scrubbing &
-Restores corrupted data, when errors occur. While \ac{SEM} supports native scrubbing, this version of \ac{Fatori-V} uses scrubbing as part of the M-of-N flow by triggering corrective actions when faults are detected. \\
-\hline
-Self-testing &
-Uses idle or scheduled opportunities during execution to run predefined computations with known results, allowing the \ac{CPU} to check whether specific modules behave correctly. This can be triggered only during idle periods or periodically, trading overhead for improved detection coverage. \\
-\hline
-\end{tabularx}
-\caption{Background on the new \acp{FTM} introduced in \ac{Fatori-V}.}
-\label{tab:new_ftm_background}
-\end{table}
+When redundancy is disabled, the wrapper keeps the default register implementation. When redundancy is enabled, it instantiates exactly \(N\) physical register replicas using Verilog \texttt{generate} logic. All replicas receive the same input and enable signal.
 
+The register voter compares the replica values and counts how many replicas match each value. A value is accepted only if it reaches the configured quorum and no different value also reaches that quorum. If one or more replicas disagree with the voted value, the wrapper reports a minor error and marks the disagreeing replicas. If no unique value reaches \(M\), the wrapper reports a major error. When correction is enabled, the voted value is written back into the disagreeing replicas, restoring corrupted data.
 
-%\subsection{Register-Level M-of-N}
-%\label{chap6:mofn_reg}
+Logic M-of-N applies the same voting principle to larger hardware modules. Registers can share one common wrapper because they have the same basic interface. Logic modules do not, so each protected target needs a wrapper adapted to its native ports. The need for individual wrappers was the main limiting factor when expanding Logic M-of-N to other modules. In this work, wrappers were developed for \texttt{ibex\_if\_stage}, \texttt{ibex\_controller}, \texttt{ibex\_decoder}, \texttt{ibex\_lsu}, and \texttt{ibex\_alu}.
 
-The register-level M-of-N mechanism extends the wrapper described in \cref{chap6:reg_wrap} so that pipeline registers can be replicated and voted. Each protected register is configured (per-instance) by build-time macros in \texttt{fatori\_reg\_mon.svh}: \texttt{*\_MON\_N} selects the number of replicas $N$, \texttt{*\_MON\_M} selects the quorum $M$ (with \texttt{M=0} mapped to strict majority $|N/2|+1$), and \texttt{\_HOLD} enables scrubbing. This granularity allows different registers to use different $N/M$ (and hold policy) in the same build.
+Logic redundancy is configured through another macro file, \texttt{fatori\_logic\_mon.svh}. Each target uses \texttt{*\_MON\_N}, \texttt{*\_MON\_M}, and \texttt{*\_MON\_HOLD}. When \(N=1\), the native module is instantiated. When \(N>1\), the wrapper instantiates exactly \(N\) replicas with the same inputs and votes their outputs.
 
-The wrapper uses the \texttt{generate} syntax of Verilog to create $N$ physical register replicas, ensuring that the hardware cost is actually dependent on $N$, and a newly developed voter compares their values. If a unique value reaches quorum $M$, that value is forwarded. If replicas disagree while a quorum winner still exists, the wrapper raises \texttt{*\_min\_err\_o} (and a one-cycle \texttt{*\_new\_min\_err\_o} pulse for counting), and the winner is forwarded. If no unique quorum exists (tie), it raises \texttt{*\_maj\_err\_o} (and \texttt{*\_new\_maj\_err\_o}), and the first is forwarded. The fifth output, \texttt{*\_err\_loc\_o}, marks which replicas disagree with the forwarded value.
+Logic M-of-N does not include correction, because that would require accessing the \ac{FPGA}'s configuration memory. Instead, the \texttt{HOLD} feature outputs the last valid voted value when no quorum exists.
 
-When scrubbing is enabled and the voter reaches a correctable quorum, the voted value is written back into disagreeing replicas. Each scrub emits a one-cycle \texttt{scrub\_occurred\_o} pulse that can be counted as a corrected-fault event.
+Each logic wrapper groups the target module's outputs into a packed structure. This structure is converted into a bit vector and sent to \texttt{fatori\_mon\_voter}. The voter receives the replica outputs as an array and uses the configured \(N\) and \(M\) values to compare them. Since \(N\), \(M\), and the voted width are parameters, synthesis elaborates only the comparison and voting hardware required by the selected configuration.
+
+The voter accepts the value produced by at least \(M\) replicas. When a valid value exists, the selected bit vector is cast back to the output structure used by the wrapper, and it is exported to the pipeline.
+
 
 
 
 % -------------------------------------------------------------
-%\subsection{Logic-Level M-of-N}
-%\label{chap6:mofn_logic}
-
-Logic M-of-N differs from register M-of-N (\cref{chap6:mofn_reg}) because registers share a single uniform wrapper, while logic blocks require per-target wrappers. In this work, wrappers were developed for \texttt{ibex\_if\_stage}, \texttt{ibex\_controller}, \texttt{ibex\_decoder}, \texttt{ibex\_lsu}, and \texttt{ibex\_alu}. Each wrapper is instantiated only when the corresponding \texttt{*\_MON\_N} is greater than 1 (otherwise the native module is used), and is configured by the same three parameters as the register mechanism (\texttt{*\_MON\_N}, \texttt{*\_MON\_M}, and \texttt{*\_MON\_HOLD}). \texttt{*\_MON\_HOLD} allows the wrapper to forward the last valid voted output during major error conditions. 
-
-Replication is implemented with a \texttt{generate-for} that instantiates exactly \texttt{N} replicas sharing the same inputs, so resource usage scales with \texttt{N}. Each replica output is packed into a module-specific struct (for example \texttt{alu\_out\_t}), flattened with \texttt{\$bits()}, and voted as one object by \texttt{fatori\_mon\_voter}. When a unique quorum exists, the voter forwards the winning value and asserts \texttt{*\_min\_error} on disagreement, while \texttt{*\_maj\_error} is asserted when no unique winner exists. The signals \texttt{*\_new\_min\_error} and \texttt{*\_new\_maj\_error} are one-cycle pulses that mark new occurrences of the corresponding error classes, and \texttt{*\_hold\_occurred\_error} pulses when an held value was forwarded.
-
-Optional \ac{FI} inputs are broadcast to all replicas when \ac{FI} is enabled (see \cref{chap8:fatori_fi}). Since each replica may include its own \acp{FTM}, it already exports the standard five-signal error interface (\cref{chap6:control_report}), and the MoN wrapper itself also generates the same five signals from its voter and any hold behaviour. Each wrapper ORs each error signal across the replicas and itself, and outputs only one five-signal set.
-
-
-% -------------------------------------------------------------
-\section{Self-Testing Hardware}
+\subsection{Self-Testing Hardware}
 \label{chap6:self_test}
 
 As explained in \cref{chap6:concept_new_ftms}, the developed \ac{ST} \ac{FTM} checks a module by running small computations with known results when that module would otherwise be unused. In \ac{Fatori-V}, \ac{ST} is implemented with one wrapper per target that exposes the same interface as the native block to the rest of the core. Each wrapper internally instantiates both the native module and a developed \ac{ST} Core that drives test patterns into the native inputs through a multiplexer. Four wrappers were developed, for the following targets: \texttt{ibex\_alu}, \texttt{ibex\_multdiv\_*}, \texttt{ibex\_load\_store\_unit}, and the PC adder.
@@ -90,6 +75,13 @@ The \ac{ST} Core holds a small, hardcoded table of test patterns and expected re
 Each wrapper computes \texttt{idle} from native Ibex signals. The \ac{ALU} wrapper reports it during \ac{CSR}, branch, or jump instructions if there is no \ac{LSU} request. The mult/div wrapper uses the \texttt{inflight} signal that reports mult/div usage. The \ac{LSU} wrapper reports idle when the \ac{LSU} displays no active requests and no pending completions. The \ac{PC} increment wrapper reports idle when the IF stage is stalled.
 
 If a real instruction arrives at a target that is executing a test, \texttt{*\_ST\_POLICY} selects how the conflict is handled: avoid only runs tests in cycles where the target is clearly unused; abort may start a test, but cancels it as soon as a real instruction needs the target; and hold lets a test complete by stalling the pipeline when a conflict occurs. Any mismatch is reported through the standard Ibex error classes (\cref{chap5:ibex_ft}).
+
+
+
+
+
+
+
 
 % #############################################################################
 \section{Fault Monitoring and Control Hardware}
@@ -153,7 +145,7 @@ After the hardware monitors are published to \acp{CSR}, firmware uses the \textt
 
 Each \ac{CSR} in \cref{tab:fatori_ft_csrs} is read by a dedicated function in the firmware, implemented through the created \texttt{iob\_csr.h} file and gated by the active Metrics Level. The full set is serialized into a static buffer, called twice in the firmware wrapper: once before the benchmark (\texttt{[pre]} stage) and once after (\texttt{[post]} stage). The resulting buffer contains the \texttt{pre}, \texttt{post} and \texttt{benchmark} (added by each benchmark's wrapper) metrics:
 
-\begin{lstlisting}[style=iob_python]
+\begin{lstlisting}[float=h, style=iob_python, caption={Data measured by the \ac{RTL} and written into a text file by the firmware.}]
 [pre]  mcycle,0x000000000001A2B3
 [pre]  fatori_minor_cnt,0
 [benchmark]  coremark_size,36
@@ -164,6 +156,8 @@ Each \ac{CSR} in \cref{tab:fatori_ft_csrs} is read by a dedicated function in th
 Once populated, the firmware transmits the buffer over \ac{UART} using the functions by IOBundle. The Py2HWSW console, running in the host, converts the buffer into a text file, naming it \texttt{metrics.txt}. On the host, the IOb-Console script intercepts this transfer and writes the file to disk under the \ac{FPGA} build directory. This is the only point at which \texttt{metrics.txt} is created as a physical file, the \ac{FPGA} itself never accesses the filesystem.
 
 The \texttt{metrics.txt} file is considered a raw metrics file. The Results Stage of the Software Layer (\cref{chap7:results_stage}) will use these raw metrics as operands in the formulas defined centrally in the configuration files (see \cref{chap3:ui_config}), creating the results tables that are displayed in \cref{chap3:ui_results}.
+
+
 
 % -------------------------------------------------------------
 \subsection{Fault Manager Hardware Module}

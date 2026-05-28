@@ -2170,11 +2170,11 @@ INPUT ./Chapters/fc_description_7.tex
 INPUT ./Chapters/fc_description_7.tex
 INPUT ./Chapters/fc_description_7.tex
 INPUT ./Chapters/fc_description_7.tex
-INPUT ./Images/chap3_layers.jpg
-INPUT ./Images/chap3_layers.jpg
-INPUT Images/chap3_layers.jpg
-INPUT ./Images/chap3_layers.jpg
-INPUT ./Images/chap3_layers.jpg
+INPUT ./Images/chap3_layers.png
+INPUT ./Images/chap3_layers.png
+INPUT Images/chap3_layers.png
+INPUT ./Images/chap3_layers.png
+INPUT ./Images/chap3_layers.png
 INPUT /usr/share/texlive/texmf-dist/fonts/tfm/adobe/helvetic/phvr7t.tfm
 INPUT ./Chapters/Thesis-MSc-Chapter_8.tex
 INPUT ./Chapters/Thesis-MSc-Chapter_8.tex
