@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.22 (TeX Live 2022/dev/Debian) (preloaded format=pdflatex 2026.1.30)  28 MAY 2026 12:04
+This is pdfTeX, Version 3.141592653-2.6-1.40.22 (TeX Live 2022/dev/Debian) (preloaded format=pdflatex 2026.1.30)  28 MAY 2026 17:13
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1425,10 +1425,28 @@ LaTeX Warning: Label `acro:ACME@cref' multiply defined.
 LaTeX Warning: Label `acro:UART@cref' multiply defined.
 
 
-LaTeX Warning: Label `chap6:starting' multiply defined.
+LaTeX Warning: Label `chap6:control_report' multiply defined.
 
 
-LaTeX Warning: Label `chap6:starting@cref' multiply defined.
+LaTeX Warning: Label `chap6:control_report@cref' multiply defined.
+
+
+LaTeX Warning: Label `chap6:metrics_hw' multiply defined.
+
+
+LaTeX Warning: Label `chap6:metrics_hw@cref' multiply defined.
+
+
+LaTeX Warning: Label `tab:fatori_ft_csrs' multiply defined.
+
+
+LaTeX Warning: Label `tab:fatori_ft_csrs@cref' multiply defined.
+
+
+LaTeX Warning: Label `chap6:fault_mgr' multiply defined.
+
+
+LaTeX Warning: Label `chap6:fault_mgr@cref' multiply defined.
 
 
 LaTeX Warning: Label `acro:MMPP2@cref' multiply defined.
@@ -1525,7 +1543,7 @@ LaTeX Info: Redefining \nameref on input line 45.
 \c@Changes@commentCountPT=\count426
 )
 TextBlockOrigin set to -5mm x 0mm
-<./Images/IST_A_RGB_POS.png, id=343, 509.905pt x 198.7425pt>
+<./Images/IST_A_RGB_POS.png, id=359, 509.905pt x 198.7425pt>
 File: ./Images/IST_A_RGB_POS.png Graphic file (type png)
 <use ./Images/IST_A_RGB_POS.png>
 Package pdftex.def Info: ./Images/IST_A_RGB_POS.png  used on input line 51.
@@ -1593,7 +1611,7 @@ File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 ]
 Package acronym Info: Label `acro:UART' newly defined as it shall be overridden
 
-although it is yet undefined on input line 57.
+although it is yet undefined on input line 61.
  [4])
 \tf@toc=\write8
 \openout8 = `main.toc'.
@@ -1612,10 +1630,10 @@ although it is yet undefined on input line 26.
 
 ] (./main.lot
 Package acronym Info: Label `acro:FT' newly defined as it shall be overridden
-although it is yet undefined on input line 4.
-Package acronym Info: Label `acro:FI' overridden on input line 4.
-Package acronym Info: Label `acro:FTM' overridden on input line 4.
-Package acronym Info: Label `acro:RISC-V' overridden on input line 5.
+although it is yet undefined on input line 6.
+Package acronym Info: Label `acro:FI' overridden on input line 6.
+Package acronym Info: Label `acro:FTM' overridden on input line 6.
+Package acronym Info: Label `acro:RISC-V' overridden on input line 7.
 Package acronym Info: Label `acro:CSR' newly defined as it shall be overridden
 although it is yet undefined on input line 16.
 Package acronym Info: Label `acro:ACME' newly defined as it shall be overridden
@@ -1628,6 +1646,14 @@ although it is yet undefined on input line 30.
 \openout10 = `main.lot'.
 
  [8] (./Chapters/Thesis-MSc-Acronyms.tex
+
+LaTeX Warning: Hyper reference `acro:HPM' on page ix undefined on input line 35
+.
+
+
+LaTeX Warning: Hyper reference `acro:HPM' on page ix undefined on input line 35
+.
+
 [9
 
 ]pdfTeX warning (ext4): destination with the same identifier (name{CPU}) has be
@@ -1674,27 +1700,72 @@ Package acronym Info: Label `acro:ACME' overridden on input line 57.
 Package acronym Info: Label `acro:EBD' newly defined as it shall be overridden
 although it is yet undefined on input line 57.
  [4]
-LaTeX Font Info:    Trying to load font information for TS1+phv on input line 8
-1.
+LaTeX Font Info:    Trying to load font information for TS1+phv on input line 7
+6.
  (/usr/share/texlive/texmf-dist/tex/latex/psnfss/ts1phv.fd
 File: ts1phv.fd 2020/03/25 scalable font definitions for TS1/phv.
 )
 Package acronym Info: Label `acro:UI' newly defined as it shall be overridden
-although it is yet undefined on input line 83.
+although it is yet undefined on input line 78.
 Package acronym Info: Label `acro:CPU' newly defined as it shall be overridden
-although it is yet undefined on input line 87.
+although it is yet undefined on input line 82.
 )
 (./Chapters/Thesis-MSc-Chapter_2.tex [5]
 Chapter 2.
 (./Chapters/fc_description_2.tex)
-Underfull \vbox (badness 10000) has occurred while \output is active []
+Package acronym Info: Label `acro:SRAM' newly defined as it shall be overridden
+
+although it is yet undefined on input line 16.
+Package acronym Info: Label `acro:LUT' newly defined as it shall be overridden
+although it is yet undefined on input line 24.
+Package acronym Info: Label `acro:CLB' newly defined as it shall be overridden
+although it is yet undefined on input line 28.
+
+Underfull \vbox (badness 1163) has occurred while \output is active []
 
  [6
 
 ]
-Overfull \hbox (0.73509pt too wide) in paragraph at lines 116--116
- []|\OT1/phv/m/n/7 Doc.| 
+Package acronym Info: Label `acro:IP' newly defined as it shall be overridden
+although it is yet undefined on input line 41.
+Package acronym Info: Label `acro:ICAP' newly defined as it shall be overridden
+
+although it is yet undefined on input line 41.
+
+Overfull \hbox (1.63113pt too wide) in paragraph at lines 41--42
+\OT1/phv/m/n/10 pointed to spe-cific mod-ules with [][]-based [][] tar-get-ing 
+and ex-e-cuted us-ing Xil-inx's [][] [][][][]Intellectual
  []
+
+Package acronym Info: Label `acro:FSM' newly defined as it shall be overridden
+although it is yet undefined on input line 45.
+<Images/SEM_State_Machine.png, id=1078, 469.755pt x 312.2064pt>
+File: Images/SEM_State_Machine.png Graphic file (type png)
+<use Images/SEM_State_Machine.png>
+Package pdftex.def Info: Images/SEM_State_Machine.png  used on input line 49.
+(pdftex.def)             Requested size: 400.617pt x 266.25801pt.
+
+LaTeX Warning: `h' float specifier changed to `ht'.
+
+
+LaTeX Warning: `h' float specifier changed to `ht'.
+
+
+LaTeX Warning: `h' float specifier changed to `ht'.
+
+LaTeX Font Info:    Trying to load font information for OT1+pcr on input line 1
+04.
+(/usr/share/texlive/texmf-dist/tex/latex/psnfss/ot1pcr.fd
+File: ot1pcr.fd 2001/06/04 font definitions for OT1/pcr.
+)
+LaTeX Font Info:    Trying to load font information for OML+pcr on input line 1
+05.
+
+(/usr/share/texlive/texmf-dist/tex/latex/psnfss/omlpcr.fd
+File: omlpcr.fd 
+)
+LaTeX Font Info:    Font shape `OML/pcr/m/n' in size <9> not available
+(Font)              Font shape `OML/cmm/m/it' tried instead on input line 105.
 
 
 LaTeX Warning: `h' float specifier changed to `ht'.
@@ -1703,82 +1774,51 @@ LaTeX Warning: `h' float specifier changed to `ht'.
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
  [7]
-Package acronym Info: Label `acro:SRAM' newly defined as it shall be overridden
-
-although it is yet undefined on input line 211.
-Package acronym Info: Label `acro:LUT' newly defined as it shall be overridden
-although it is yet undefined on input line 219.
-
-Underfull \vbox (badness 3058) has occurred while \output is active []
-
- [8]
-Package acronym Info: Label `acro:CLB' newly defined as it shall be overridden
-although it is yet undefined on input line 223.
-Package acronym Info: Label `acro:IP' newly defined as it shall be overridden
-although it is yet undefined on input line 236.
-Package acronym Info: Label `acro:ICAP' newly defined as it shall be overridden
-
-although it is yet undefined on input line 236.
-
-Overfull \hbox (1.63113pt too wide) in paragraph at lines 236--237
-\OT1/phv/m/n/10 pointed to spe-cific mod-ules with [][]-based [][] tar-get-ing 
-and ex-e-cuted us-ing Xil-inx's [][] [][][][]Intellectual
- []
-
-Package acronym Info: Label `acro:FSM' newly defined as it shall be overridden
-although it is yet undefined on input line 240.
-[9]
-<Images/SEM_State_Machine.png, id=1201, 469.755pt x 312.2064pt>
-File: Images/SEM_State_Machine.png Graphic file (type png)
-<use Images/SEM_State_Machine.png>
-Package pdftex.def Info: Images/SEM_State_Machine.png  used on input line 244.
-(pdftex.def)             Requested size: 400.617pt x 266.25801pt.
-
-
-LaTeX Warning: `h' float specifier changed to `ht'.
-
-
-LaTeX Warning: `h' float specifier changed to `ht'.
-
-LaTeX Font Info:    Trying to load font information for OT1+pcr on input line 2
-99.
-(/usr/share/texlive/texmf-dist/tex/latex/psnfss/ot1pcr.fd
-File: ot1pcr.fd 2001/06/04 font definitions for OT1/pcr.
-)
-LaTeX Font Info:    Trying to load font information for OML+pcr on input line 3
-00.
-
-(/usr/share/texlive/texmf-dist/tex/latex/psnfss/omlpcr.fd
-File: omlpcr.fd 
-)
-LaTeX Font Info:    Font shape `OML/pcr/m/n' in size <9> not available
-(Font)              Font shape `OML/cmm/m/it' tried instead on input line 300.
-
-Underfull \vbox (badness 2635) has occurred while \output is active []
-
- [10 <./Images/SEM_State_Machine.png>]
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
- [11]
-LaTeX Font Info:    Trying to load font information for OMS+phv on input line 3
-43.
+ [8 <./Images/SEM_State_Machine.png>]
+Underfull \vbox (badness 1418) has occurred while \output is active []
+
+ [9]
+LaTeX Font Info:    Trying to load font information for OMS+phv on input line 1
+48.
 
 (/usr/share/texlive/texmf-dist/tex/latex/psnfss/omsphv.fd
 File: omsphv.fd 
 )
 LaTeX Font Info:    Font shape `OMS/phv/m/n' in size <10> not available
-(Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 343.
-)
-(./Chapters/Thesis-MSc-Chapter_3.tex [12]
+(Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 148.
+Package acronym Info: Label `acro:ECC' newly defined as it shall be overridden
+although it is yet undefined on input line 172.
+ [10]
+
+LaTeX Warning: `h' float specifier changed to `ht'.
+
+
+Underfull \vbox (badness 1152) has occurred while \output is active []
+
+ [11]
+Overfull \hbox (0.73509pt too wide) in paragraph at lines 295--295
+ []|\OT1/phv/m/n/7 Doc.| 
+ []
+
+
+LaTeX Warning: `h' float specifier changed to `ht'.
+
+
+Underfull \vbox (badness 7168) has occurred while \output is active []
+
+ [12])
+(./Chapters/Thesis-MSc-Chapter_3.tex [13]
 Chapter 3.
 (./Chapters/fc_description_3.tex)
-<Images/chap3_layers_simple.png, id=1266, 801.9561pt x 498.663pt>
+<Images/chap3_layers_simple.png, id=1294, 801.9561pt x 498.663pt>
 File: Images/chap3_layers_simple.png Graphic file (type png)
 <use Images/chap3_layers_simple.png>
 Package pdftex.def Info: Images/chap3_layers_simple.png  used on input line 15.
 
 (pdftex.def)             Requested size: 318.66946pt x 198.15291pt.
- [13
+ [14
 
  <./Images/chap3_layers_simple.png>]
 (/usr/share/texlive/texmf-dist/tex/latex/ucs/data/uni-32.def
@@ -1786,7 +1826,7 @@ File: uni-32.def 2013/05/13 UCS: Unicode data U+2000..U+20FF
 )
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
- [14]
+ [15]
 LaTeX Info: Symbol \textasciigrave not provided by
             font family pcr in TS1 encoding.
             Default family used instead on input line 87.
@@ -1799,7 +1839,7 @@ LaTeX Info: Symbol \textasciigrave not provided by
 LaTeX Info: Symbol \textasciigrave not provided by
             font family pcr in TS1 encoding.
             Default family used instead on input line 90.
-<Images/folder_hierarchy.jpg, id=1296, 248.8497pt x 370.0224pt>
+<Images/folder_hierarchy.jpg, id=1325, 248.8497pt x 370.0224pt>
 File: Images/folder_hierarchy.jpg Graphic file (type jpg)
 <use Images/folder_hierarchy.jpg>
 Package pdftex.def Info: Images/folder_hierarchy.jpg  used on input line 99.
@@ -1811,7 +1851,7 @@ LaTeX Warning: `h' float specifier changed to `ht'.
 
 Underfull \vbox (badness 1783) has occurred while \output is active []
 
- [15]
+ [16]
 
 LaTeX Warning: `h' float specifier changed to `ht'.
 
@@ -1859,13 +1899,13 @@ t-
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
- [16 <./Images/folder_hierarchy.jpg>]
-<Images/input_config.jpg, id=1337, 285.4665pt x 682.9515pt>
+ [17 <./Images/folder_hierarchy.jpg>]
+<Images/input_config.jpg, id=1365, 285.4665pt x 682.9515pt>
 File: Images/input_config.jpg Graphic file (type jpg)
 <use Images/input_config.jpg>
 Package pdftex.def Info: Images/input_config.jpg  used on input line 231.
 (pdftex.def)             Requested size: 102.42921pt x 245.04951pt.
-<Images/results.jpg, id=1338, 370.2633pt x 683.1924pt>
+<Images/results.jpg, id=1366, 370.2633pt x 683.1924pt>
 File: Images/results.jpg Graphic file (type jpg)
 <use Images/results.jpg>
 Package pdftex.def Info: Images/results.jpg  used on input line 237.
@@ -1907,7 +1947,7 @@ Underfull \hbox (badness 10000) in paragraph at lines 311--311
 []|\OT1/phv/m/n/7 instructions[]per[]cycle:
  []
 
-[17]
+[18]
 Underfull \hbox (badness 10000) in paragraph at lines 373--373
 []|\OT1/phv/m/n/7 Design:
  []
@@ -1927,16 +1967,16 @@ Underfull \hbox (badness 10000) in paragraph at lines 373--373
 []|\OT1/phv/m/n/7 DDs Uti-liza-tion %:
  []
 
-) (./Chapters/Thesis-MSc-Chapter_4.tex [18] [19 <./Images/input_config.jpg> <./
+) (./Chapters/Thesis-MSc-Chapter_4.tex [19] [20 <./Images/input_config.jpg> <./
 Images/results.jpg>]
 Chapter 4.
 (./Chapters/fc_description_4.tex)
-<Images/VeeRwolf.png, id=1369, 561.516pt x 378.651pt>
+<Images/VeeRwolf.png, id=1397, 561.516pt x 378.651pt>
 File: Images/VeeRwolf.png Graphic file (type png)
 <use Images/VeeRwolf.png>
 Package pdftex.def Info: Images/VeeRwolf.png  used on input line 19.
 (pdftex.def)             Requested size: 227.62204pt x 153.49725pt.
-<Images/VeeR EL2 Core.png, id=1372, 602.25pt x 471.26062pt>
+<Images/VeeR EL2 Core.png, id=1400, 602.25pt x 471.26062pt>
 File: Images/VeeR EL2 Core.png Graphic file (type png)
 <use Images/VeeR EL2 Core.png>
 Package pdftex.def Info: Images/VeeR EL2 Core.png  used on input line 26.
@@ -1951,7 +1991,7 @@ Package acronym Info: Label `acro:DMA' newly defined as it shall be overridden
 although it is yet undefined on input line 34.
 Package acronym Info: Label `acro:AHB' newly defined as it shall be overridden
 although it is yet undefined on input line 34.
-<./Images/EL2_Full_Pipeline.png, id=1380, 930.47626pt x 227.34938pt>
+<./Images/EL2_Full_Pipeline.png, id=1408, 930.47626pt x 227.34938pt>
 File: ./Images/EL2_Full_Pipeline.png Graphic file (type png)
 <use ./Images/EL2_Full_Pipeline.png>
 Package pdftex.def Info: ./Images/EL2_Full_Pipeline.png  used on input line 38.
@@ -1963,12 +2003,10 @@ LaTeX Warning: `h' float specifier changed to `ht'.
 
 Package acronym Info: Label `acro:PC' newly defined as it shall be overridden
 although it is yet undefined on input line 43.
-Package acronym Info: Label `acro:ECC' newly defined as it shall be overridden
-although it is yet undefined on input line 43.
 
 Underfull \vbox (badness 3343) has occurred while \output is active []
 
- [20
+ [21
 
  <./Images/VeeRwolf.png> <./Images/VeeR EL2 Core.png>]
 Package acronym Info: Label `acro:UART' overridden on input line 45.
@@ -1982,7 +2020,7 @@ although it is yet undefined on input line 45.
 Package acronym Info: Label `acro:JTAG' newly defined as it shall be overridden
 
 although it is yet undefined on input line 45.
-<./Images/EL2_Full_Pipe_Faul_Tolerance_Baseline.png, id=1403, 2160.3912pt x 425
+<./Images/EL2_Full_Pipe_Faul_Tolerance_Baseline.png, id=1432, 2160.3912pt x 425
 .1885pt>
 File: ./Images/EL2_Full_Pipe_Faul_Tolerance_Baseline.png Graphic file (type png
 )
@@ -1998,75 +2036,56 @@ Package acronym Info: Label `acro:TMR' newly defined as it shall be overridden
 although it is yet undefined on input line 62.
 Package acronym Info: Label `acro:ALU' newly defined as it shall be overridden
 although it is yet undefined on input line 62.
-[21 <./Images/EL2_Full_Pipeline.png>]
+[22 <./Images/EL2_Full_Pipeline.png>]
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
- [22 <./Images/EL2_Full_Pipe_Faul_Tolerance_Baseline.png>])
-(./Chapters/Thesis-MSc-Chapter_5.tex [23]
+ [23 <./Images/EL2_Full_Pipe_Faul_Tolerance_Baseline.png>])
+(./Chapters/Thesis-MSc-Chapter_5.tex [24]
 Chapter 5.
 (./Chapters/fc_description_5.tex)
-<Images/chap5_ibex.jpg, id=1460, 674.0382pt x 536.0025pt>
+<Images/chap5_ibex.jpg, id=1488, 674.0382pt x 536.0025pt>
 File: Images/chap5_ibex.jpg Graphic file (type jpg)
 <use Images/chap5_ibex.jpg>
 Package pdftex.def Info: Images/chap5_ibex.jpg  used on input line 18.
 (pdftex.def)             Requested size: 182.09485pt x 144.8044pt.
-<Images/chap5_iob-soc-ibex.jpg, id=1461, 508.299pt x 309.3156pt>
+<Images/chap5_iob-soc-ibex.jpg, id=1489, 508.299pt x 309.3156pt>
 File: Images/chap5_iob-soc-ibex.jpg Graphic file (type jpg)
 <use Images/chap5_iob-soc-ibex.jpg>
 Package pdftex.def Info: Images/chap5_iob-soc-ibex.jpg  used on input line 25.
 (pdftex.def)             Requested size: 250.38562pt x 152.3636pt.
- [24
+ [25
 
- <./Images/chap5_ibex.jpg> <./Images/chap5_iob-soc-ibex.jpg>]
-Underfull \hbox (badness 6893) in paragraph at lines 157--157
+ <./Images/chap5_ibex.jpg> <./Images/chap5_iob-soc-ibex.jpg>] [26]
+Underfull \hbox (badness 6893) in paragraph at lines 124--124
 []|\OT1/phv/m/n/10 Corrected [][], retryable
  []
 
 
-Underfull \hbox (badness 1931) in paragraph at lines 157--157
+Underfull \hbox (badness 1931) in paragraph at lines 124--124
 []|\OT1/phv/m/n/10 Reports a non-recoverable con-di-tion de-
  []
 
 
-Underfull \hbox (badness 1931) in paragraph at lines 157--157
+Underfull \hbox (badness 1931) in paragraph at lines 124--124
 []|\OT1/phv/m/n/10 Reports a non-recoverable con-di-tion de-
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 157--157
+Underfull \hbox (badness 10000) in paragraph at lines 124--124
 []|\OT1/phv/m/n/10 Bad check-bits, cor-rupted
  []
 
-
-LaTeX Warning: `h' float specifier changed to `ht'.
-
-
-Underfull \vbox (badness 2735) has occurred while \output is active []
-
- [25]
-[26]
-Underfull \vbox (badness 2005) has occurred while \output is active []
-
- [27]
+[27] [28]
 LaTeX Font Info:    Trying to load font information for TS1+pcr on input line 1
-95.
-
-(/usr/share/texlive/texmf-dist/tex/latex/psnfss/ts1pcr.fd
+62.
+ (/usr/share/texlive/texmf-dist/tex/latex/psnfss/ts1pcr.fd
 File: ts1pcr.fd 2001/06/04 font definitions for TS1/pcr.
 )
-
-LaTeX Warning: `h' float specifier changed to `ht'.
-
-[28]
-<./Images/Ibex Protocol.png, id=1577, 506.39188pt x 224.84pt>
+<./Images/Ibex Protocol.png, id=1585, 506.39188pt x 224.84pt>
 File: ./Images/Ibex Protocol.png Graphic file (type png)
 <use ./Images/Ibex Protocol.png>
-Package pdftex.def Info: ./Images/Ibex Protocol.png  used on input line 219.
+Package pdftex.def Info: ./Images/Ibex Protocol.png  used on input line 186.
 (pdftex.def)             Requested size: 409.71689pt x 181.92041pt.
-
-
-LaTeX Warning: `h' float specifier changed to `ht'.
-
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
@@ -2075,124 +2094,132 @@ Underfull \vbox (badness 10000) has occurred while \output is active []
 LaTeX Warning: `h' float specifier changed to `ht'.
 
 
-Overfull \hbox (2.11519pt too wide) in paragraph at lines 332--333
+Overfull \hbox (2.11519pt too wide) in paragraph at lines 299--300
 \OT1/phv/m/n/10 re-quest sig-nal is routed ei-ther to the [][] read ad-dress ch
 an-nel, $[] \OT1/cmr/m/n/10 = [] &  \OMS/cmsy/m/n/10 ^^X
  []
 
-) (./Chapters/Thesis-MSc-Chapter_6.tex [30 <./Images/Ibex Protocol.png>]
-[31]
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+ [30 <./Images/Ibex Protocol.png>]) (./Chapters/Thesis-MSc-Chapter_6.tex
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+ [31]
+[32]
 Chapter 6.
 (./Chapters/fc_description_6.tex)
+
+LaTeX Warning: Reference `chap4:iob-soc-ibex' on page 1 undefined on input line
+ 15.
+
 LaTeX Font Info:    Trying to load font information for TS1+cmtt on input line 
 25.
-
 (/usr/share/texlive/texmf-dist/tex/latex/base/ts1cmtt.fd
 File: ts1cmtt.fd 2019/12/16 v2.5j Standard LaTeX font definitions
-) [32
+) [33
 
-]
-Overfull \hbox (9.48152pt too wide) in paragraph at lines 47--48
-[]\OT1/phv/m/n/10 Ibex con-tains 186 pipeline reg-is-ters im-ple-mented as ex-p
-licit "\OT1/cmtt/m/n/10 always[]ff @(posedge clk[]i or negedge
+] [34]
+Package acronym Info: Label `acro:ST' newly defined as it shall be overridden
+although it is yet undefined on input line 72.
+Package acronym Info: Label `acro:LSU' newly defined as it shall be overridden
+although it is yet undefined on input line 76.
+
+Underfull \vbox (badness 3049) has occurred while \output is active []
+
+ [35]
+Overfull \hbox (9.56119pt too wide) in paragraph at lines 112--113
+[]\OT1/phv/m/n/10 The amount of mon-i-tor-ing hard-ware is se-lected by the Met
+-ric Level con-fig-ured in \OT1/cmtt/m/n/10 fatori[]features.svh\OT1/phv/m/n/10
+ .
  []
 
 
-LaTeX Warning: Reference `chap3:ui_config' on page 1 undefined on input line 51
-.
+LaTeX Warning: `h' float specifier changed to `ht'.
+
+[36]
+
+LaTeX Warning: `h' float specifier changed to `ht'.
 
 
-LaTeX Warning: Reference `chap6:mofn_reg' on page 1 undefined on input line 53.
-
-
-
-LaTeX Warning: Reference `chap6:concept_new_ftms' on page 1 undefined on input 
-line 65.
-
-
-LaTeX Warning: Reference `chap6:impl_new_ftms' on page 1 undefined on input lin
-e 65.
-
-
-Underfull \vbox (badness 10000) has occurred while \output is active []
-
- [33]
-
-LaTeX Warning: Reference `chap6:reg_wrap' on page 1 undefined on input line 95.
-
-
-
-LaTeX Warning: Reference `chap6:mofn_reg' on page 1 undefined on input line 107
-.
+Overfull \hbox (33.11073pt too wide) in paragraph at lines 233--234
+[]\OT1/phv/m/n/10 The amount of mon-i-tor-ing hard-ware is se-lected through th
+e Met-ric Level con-fig-ured in \OT1/cmtt/m/n/10 fatori[]features.svh\OT1/phv/m
+/n/10 .
+ []
 
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
- [34]
+ [37]
 
-LaTeX Warning: Reference `chap6:concept_new_ftms' on page 1 undefined on input 
-line 118.
-
-Package acronym Info: Label `acro:ST' newly defined as it shall be overridden
-although it is yet undefined on input line 118.
-Package acronym Info: Label `acro:LSU' newly defined as it shall be overridden
-although it is yet undefined on input line 120.
-
-Underfull \vbox (badness 7704) has occurred while \output is active []
-
- [35]
-Underfull \vbox (badness 10000) has occurred while \output is active []
-
- [36]
-
-LaTeX Warning: Reference `chap6:error_agg' on page 1 undefined on input line 18
-0.
-
-[37]
-
-LaTeX Warning: Reference `chap7:results_stage' on page 1 undefined on input lin
-e 198.
+LaTeX Warning: Reference `chap5:ibex_ft' on page 1 undefined on input line 254.
 
 
-LaTeX Warning: Reference `chap3:ui_config' on page 1 undefined on input line 19
+
+LaTeX Warning: Reference `chap5:ibex_ft' on page 1 undefined on input line 255.
+
+
+
+Underfull \vbox (badness 6252) has occurred while \output is active []
+
+ [38]
+
+LaTeX Warning: Reference `chap6:error_agg' on page 1 undefined on input line 29
 8.
 
 
-LaTeX Warning: Reference `chap3:ui_results' on page 1 undefined on input line 1
-98.
+LaTeX Warning: `h' float specifier changed to `ht'.
 
 
-LaTeX Warning: Reference `chap6:error_agg' on page 1 undefined on input line 20
+LaTeX Warning: Reference `chap7:results_stage' on page 1 undefined on input lin
+e 316.
+
+
+LaTeX Warning: Reference `chap3:ui_config' on page 1 undefined on input line 31
+6.
+
+
+LaTeX Warning: Reference `chap3:ui_results' on page 1 undefined on input line 3
+16.
+
+[39]
+
+LaTeX Warning: Reference `chap6:error_agg' on page 1 undefined on input line 32
 4.
 
 
+LaTeX Warning: Reference `chap5:ibex_ft' on page 1 undefined on input line 324.
+
+
+
 LaTeX Warning: Reference `chap6:metrics_hw_impl' on page 1 undefined on input l
-ine 204.
+ine 324.
 
 
-LaTeX Warning: Reference `chap6:error_agg' on page 1 undefined on input line 20
+LaTeX Warning: Reference `chap6:error_agg' on page 1 undefined on input line 32
 8.
 
 
-LaTeX Warning: Reference `chap6:reg_wrap' on page 1 undefined on input line 208
+LaTeX Warning: Reference `chap6:reg_wrap' on page 1 undefined on input line 328
 .
 
 
 LaTeX Warning: Reference `chap6:metrics_hw_impl' on page 1 undefined on input l
-ine 208.
+ine 328.
 
-) (./Chapters/Thesis-MSc-Chapter_7.tex [38] [39]
+) (./Chapters/Thesis-MSc-Chapter_7.tex [40] [41]
 Chapter 7.
 (./Chapters/fc_description_7.tex)
-<Images/chap3_layers.png, id=1812, 1215.5814pt x 556.9608pt>
+<Images/chap3_layers.png, id=1841, 1215.5814pt x 556.9608pt>
 File: Images/chap3_layers.png Graphic file (type png)
 <use Images/chap3_layers.png>
 Package pdftex.def Info: Images/chap3_layers.png  used on input line 14.
 (pdftex.def)             Requested size: 409.71689pt x 187.72394pt.
- [40
+ [42
 
- <./Images/chap3_layers.png>] [41]
-[42]
+ <./Images/chap3_layers.png>] [43]
+[44]
 ! Package array Error:  Illegal pream-token (x): `c' used.
 
 See the array package documentation for explanation.
@@ -2364,7 +2391,7 @@ Underfull \hbox (badness 10000) in paragraph at lines 271--271
 \OT1/phv/m/n/7 in-struc-tion
  []
 
-[43]
+[45]
 Package acronym Info: Label `acro:CRC' newly defined as it shall be overridden
 although it is yet undefined on input line 301.
 
@@ -2377,11 +2404,11 @@ h \OT1/phv/m/n/10 files. The header se-lects static mem-ory through \OT1/cmtt/m
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
- [44]
-[45]
+ [46]
+[47]
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
- [46]
+ [48]
 ! Package array Error:  Illegal pream-token (x): `c' used.
 
 See the array package documentation for explanation.
@@ -2615,10 +2642,10 @@ Underfull \hbox (badness 6236) in paragraph at lines 675--675
 
 LaTeX Warning: `h' float specifier changed to `ht'.
 
-) (./Chapters/Thesis-MSc-Chapter_8.tex [47] [48] [49]
+) (./Chapters/Thesis-MSc-Chapter_8.tex [49] [50] [51]
 Chapter 8.
 (./Chapters/fc_description_8.tex)
-<Images/chap8_fi_system.png, id=2092, 1324.95pt x 1168.6059pt>
+<Images/chap8_fi_system.png, id=2123, 1324.95pt x 1168.6059pt>
 File: Images/chap8_fi_system.png Graphic file (type png)
 <use Images/chap8_fi_system.png>
 Package pdftex.def Info: Images/chap8_fi_system.png  used on input line 20.
@@ -2630,7 +2657,7 @@ LaTeX Warning: `h' float specifier changed to `ht'.
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
- [50
+ [52
 
 ]
 
@@ -2639,14 +2666,14 @@ LaTeX Warning: `h' float specifier changed to `ht'.
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
- [51 <./Images/chap8_fi_system.png>]
+ [53 <./Images/chap8_fi_system.png>]
 
 LaTeX Warning: `h' float specifier changed to `ht'.
 
 
 Underfull \vbox (badness 3375) has occurred while \output is active []
 
- [52]
+ [54]
 Overfull \hbox (8.62143pt too wide) in paragraph at lines 112--113
 []\OT1/phv/m/n/10 Each Area Pro-file fol-lows the fixed in-ter-face shown in ap
 -pendix [][]D[][]. It is loaded from \OT1/cmtt/m/n/10 fi/profiles/area/\OT1/phv
@@ -2656,7 +2683,7 @@ Overfull \hbox (8.62143pt too wide) in paragraph at lines 112--113
 
 Underfull \vbox (badness 6252) has occurred while \output is active []
 
- [53]
+ [55]
 Underfull \hbox (badness 6078) in paragraph at lines 176--176
 \OT1/phv/m/n/9 Row cut-lines at $\OML/cmm/m/it/9 Y \OT1/cmr/m/n/9 =
  []
@@ -2689,7 +2716,7 @@ it/9 ; \OT1/cmr/m/n/9 41888\OMS/cmsy/m/n/9 g$\OT1/phv/m/n/9 .|
 
 LaTeX Warning: `h' float specifier changed to `ht'.
 
-[54]
+[56]
 Overfull \hbox (9.72153pt too wide) in paragraph at lines 193--194
 []\OT1/phv/m/n/10 Each Time Pro-file fol-lows the fixed in-ter-face shown in ap
 -pendix [][]C[][]. It is loaded from \OT1/cmtt/m/n/10 fi/profiles/time/\OT1/phv
@@ -2701,31 +2728,31 @@ although it is yet undefined on input line 199.
 
 Underfull \vbox (badness 2020) has occurred while \output is active []
 
- [55]
-[56]
+ [57]
+[58]
 
 Package hyperref Warning: Token not allowed in a PDF string (Unicode):
 (hyperref)                removing `\@ac' on input line 242.
 
-[57]) (./Chapters/Thesis-MSc-Chapter_9.tex [58]
+[59]) (./Chapters/Thesis-MSc-Chapter_9.tex [60]
 Chapter 9.
 (./Chapters/fc_description_9.tex)
-<Images/chap9_exp_setup.png, id=2274, 824.1189pt x 440.1243pt>
+<Images/chap9_exp_setup.png, id=2304, 824.1189pt x 440.1243pt>
 File: Images/chap9_exp_setup.png Graphic file (type png)
 <use Images/chap9_exp_setup.png>
 Package pdftex.def Info: Images/chap9_exp_setup.png  used on input line 17.
 (pdftex.def)             Requested size: 409.71689pt x 218.81247pt.
- [59
+ [61
 
  <./Images/chap9_exp_setup.png>]
-<Images/chap9_pblock_model_accuracy.png, id=2296, 702.4644pt x 180.1932pt>
+<Images/chap9_pblock_model_accuracy.png, id=2326, 702.4644pt x 180.1932pt>
 File: Images/chap9_pblock_model_accuracy.png Graphic file (type png)
 <use Images/chap9_pblock_model_accuracy.png>
 Package pdftex.def Info: Images/chap9_pblock_model_accuracy.png  used on input 
 line 44.
 (pdftex.def)             Requested size: 409.71689pt x 105.10051pt.
 Package acronym Info: Label `acro:MMPP2' overridden on input line 51.
-<Images/uniform_profile_overlay.png, id=2300, 715.473pt x 425.9112pt>
+<Images/uniform_profile_overlay.png, id=2330, 715.473pt x 425.9112pt>
 File: Images/uniform_profile_overlay.png Graphic file (type png)
 <use Images/uniform_profile_overlay.png>
 Package pdftex.def Info: Images/uniform_profile_overlay.png  used on input line
@@ -2734,25 +2761,25 @@ Package pdftex.def Info: Images/uniform_profile_overlay.png  used on input line
 
 Underfull \vbox (badness 6016) has occurred while \output is active []
 
- [60 <./Images/chap9_pblock_model_accuracy.png>]
-<Images/poisson_profile_overlay.png, id=2305, 715.473pt x 425.9112pt>
+ [62 <./Images/chap9_pblock_model_accuracy.png>]
+<Images/poisson_profile_overlay.png, id=2335, 715.473pt x 425.9112pt>
 File: Images/poisson_profile_overlay.png Graphic file (type png)
 <use Images/poisson_profile_overlay.png>
 Package pdftex.def Info: Images/poisson_profile_overlay.png  used on input line
  90.
 (pdftex.def)             Requested size: 218.51521pt x 130.07494pt.
-<Images/mmpp2_profile_overlay.png, id=2306, 715.473pt x 425.9112pt>
+<Images/mmpp2_profile_overlay.png, id=2336, 715.473pt x 425.9112pt>
 File: Images/mmpp2_profile_overlay.png Graphic file (type png)
 <use Images/mmpp2_profile_overlay.png>
 Package pdftex.def Info: Images/mmpp2_profile_overlay.png  used on input line 9
 7.
 (pdftex.def)             Requested size: 218.51521pt x 130.07494pt.
-<Images/ramp_profile_line.png, id=2311, 715.473pt x 425.9112pt>
+<Images/ramp_profile_line.png, id=2341, 715.473pt x 425.9112pt>
 File: Images/ramp_profile_line.png Graphic file (type png)
 <use Images/ramp_profile_line.png>
 Package pdftex.def Info: Images/ramp_profile_line.png  used on input line 109.
 (pdftex.def)             Requested size: 218.51521pt x 130.07494pt.
-<Images/microburst_profile_unconnected.png, id=2312, 715.473pt x 425.9112pt>
+<Images/microburst_profile_unconnected.png, id=2342, 715.473pt x 425.9112pt>
 File: Images/microburst_profile_unconnected.png Graphic file (type png)
 <use Images/microburst_profile_unconnected.png>
 Package pdftex.def Info: Images/microburst_profile_unconnected.png  used on inp
@@ -2765,18 +2792,18 @@ LaTeX Warning: `h' float specifier changed to `ht'.
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
- [61 <./Images/uniform_profile_overlay.png> <./Images/poisson_profile_overlay.p
+ [63 <./Images/uniform_profile_overlay.png> <./Images/poisson_profile_overlay.p
 ng> <./Images/mmpp2_profile_overlay.png>]
 Package acronym Info: Label `acro:RF' newly defined as it shall be overridden
 although it is yet undefined on input line 168.
 
 Underfull \vbox (badness 3128) has occurred while \output is active []
 
- [62 <./Images/ramp_profile_line.png> <./Images/microburst_profile_unconnected.
+ [64 <./Images/ramp_profile_line.png> <./Images/microburst_profile_unconnected.
 png>]
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
- [63]
+ [65]
 Underfull \hbox (badness 10000) in paragraph at lines 309--309
 []|\OT1/phv/m/n/7 Native/no Reg-is-ter
  []
@@ -2841,7 +2868,11 @@ Underfull \hbox (badness 10000) in paragraph at lines 309--309
 \OT1/phv/m/n/7 In-struc-tions, DIT, Hard-ened
  []
 
-[64]
+
+LaTeX Warning: Reference `chap5:ibex_ft' on page 1 undefined on input line 321.
+
+
+[66]
 Underfull \hbox (badness 10000) in paragraph at lines 435--435
 []|\OT1/phv/m/n/7 Native/no Reg-is-ter
  []
@@ -2909,7 +2940,7 @@ Underfull \hbox (badness 10000) in paragraph at lines 435--435
 
 Underfull \vbox (badness 1360) has occurred while \output is active []
 
- [65]
+ [67]
 Underfull \hbox (badness 10000) in paragraph at lines 959--959
 []|\OT1/phv/m/n/7 Data In-de-pen-dent
  []
@@ -2917,7 +2948,7 @@ Underfull \hbox (badness 10000) in paragraph at lines 959--959
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
- [66]
+ [68]
 
 LaTeX Warning: Reference `chap6:mofn_reg' on page 1 undefined on input line 114
 0.
@@ -2925,15 +2956,15 @@ LaTeX Warning: Reference `chap6:mofn_reg' on page 1 undefined on input line 114
 
 Underfull \vbox (badness 4024) has occurred while \output is active []
 
- [67]
-[68]
+ [69]
+[70]
 
 LaTeX Warning: `h' float specifier changed to `ht'.
 
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
- [69]
+ [71]
 Overfull \hbox (5.74481pt too wide) in paragraph at lines 1600--1601
 []\OT1/phv/m/n/10 Table [][]9.8[][] shows that Logic M-of-N mainly af-fects har
 d-ware cost and tim-ing, while Core-Mark, Embench-
@@ -2942,8 +2973,8 @@ d-ware cost and tim-ing, while Core-Mark, Embench-
 ) (./Chapters/Thesis-MSc-Chapter_10.tex
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
- [70]
-[71]
+ [72]
+[73]
 Chapter 10.
 (./Chapters/fc_description_10.tex)
 
@@ -2959,7 +2990,7 @@ although it is yet undefined on input line 24.
 
 Underfull \vbox (badness 3396) has occurred while \output is active []
 
- [72
+ [74
 
 ])
 Overfull \hbox (5.41524pt too wide) in paragraph at lines 32--257
@@ -2967,22 +2998,22 @@ Overfull \hbox (5.41524pt too wide) in paragraph at lines 32--257
 tic pa-ram-e-ter sweeps, finer injection-
  []
 
-(./main.bbl [73]
+(./main.bbl [75]
 LaTeX Font Info:    Font shape `OT1/phv/m/it' in size <10> not available
 (Font)              Font shape `OT1/phv/m/sl' tried instead on input line 39.
- [74
+ [76
 
 ]
 Underfull \vbox (badness 1360) has occurred while \output is active []
 
- [75]
-[76]
+ [77]
+[78]
 Underfull \hbox (badness 1033) in paragraph at lines 302--307
 \OT1/phv/m/n/10 used for the SweRV EL2 Core-Mark/MHz fig-ure. Ac-cessed 11-Feb-
 2026.
  []
 
-[77]) (./Chapters/Thesis-MSc-AppendixA.tex [78]
+[79]) (./Chapters/Thesis-MSc-AppendixA.tex [80]
 Appendix A.
 LaTeX Font Info:    Font shape `OT1/cmtt/bx/n' in size <8> not available
 (Font)              Font shape `OT1/cmtt/m/n' tried instead on input line 18.
@@ -2993,15 +3024,15 @@ LaTeX Font Warning: Font shape `TS1/cmtt/bx/it' undefined
 (Font)              using `TS1/cmtt/m/n' instead
 (Font)              for symbol `textquotesingle' on input line 61.
 
-[79
+[81
 
-]) (./Chapters/Thesis-MSc-AppendixC.tex [80]
+]) (./Chapters/Thesis-MSc-AppendixC.tex [82]
 Appendix B.
 
 LaTeX Warning: Reference `chap3:ui_config' on page 1 undefined on input line 10
 .
 
-) (./Chapters/Thesis-MSc-AppendixD.tex [81
+) (./Chapters/Thesis-MSc-AppendixD.tex [83
 
 ]
 Appendix C.
@@ -3021,7 +3052,7 @@ Overfull \hbox (47.76086pt too wide) in paragraph at lines 27--28
 [][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][] 
  []
 
-) (./Chapters/Thesis-MSc-AppendixE.tex [82
+) (./Chapters/Thesis-MSc-AppendixE.tex [84
 
 ]
 Appendix D.
@@ -3042,7 +3073,7 @@ Package glossaries Warning: No \printglossary or \printglossaries found.
 (Remove \makeglossaries if you don't want any glossaries.) 
 This document will not have a glossary.
 
-[83
+[85
 
 runsystem(xindy -I xindy -L english -M main -C utf8x -t main.glg -o main.gls ma
 in.glo)...disabled (restricted).
@@ -3061,17 +3092,17 @@ LaTeX Warning: There were undefined references.
 LaTeX Warning: There were multiply-defined labels.
 
 Package rerunfilecheck Info: File `main.out' has not changed.
-(rerunfilecheck)             Checksum: 790D2DC162BD05FB8220E73E807CBD9B;16734.
+(rerunfilecheck)             Checksum: 60EEF462B688431D167651A4FD3C37BF;17612.
  ) )
 (\end occurred inside a group at level 1)
 
 ### semi simple group (level 1) entered at line 123 (\begingroup)
 ### bottom level 
 Here is how much of TeX's memory you used:
- 45670 strings out of 478287
- 861692 string characters out of 5849289
- 2583484 words of memory out of 5000000
- 62090 multiletter control sequences out of 15000+600000
+ 45688 strings out of 478287
+ 861927 string characters out of 5849289
+ 2583609 words of memory out of 5000000
+ 62100 multiletter control sequences out of 15000+600000
  510696 words of font info for 104 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
  95i,16n,97p,1951b,2774s stack positions out of 5000i,500n,10000p,200000b,80000s
@@ -3098,10 +3129,10 @@ ts/type1/public/cm-super/sftt1000.pfb></usr/share/texlive/texmf-dist/fonts/type
 1/urw/courier/ucrr8a.pfb></usr/share/texlive/texmf-dist/fonts/type1/urw/helveti
 c/uhvb8a.pfb></usr/share/texlive/texmf-dist/fonts/type1/urw/helvetic/uhvr8a.pfb
 ></usr/share/texlive/texmf-dist/fonts/type1/urw/helvetic/uhvro8a.pfb>
-Output written on main.pdf (93 pages, 10317493 bytes).
+Output written on main.pdf (95 pages, 10323432 bytes).
 PDF statistics:
- 3475 PDF objects out of 3580 (max. 8388607)
- 2983 compressed objects within 30 object streams
- 850 named destinations out of 1000 (max. 500000)
- 795 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 3506 PDF objects out of 3580 (max. 8388607)
+ 3019 compressed objects within 31 object streams
+ 858 named destinations out of 1000 (max. 500000)
+ 827 words of extra memory for PDF output out of 10000 (max. 10000000)
 
