@@ -45,7 +45,7 @@ Although Ibex already includes native \acp{FTM}, this work expanded that set to 
 
 As introduced in \cref{chap2:ftms}, M-of-N Redundancy (or M-of-N Systems) replicates a block \(N\) times and accepts an output when at least \(M\) replicas agree. In \ac{Fatori-V}, this is applied to wrapped pipeline registers and to selected logic modules. When correction is enabled, the same flow also applies scrubbing by restoring replicas that disagree with the voted value.
 
-Register M-of-N extends the register wrapper introduced in \cref{chap6:starting}. Each register's M-of-N parameters are configured through a new single macro file, \texttt{fatori\_reg\_mon.svh}. The \texttt{*\_MON\_N} macro selects the number of replicas, \texttt{*\_MON\_M} selects the quorum threshold, and \texttt{*\_MON\_CORRECTION} enables correction. When \texttt{M=0}, the threshold is set to strict majority, \(\lfloor N/2 \rfloor + 1\), by the hardware.
+\label{chap6:mofn_reg}Register M-of-N extends the register wrapper introduced in \cref{chap6:starting}. Each register's M-of-N parameters are configured through a new single macro file, \texttt{fatori\_reg\_mon.svh}. The \texttt{*\_MON\_N} macro selects the number of replicas, \texttt{*\_MON\_M} selects the quorum threshold, and \texttt{*\_MON\_CORRECTION} enables correction. When \texttt{M=0}, the threshold is set to strict majority, \(\lfloor N/2 \rfloor + 1\), by the hardware.
 
 When redundancy is disabled, the wrapper keeps the default register implementation. When redundancy is enabled, it instantiates exactly \(N\) physical register replicas using Verilog \texttt{generate} logic. All replicas receive the same input and enable signal.
 
@@ -94,7 +94,7 @@ A stable Self-Testing implementation was not reached within the project time. Th
 \section{Fault Monitoring and Control Hardware}
 \label{chap6:control_report}
 
-The \acp{FTM} described in the previous sections report errors, but those reports must still be collected, counted, and exposed to firmware. For that purpose, \ac{Fatori-V} adds monitoring and control hardware using, and extending, the native Ibex error interface described in \cref{chap4:ibex_ft}.
+The \acp{FTM} described in the previous sections report errors, but those reports must still be collected, counted, and exposed to firmware. For that purpose, \ac{Fatori-V} adds monitoring and control hardware using, and extending, the native Ibex error interface described in \cref{chap5:ibex_ft}.
 
 The extended interface keeps the minor and major error native signals and adds the one-cycle pulses \texttt{new\_min} and \texttt{new\_maj}, which mark each new detected error for counting. It also adds \texttt{scrub\_occurred}, which marks corrections performed by redundancy voters.
 
