@@ -9,76 +9,30 @@
 \section{Fatori-V Operation Sequence}
 \label{chap7:software_overview}
 
-\begin{figure}[H]
+\begin{figure}[h]
 \centering
-    \includegraphics[width=0.9\textwidth]{Images/chap3_layers.jpg}
-    \caption{Fatori-V Complete Overview}
+    \includegraphics[width=0.9\textwidth]{Images/chap3_layers.png}
+    \caption{\ac{Fatori-V} run flow from input run files to result tables.}
     \label{fig:fatori_overview}
 \end{figure}
 
 
-The Software Layer is the upper layer of \ac{Fatori-V} shown in \cref{fig:fatori_overview}. It reads the user-provided run files in \texttt{runs/*.yaml} (\cref{chap3:ui_yaml}), validates and normalizes them, generates and allocates the interface files that configure the Hardware Layer (SystemVerilog headers and Vivado Tcl hooks, \cref{chap3:hwvssw}), launches the build to produce the bitstream and reports, executes the selected benchmark sessions, and packages logs, generated tables, and metrics into \texttt{results/}. It is split into the orchestrator, which drives the run and session workflow, and the \ac{FI} console (\cref{chap8:fatori_fi}). When \ac{FI} is enabled, the orchestrator generates the \ac{FI} console \ac{CLI} command per session, runs it as a subprocess, and synchronizes it with benchmark execution using the handshake described in \cref{chap7:handshake}.
+A \ac{Fatori-V} run starts from a user-defined \texttt{.yaml} file provided through \texttt{runs/}. Each run file describes the hardware configuration, benchmark setup, build options, and \ac{FI} parameters. The top script, \texttt{fatori-v.py}, reads the selected run files and executes the same staged workflow for each one, as shown in \cref{fig:fatori_overview}.
 
-The top script file is \texttt{fatori-v.py}. It iterates through all run files (see \cref{chap3:ui_yaml}) found in \texttt{runs/} (or a user-selected subset) and applies the same phased algorithm to each one, which allows users to prepare multiple experiments up front and run them sequentially with one invocation.
+During a run, \ac{Fatori-V} validates the user configuration, generates the required interface files, stages those files in the architecture and benchmark repositories, builds the configured system, executes the selected benchmark sessions, and writes the final result tables. When \ac{FI} is enabled, the same flow also prepares the \ac{FI} command and launches the \ac{FI} tool during benchmark execution.
 
-\ac{Fatori-V} executes each run through a fixed staged workflow. Each stage transforms the Run \texttt{.yaml} filw \cref{chap3:ui_yaml} into concrete configuration files, build inputs, benchmark sessions, and final result tables. \Cref{tab:fatori_workflow_stages} summarizes the role and output of each stage.
+The Validation Stage checks the run \texttt{.yaml} before any file is generated. The checks are defined in \texttt{config/validation\_checks.py}. Each check inspects selected fields and either applies a deterministic correction or aborts the run. In strict mode, warnings without automatic corrections also abort the run. After validation, \ac{Fatori-V} writes \texttt{verified\_yaml.yaml}, which is used by the remaining stages and stored in the final results folder. Users can add custom checks to \texttt{config/validation\_checks.py}.
 
-\begin{table}[htbp]
-\centering
-\caption{Main stages of the \ac{Fatori-V} run workflow.}
-\label{tab:fatori_workflow_stages}
-\small
-\setlength{\tabcolsep}{4pt}
-\renewcommand{\arraystretch}{1.25}
-\begin{tabularx}{\textwidth}{|>{\raggedright\arraybackslash}p{0.17\textwidth}|>{\raggedright\arraybackslash}p{0.39\textwidth}|>{\raggedright\arraybackslash}X|}
-\hline
-Stage & Main role & Main outputs \\
-\hline
-Validation & Checks the run \texttt{.yaml}, applies allowed corrections, and aborts invalid configurations. & Verified run file, normalized configuration, validation warnings or errors. \\
-\hline
-Generation & Translates the verified run configuration into hardware, firmware, benchmark, and Vivado Tcl files. & Generated \texttt{.svh}, \texttt{.h}, and \texttt{.tcl} files under \texttt{tmp/}. \\
-\hline
-File movement & Copies generated and user-provided files into the lower-layer architecture and benchmark trees. & Staged IOb-SoC-Ibex and benchmark repositories, with backups of overwritten files. \\
-\hline
-Build & Runs the required Makefile targets to build the configured hardware and prepare the selected benchmark sessions. & \ac{FPGA} image, build reports, benchmark build configuration, and \ac{FI} console command when enabled. \\
-\hline
-Execution & Runs the enabled benchmark sessions and, when enabled, launches the \ac{FI} campaign in parallel. & Session logs, benchmark output, \texttt{metrics.txt}, and \ac{FI} logs. \\
-\hline
-Results & Parses benchmark metrics and Vivado reports, computes derived metrics, and creates consolidated result tables. & Per-session metrics, parsed build metrics, CSV tables, and XLSX tables. \\
-\hline
-\end{tabularx}
-\end{table}
+The Generation Stage translates the verified configuration into the interface macro files required by the build flow. These include SystemVerilog headers such as \texttt{fatori\_features.svh}, \texttt{fatori\_ftm.svh}, \texttt{fatori\_logic\_mon.svh}, \texttt{fatori\_reg\_mon.svh}, \texttt{fatori\_selftest.svh}, and \texttt{fatori\_pblocks.svh}. It also generates firmware headers for benchmark selection and Vivado \texttt{.tcl} scripts for the build flow.
 
-The Validation Stage is implemented through checks defined in \texttt{config/validation\_checks.py}, and provided by the user. One example is displayed in \cref{lst:check}. Each check inspects selected \texttt{.yaml} fields and either applies a deterministic correction or aborts the run. In strict mode, warnings without auto-corrections also abort the run. After all checks are applied, \ac{Fatori-V} writes \texttt{verified\_yaml.yaml}, which replaces the user-provided run file for the remaining stages and is stored in the final results folder.
+The File Movement Stage copies generated files according to \texttt{gen\_locations.yaml}. User-provided hardware and software inputs are copied according to the corresponding \texttt{locations.yaml} files. Before overwriting a destination file, \ac{Fatori-V} creates a backup so the repository can be restored after the run.
 
-\begin{lstlisting}[language=matlabfloz,caption={Example check in validation\_checks.py},label=lst:check]
-  {'type': 'warning',
-  'logic': lambda cfg: cfg['...']['icache_ecc'] and not cfg['...']['icache'],
-  'message': 'ICache ECC enabled but ICache is disabled. Disabling ICache ECC.',
-  'correction': lambda cfg: cfg['...'].update({'icache_ecc': 'off'})}
-\end{lstlisting}
+The Build Stage runs the IOb-\ac{SoC}-Ibex Makefile targets. It builds the \ac{FPGA} image, prepares the selected benchmarks, and stores the implementation reports used later for hardware metrics. When \ac{FI} is enabled, this stage also prepares the \ac{FI} command used during execution.
 
-The Generation Stage creates the interface files consumed by the Hardware Layer. These include SystemVerilog headers such as \texttt{fatori\_features.svh}, \texttt{fatori\_ftm.svh}, \texttt{fatori\_logic\_mon.svh}, \texttt{fatori\_reg\_mon.svh}, \texttt{fatori\_selftest.svh}, and \texttt{fatori\_pblocks.svh}, firmware headers that allow the firmware wrapper to run only the enabled benchmarks and the Vivado \texttt{.tcl} scripts that configure the Vivado fllow. The generated files are first written under \texttt{tmp/} and are then copied into the lower-layer repositories during File Movement.
+The Execution Stage runs each enabled benchmark as a separate session. A session is valid when the process exits cleanly, the benchmark succeeds, and a valid \texttt{metrics.txt} file, containing measured data, is produced. When \ac{FI} is enabled, the session controller launches the \ac{FI} tool as a parallel process and uses the synchronization mechanism described in \cref{chap7:sw_logging}.
 
-Generated files are copied according to \texttt{gen\_locations.yaml}, while user-provided hardware and software inputs are copied according to the corresponding \texttt{locations.yaml} files. Before any destination file is overwritten, the original file is backed up so the architecture tree can be restored after the run. Once the files are staged, the Build Stage runs the required Makefile targets and, when \ac{FI} is enabled, prepares the \ac{FI} console command used during execution.
+The Results Stage collects the session data, benchmark outputs, \texttt{metrics.txt} files, \ac{FI} logs, and implementation reports. These files are stored under \texttt{results/} and used to create the result tables.
 
-The Execution Stage runs each enabled benchmark as a separate session. A session is considered valid only if the process exits cleanly, the benchmark succeeds, and a valid \texttt{metrics.txt} file is produced. When \ac{FI} is enabled, the session controller also launches the \ac{FI} console as a parallel subprocess and relies on the synchronization mechanism described in \cref{chap7:handshake}.
-
-The Results Stage converts raw measurements into result tables. Benchmark data is extracted from \texttt{metrics.txt}, while implementation data is parsed from Vivado reports. Direct metrics are copied or differenced from raw values, and indirect metrics are computed from formulas defined by the user in \texttt{config/metrics\_definitions.py}. The full list of direct and indirect metrics is provided in \cref{chap9:computed_metrics}. A metric definition example is displayed in \cref{lst:metrics}.
-
-\begin{lstlisting}[language=matlabfloz,caption={Example metric definitions in \texttt{metrics\_definitions.py}},label=lst:metrics]
-{'id': 'mcycle',
- 'type': 'direct', 
- 'benchmarks': 'GENERAL', 
- 'compute': 'diff', 
- 'value_type': 'hex'},
-
-{'id': 'instructions_per_cycle',
- 'type': 'indirect',
- 'benchmarks': 'GENERAL',
- 'formula': lambda m: round(m.get('minstret', 0) / m.get('mcycle', 1), 2) 
-    if m.get('mcycle', 0) > 0 else 0},
-\end{lstlisting}
 
 
 
@@ -101,7 +55,7 @@ The model is used for the following pblock targets: \ac{ALU}, \ac{LSU}, Controll
 
 
 % -----------------------------------------------------------------------------
-\subsection{Sizing Model}
+\subsection{Sizing Equations}
 \label{chap7:pblock_sizing_model}
 
 The model estimates the \ac{LUT} and \ac{FF} usage of each pblock target. Each target starts from a measured baseline and adds the overhead of the active hardware features. The baseline with architectural features is defined in \cref{eq:pblock_target_base}.
@@ -170,7 +124,7 @@ M_t
 
 
 % -----------------------------------------------------------------------------
-\subsection{Parameter Extraction}
+\subsection{Measured Model Parameters}
 \label{chap7:pblock_study}
 
 The model parameters were extracted from implementation reports generated for the XCKU040 \ac{FPGA}. Each experiment enabled a controlled hardware configuration, implemented the design, and parsed the utilization reports to measure the \ac{LUT} and \ac{FF} usage of each pblock target.
@@ -184,7 +138,7 @@ The experiments were organized to isolate the terms defined in \cref{eq:pblock_t
 \scriptsize
 \setlength{\tabcolsep}{2.8pt}
 \renewcommand{\arraystretch}{1.20}
-\begin{tabularx}{\textwidth}{|p{0.16\textwidth}|p{0.18\textwidth}|p{0.24\textwidth}|p{0.24\textwidth}|X|}
+\begin{tabularx}{\textwidth}{|x|x|x|x|X|}
 \hline
 Target &
 Baseline &
@@ -328,62 +282,143 @@ Negative measured contributions are kept at zero. This prevents synthesis optimi
 % #############################################################################
 \section{Benchmark Porting}
 \label{chap7:benchmarks}
-\ac{Fatori-V} natively integrates four benchmark programs than can be executed sequentially in the same run: IObundle's Hello World, CoreMark \cite{coremark}, Embench-IoT \cite{embench-iot}, and Fatori Stress (designed in this work to stress the exact Ibex targets that \ac{Fatori-V} can inject into). All benchmarks follow the same interface and folder format under \texttt{benchmarks/}: a folder whose name matches the benchmark key in the run \texttt{.yaml}, a \texttt{benchmark.h} that exposes the benchmark entry point as \texttt{BENCHMARK\_MAIN} (called by the firmware wrapper, see \cref{chap5:iob-soc-ibex}), the \texttt{repo/} directory containing a clone of the official benchmark repository (when applicable), a \texttt{Makefile} with a \texttt{prepare/setup} target that copies the required upstream sources into \texttt{code/} for compilation, an optional \texttt{requirements.yaml} that declares extra build/link flags, and the benchmark-specific wrapper/port files required to run in a baremetal environment (e.g., local \texttt{printf} implementation instead of OS/stdio).  
+
+\ac{Fatori-V} integrates four benchmark programs that can run sequentially in the same experiment. These are IObundle's Hello World, CoreMark, Embench-IoT, and Fatori Stress. Hello World is used as a simple execution check. CoreMark and Embench-IoT provide standard performance benchmarks. Fatori Stress was developed in this work as a checksum-based way to evaluate \ac{FT} on Ibex.
+
+All benchmarks were ported following the same folder structure under \texttt{benchmarks/}. Each benchmark has one folder whose name matches the key used in the run \texttt{.yaml}. The folder requires a \texttt{benchmark.h} file that defines \texttt{BENCHMARK\_MAIN} as the benchmark's main function, a \texttt{repo/} folder with the upstream source when applicable, a \texttt{Makefile} that generates the sources from \texttt{repo/}, and wrapper files that adapt the benchmark to the bare-metal firmware environment. Some benchmarks also include \texttt{requirements.yaml} to declare extra compile or link flags.
+
+Benchmark options exposed by each port are routed to the run \texttt{.yaml}, so the user can configure benchmark parameters together with the remaining experiment settings.
+
+
 
 
 % -------------------------------------------------------------
 \subsection{CoreMark Benchmark}
 \label{chap7:coremark}
-CoreMark \cite{coremark} is an industry-standard \ac{CPU} benchmark commonly reported in the state of the art, so including it gives \ac{Fatori-V} a reference workload that is easy to compare against other \ac{RISC-V} results. 
 
-In \ac{Fatori-V}, CoreMark is configured by a single \texttt{.yaml} iterations parameter  compiled into \texttt{bench\_config.h} as \texttt{ITERATIONS}. The Results Phase exports the standard CoreMark report fields, such as  \texttt{coremark\_size}, \texttt{total\_ticks}, \texttt{total\_time\_secs}, \texttt{iterations\_per\_sec}, \texttt{iterations}, \texttt{memory\_location}, and the \ac{CRC} fields \texttt{seedcrc}, \texttt{crclist}, \texttt{crcmatrix}, \texttt{crcstate}, and \texttt{crcfinal}. These fields are used to calculate the CoreMark Score and are merged with the remaining measured metrics to generate the results tables.
+CoreMark is included as a reference benchmark for comparing \ac{CPU} implementations. In \ac{Fatori-V}, the number of iterations is selected in the run \texttt{.yaml} file and compiled into \texttt{bench\_config.h} as \texttt{ITERATIONS}.
 
-CoreMark runs four kernels: linked-list processing, matrix operations, a small state machine, and \ac{CRC} computation. The official porting point for new platforms is \texttt{core\_portme.c/h}, which must define the \texttt{ee\_*} datatypes, configuration constants such as \texttt{MEM\_METHOD}, \texttt{SEED\_METHOD}, \texttt{HAS\_STDIO}, \texttt{HAS\_PRINTF}, and \texttt{MULTITHREAD}, and the timing interface. In the \ac{Fatori-V} integration, \texttt{core\_portme.h} configures the software by choosing static memory with \texttt{MEM\_STATIC} and disabling floats with \texttt{HAS\_FLOAT}. The \texttt{core\_portme.c} file sizes the native volatile seeds to select a \texttt{PERFORMANCE\_RUN} and redirects \texttt{ee\_printf} to a locally implemented version. The developed \texttt{coremark\_main.c} file resolves the dual-main issue by renaming CoreMark's main through a preprocessor alias before including the upstream \texttt{core\_main.c}. The locally developed \texttt{coremark\_metrics.c/h} files implement \texttt{coremark\_printf} as a dual-sink logger, parse the captured CoreMark report lines, and export the extracted fields as \texttt{"[benchmark] key,value"} lines appended to \texttt{metrics.txt}.
+CoreMark evaluates linked-list handling, matrix operations, state-machine execution, and \ac{CRC} computation. The benchmark reports execution time, iteration count, iterations per second, memory configuration, and \ac{CRC} values. \ac{Fatori-V} parses these fields from the CoreMark report and stores them in \texttt{metrics.txt}. The CoreMark score is computed as the number of completed iterations divided by the measured execution time.
+
+The port uses the official \texttt{core\_portme.c/h} files. The header selects static memory through \texttt{MEM\_STATIC} and disables floating-point support through \texttt{HAS\_FLOAT}. The source file redirects \texttt{ee\_printf} to the local print implementation.
+
+The wrapper \texttt{coremark\_main.c} adapts the upstream entry point to the common benchmark interface. It renames CoreMark's original main function before including the upstream \texttt{core\_main.c}, allowing the firmware wrapper to call it through \texttt{BENCHMARK\_MAIN}. The files \texttt{coremark\_metrics.c/h} capture the CoreMark report, extract the relevant fields, and write them to \texttt{metrics.txt}.
+
+
+
+
 
 
 % -------------------------------------------------------------
 \subsection{Embench-IoT Benchmark}
 \label{chap7:embench-iot}
-Embench-IoT \cite{embench-iot} is a modern embedded benchmark suite designed for baremetal use and for producing a single consistent score from a diverse set of small programs.
 
-In \ac{Fatori-V}, Embench is configured through the run \texttt{.yaml} file by selecting which sub-benchmarks are enabled. This selection is compiled into \texttt{bench\_config.h} as one 0/1 macro per sub-benchmark. The Results Phase exports \texttt{total\_benchmarks}, \texttt{total\_passed}, \texttt{embench\_score}, and, for each executed sub-benchmark, its cycles, pass flag, and ratio. The current IOb-SoC-Ibex software memory budget cannot link the full suite simultaneously, so a validation check (see \cref{chap7:validation_stage}) enforces a limit of at most 10 enabled sub-benchmarks and automatically disables the excess to keep the build runnable.
+Embench-IoT executes a set of embedded sub-benchmarks sequentially and combines their results into a score commonly used to evaluate \acp{CPU}. In \ac{Fatori-V}, the user selects the enabled sub-benchmarks through the run \texttt{.yaml} file. This selection is compiled into \texttt{bench\_config.h}, with one enable macro per sub-benchmark.
 
-Each Embench-IoT program follows an initialize, benchmark, and verify structure. The suite score is computed by comparing each program's measured cycle count against the baseline cycle counts distributed with Embench. To implement it in \ac{Fatori-V}, the \texttt{embench\_benchmarks.c} wrapper pulls the selected Embench programs into the build and renames their entry functions so multiple sub-benchmarks can be linked together without symbol collisions. The \texttt{embench\_main.c} wrapper runs each enabled sub-benchmark through its renamed \texttt{initialise\_benchmark\_*} and \texttt{benchmark\_*} functions, measures cycles with \texttt{mcycle}/\texttt{mcycleh} reads, verifies results with \texttt{verify\_benchmark\_*}, computes ratios against \texttt{baseline\_cycles} from \texttt{embench\_data.h}, and exports all values to \texttt{metrics.txt}. The \texttt{boardsupport.c/h} files provide the minimal hooks expected by the upstream suite, and \texttt{requirements.yaml} declares the required \texttt{-lm} link flag and compile ordering so math-heavy programs can run under soft-float.
+Each selected Embench-IoT sub-benchmark prepares its input data, runs the timed benchmark code, and checks whether the produced output is correct. \ac{Fatori-V} records the executed sub-benchmarks, pass count, Embench-IoT score, cycle count, pass flag, and ratio between the measured cycle count and the reference cycle count stored in \texttt{embench\_data.h}. Because the software memory available on the board used in this work is limited, \ac{Fatori-V}'s validation restricts each run to ten enabled sub-benchmarks. If the run file enables more than ten, the excess entries are disabled before the build. This limit is defined in \texttt{validation\_checks.py}.
+
+The file \texttt{embench\_benchmarks.c} includes the selected Embench-IoT programs and renames their \texttt{main} functions to avoid symbol conflicts. The file \texttt{embench\_main.c} runs each enabled sub-benchmark, measures cycles with \texttt{mcycle} and \texttt{mcycleh}, verifies the result, computes the ratio, and writes the measured values to \texttt{metrics.txt}. The files \texttt{boardsupport.c/h} provide the platform hooks required by Embench-IoT, and \texttt{requirements.yaml} adds the \texttt{-lm} link flag required by math-based sub-benchmarks.
+
+
+
+
 
 
 % -------------------------------------------------------------
-\subsection{Fatori Fault Tolerance Benchmark}
+\subsection{Fatori Native Benchmark}
 \label{chap7:fatori_stress}
-Fatori Stress was developed specifically for this thesis to create deterministic, self-validating workloads that can be aligned with \ac{FI} campaigns (see \cref{chap8:fatori_fi}) while stressing specific Ibex targets. The benchmark executes the same operations twice: a forward run from iteration $0\rightarrow (N-1)$ followed by a backward run from $(N-1)\rightarrow 0$. At each iteration, it computes a per-iteration value and XORs it into a running checksum. XOR is self-inverse, which means that a fault-free execution returns exactly to the initial checksum after the backward pass, while any corruption breaks reversibility and flags the run as FAIL. Operands are derived only from the iteration index, so the workload changes with the requested iteration count but remains fully reproducible.
 
-The user-requested configuration is compiled through the generated \texttt{bench\_config.h}: \texttt{FATORI\_ITERATIONS} selects $N$, and per-target macros select which module workloads are executed. This version implements seven targets: the \ac{ALU}, Multiplier/Divider, Decoder, Controller, \ac{LSU}, Branch Predictor, and the Instruction Decompressor. \ac{Fatori-V}'s Results Phase (see \cref{chap7:results_stage}) records benchmark-specific fields: enabled target list, iteration count, initial, forward, and backward checksum values, validation status (\texttt{PASS}, \texttt{FAIL}, or \texttt{SKIPPED}), and the first iteration where a mismatch is detected.
+Fatori Stress was developed in this work to provide a deterministic workload for \ac{FI} campaigns. It is self-validating and can be configured to exercise specific Ibex targets.
 
-Each Fatori Stress iteration calls a dispatcher that invokes one stress function per enabled target and XOR-accumulates their return values. \texttt{alu\_stress} mixes independent arithmetic and logic operations with dependent chains, variable shifts, and signed/unsigned comparisons. \texttt{multiplier\_stress} uses \texttt{mul}/\texttt{div} operations when the toolchain \ac{ISA} enables RV32M. Otherwise, it executes a shift-and-add multiply and a long-division loop. \texttt{decoder\_stress} alternates instruction shapes by combining register-register operations, immediate operations, and volatile array accesses. \texttt{controller\_stress} stresses control flow with nested conditionals, backward-branch loops, and noinline helper calls. \texttt{lsu\_stress} writes a known word pattern into a static buffer and reads it back as byte, halfword, and word accesses. \texttt{branch\_predict\_stress} generates predictable branch patterns. \texttt{compressed\_stress} is used when the firmware is compiled with RV32C enabled, forcing the fetch stream to contain mixed 16-bit and 32-bit encodings.
+The benchmark executes the selected workload twice. The first pass runs from iteration \(0\) to \(N-1\). The second pass runs from iteration \(N-1\) back to \(0\). Each iteration computes a value from the iteration index and XORs it into a running checksum. Since XOR is self-inverse, a fault-free execution returns to the initial checksum after the backward pass. If a fault changes the computed values, the final checksum does not match and the benchmark reports \texttt{FAIL}.
+
+The generated \texttt{bench\_config.h} file configures the benchmark. The macro \texttt{FATORI\_ITERATIONS} sets \(N\), and one macro per target selects which stress functions are executed. The current implementation supports the \ac{ALU}, Multiplier/Divider, Decoder, Controller, \ac{LSU}, Branch Predictor, and Instruction Decompressor.
+
+Each iteration calls a dispatcher that executes the enabled target workloads and combines their return values into the checksum. The \texttt{alu\_stress} function exercises arithmetic, logic, shifts, and signed and unsigned comparisons. The \texttt{multiplier\_stress} function uses multiplication and division when RV32M is enabled, and uses software fallback loops otherwise. The \texttt{decoder\_stress} function alternates instruction formats through register-register operations, immediate operations, and volatile memory accesses. The \texttt{controller\_stress} function exercises control flow through nested conditions, loops, and non-inlined helper calls. The \texttt{lsu\_stress} function writes a known pattern to a static buffer and reads it back using byte, halfword, and word accesses. The \texttt{branch\_predict\_stress} function produces branch patterns. The \texttt{compressed\_stress} function is used when RV32C is enabled, forcing the instruction stream to include mixed 16-bit and 32-bit encodings.
+
+During execution, Fatori Stress records the enabled target list, iteration count, initial checksum, forward checksum, backward checksum, validation status, and first mismatch iteration when a mismatch is detected.
 
 
 % -------------------------------------------------------------
 \section{Synchronization, Logging and Metrics Computing}
 \label{chap7:sw_logging}
 
-\ac{Fatori-V} uses a file-based handshake to align the firmware’s “start of benchmark” with the \ac{FI} console’s “start of campaign”. The firmware wrapper creates a small sync file (using the provided \ac{UART} file-transfer functions) containing the string "WAIT", the orchestrator passes the path of that file to the \ac{FI} console command line, and the \ac{FI} console freezes until the file appears and then overwrites its content with "READY". Firmware execution is held in a polling loop that repeatedly reads the file and only proceeds once "WAIT" becomes "READY", at which point the benchmark body starts.
+\ac{Fatori-V} synchronizes the \ac{FI} campaign with benchmark execution using a file-based handshake. Before starting the benchmark, the firmware running on the board requests the host \ac{PC} to create a synchronization file containing \texttt{WAIT}. The \ac{FI} tool receives the path to this file, waits until it is created, and writes \texttt{READY} when it is ready to inject. The firmware polls the same file and starts the benchmark only after reading \texttt{READY}.
 
-To mitigate \ac{UART} induced delays, the firmware wrapper executes all setup work (\ac{UART} init, metric pre-sampling, and any preliminary reads) before entering the "WAIT"/"READY" protocol loop. 
+The firmware and the \ac{FI} tool complete their setup before the synchronization step, so the benchmark and the campaign can start immediately after the handshake. The firmware initializes the \ac{UART}, samples the pre-benchmark metrics, prepares the benchmark, and writes \texttt{WAIT}.
 
-From the \ac{FI} perspective, the campaign begins as soon as "READY" is written, because all \ac{FI} setup (TargetPool building, ACME algorithms, and preflight tests) is completed before the handshake protocol. Since the firmware only observes that update on the next polling iteration, there can be a small propagation delay between “\ac{FI} starts” and “benchmark begins”, so the first few injections may occur before the benchmark actually begins executing. In practice, campaigns should use sufficiently large injection pools (typically $>500$ injections) so that this initial misalignment has less impact on the overall statistics.
+A small timing offset can still exist. The \ac{FI} tool starts the campaign after writing \texttt{READY}, while the firmware only observes that update on its next polling iteration. A short delay is inserted after synchronization, but the first injections may still occur slightly before the benchmark begins executing. The experiments use large injection pools, so this offset has limited impact on the final campaign statistics.
 
+Logging is centralized through the event system under \texttt{scripts/logging/}. Scripts do not print messages directly. They emit a log event with an event identifier and the fields needed to build the message. The logger then decides whether the event is printed and how it is formatted.
 
-Logging is implemented as a centralized event system under \texttt{scripts/logging/} and configured by two config files (see \cref{chap3:ui_config}): \texttt{log\_levels.py} selects which events are printed for each verbosity level (minimal/normal/verbose), and \texttt{messages\_formats.py} defines the displayed messages. Scripts do directly print strings, they emit an event ID plus a small set of fields, and the logger decides whether to print the event and how to format it. This keeps timestamps, prefixes, and sinks consistent across the project and implements increased system customization. Each event is associated with a verbosity level, so users can precisely choose which events are shown on the terminal and written to the log for minimal, normal, and verbose runs. An example is provided in \cref{lst:log}.
-
-\begin{lstlisting}[language=matlabfloz,caption={Example log event implementation},label=lst:log]
-from scripts.logging.logger import log_event
-log_event('DEBUG', 'FILE\_ALLOCATION', num\_alloc\_files")
-\end{lstlisting}
+Logging can be tuned through two configuration files. \texttt{log\_levels.py} defines which events are shown for each verbosity level, and \texttt{messages\_formats.py} defines the corresponding message text. This lets users control how much information \ac{Fatori-V} reports during a run, while keeping prefixes, timestamps, terminal output, and log files consistent across the platform.
 
 
-For each run, \ac{Fatori-V} extracts \texttt{metrics.txt}, produced by the firmware, which contains the RAW measured data: (i) snapshots of Ibex native hardware-performance-monitoring counters (see \cref{chap5:ibex_overview}) and the added \ac{Fatori-V} \acp{CSR} (see \cref{chap6:metrics_hw}), sampled both before and after each benchmark, and (ii) benchmark-specific values reported by the benchmark itself (through per-benchmark parsers/wrappers implemented for \ac{Fatori-V}, see \cref{chap7:benchmarks}).
+\ac{Fatori-V} generates result tables using measured and computed values. During the Results Stage, it loads \texttt{config/metrics\_definitions.py}, computes every defined metric for each benchmark session, and adds the values to the output tables. Users can extend this file with new metrics. Metrics measured in hardware are called direct metrics and must be written by the firmware to \texttt{metrics.txt}. Once defined, direct metrics can be used to compute indirect metrics, if their formulas are added to \texttt{config/metrics\_definitions.py}.
 
-In the Results Stage, higher-level metrics are computed from this raw data using the user-provided metric definitions in \texttt{config/metrics\_definitions.py} (see \cref{chap3:ui_results}), which include a set of default definitions and can be extended with additional formulas. \ac{Fatori-V} builds the results tables, by appending all raw and computed metrics, along with the extracted data from Vivado reports. \Cref{tab:metrics_all} lists all metrics exported by \ac{Fatori-V} in all experiments.
+Some direct metrics are sampled before and after the benchmark. For these metrics, the firmware writes both values to \texttt{metrics.txt}, and \ac{Fatori-V} stores the post-minus-pre difference in the result tables.
 
+The Results Stage also parses Vivado implementation reports to add hardware metrics. The final tables combine direct metrics, indirect metrics, benchmark-specific fields, \ac{FI} metrics, and implementation data. \Cref{tab:metrics_performance,tab:metrics_hardware,tab:metrics_ft} lists the metrics exported by \ac{Fatori-V} in its current version.
+
+
+
+\begin{table}[h]
+\centering
+\small
+\setlength{\tabcolsep}{3.2pt}
+\renewcommand{\arraystretch}{1.25}
+\begin{tabularx}{\textwidth}{|p{0.23\textwidth}|p{0.12\textwidth}|x|X|}
+\hline
+Metric Name &
+Kind &
+Computation &
+What it Measures \\
+\hline
+\hline
+LUT Count &
+Measured &
+Vivado utilization report &
+Total look-up tables used. \\
+\hline
+LUT Utilization &
+Measured &
+Vivado utilization report &
+LUT count as device percentage. \\
+\hline
+Flip-Flop Count &
+Measured &
+Vivado utilization report &
+Total register flip-flops used. \\
+\hline
+FF Utilization &
+Measured &
+Vivado utilization report &
+FF count as device percentage. \\
+\hline
+Block RAM Tiles &
+Measured &
+Vivado utilization report &
+On-chip BRAM tiles consumed. \\
+\hline
+DSP Blocks &
+Measured &
+Vivado utilization report &
+Dedicated DSP48E2 slices used. \\
+\hline
+Worst Negative Slack &
+Measured &
+Vivado timing report &
+Critical setup-timing margin, in ns. \\
+\hline
+Total On-Chip Power &
+Measured &
+Vivado power report &
+Estimated dynamic and static power. \\
+\hline
+\end{tabularx}
+\caption{Hardware cost metrics automatically extracted by \ac{Fatori-V} for every run.}
+\label{tab:metrics_hardware}
+\end{table}
 
 
 
@@ -393,7 +428,7 @@ In the Results Stage, higher-level metrics are computed from this raw data using
 \small
 \setlength{\tabcolsep}{3.2pt}
 \renewcommand{\arraystretch}{1.25}
-\begin{tabularx}{\textwidth}{|p{0.23\textwidth}|p{0.12\textwidth}|p{0.26\textwidth}|X|}
+\begin{tabularx}{\textwidth}{|p{0.23\textwidth}|p{0.12\textwidth}|x|X|}
 \hline
 Metric Name &
 Kind &
@@ -519,76 +554,12 @@ Share of retired RV32C instructions. \\
 
 
 
-
 \begin{table}[h]
 \centering
 \small
 \setlength{\tabcolsep}{3.2pt}
 \renewcommand{\arraystretch}{1.25}
-\begin{tabularx}{\textwidth}{|p{0.23\textwidth}|p{0.12\textwidth}|p{0.26\textwidth}|X|}
-\hline
-Metric Name &
-Kind &
-Computation &
-What it Measures \\
-\hline
-\hline
-LUT Count &
-Measured &
-Vivado utilization report &
-Total look-up tables used. \\
-\hline
-LUT Utilization &
-Measured &
-Vivado utilization report &
-LUT count as device percentage. \\
-\hline
-Flip-Flop Count &
-Measured &
-Vivado utilization report &
-Total register flip-flops used. \\
-\hline
-FF Utilization &
-Measured &
-Vivado utilization report &
-FF count as device percentage. \\
-\hline
-Block RAM Tiles &
-Measured &
-Vivado utilization report &
-On-chip BRAM tiles consumed. \\
-\hline
-DSP Blocks &
-Measured &
-Vivado utilization report &
-Dedicated DSP48E2 slices used. \\
-\hline
-Worst Negative Slack &
-Measured &
-Vivado timing report &
-Critical setup-timing margin, in ns. \\
-\hline
-Total On-Chip Power &
-Measured &
-Vivado power report &
-Estimated dynamic and static power. \\
-\hline
-\end{tabularx}
-\caption{Hardware cost metrics automatically extracted by \ac{Fatori-V} for every run.}
-\label{tab:metrics_hardware}
-\end{table}
-
-
-
-
-
-
-\begin{table}[h]
-\centering
-\small
-\setlength{\tabcolsep}{3.2pt}
-\renewcommand{\arraystretch}{1.25}
-\begin{tabularx}{\textwidth}{|p{0.23\textwidth}|p{0.12\textwidth}|p{0.26\textwidth}|X|}
+\begin{tabularx}{\textwidth}{|p{0.23\textwidth}|p{0.12\textwidth}|x|X|}
 \hline
 Metric Name &
 Kind &
