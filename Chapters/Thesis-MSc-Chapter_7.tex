@@ -361,6 +361,68 @@ Some direct metrics are sampled before and after the benchmark. For these metric
 The Results Stage also parses Vivado implementation reports to add hardware metrics. The final tables combine direct metrics, indirect metrics, benchmark-specific fields, \ac{FI} metrics, and implementation data. \Cref{tab:metrics_performance,tab:metrics_hardware,tab:metrics_ft} lists the metrics exported by \ac{Fatori-V} in its current version.
 
 
+
+\begin{table}[h]
+\centering
+\small
+\setlength{\tabcolsep}{3.2pt}
+\renewcommand{\arraystretch}{1.25}
+\begin{tabularx}{\textwidth}{|p{0.23\textwidth}|p{0.12\textwidth}|x|X|}
+\hline
+Metric Name &
+Kind &
+Computation &
+What it Measures \\
+\hline
+\hline
+LUT Count &
+Measured &
+Vivado utilization report &
+Total look-up tables used. \\
+\hline
+LUT Utilization &
+Measured &
+Vivado utilization report &
+LUT count as device percentage. \\
+\hline
+Flip-Flop Count &
+Measured &
+Vivado utilization report &
+Total register flip-flops used. \\
+\hline
+FF Utilization &
+Measured &
+Vivado utilization report &
+FF count as device percentage. \\
+\hline
+Block RAM Tiles &
+Measured &
+Vivado utilization report &
+On-chip BRAM tiles consumed. \\
+\hline
+DSP Blocks &
+Measured &
+Vivado utilization report &
+Dedicated DSP48E2 slices used. \\
+\hline
+Worst Negative Slack &
+Measured &
+Vivado timing report &
+Critical setup-timing margin, in ns. \\
+\hline
+Total On-Chip Power &
+Measured &
+Vivado power report &
+Estimated dynamic and static power. \\
+\hline
+\end{tabularx}
+\caption{Hardware cost metrics automatically extracted by \ac{Fatori-V} for every run.}
+\label{tab:metrics_hardware}
+\end{table}
+
+
+
+
 \begin{table}[h]
 \centering
 \small
@@ -488,70 +550,6 @@ Share of retired RV32C instructions. \\
 \caption{Performance metrics automatically extracted and computed by \ac{Fatori-V} for every run.}
 \label{tab:metrics_performance}
 \end{table}
-
-
-
-
-
-\begin{table}[h]
-\centering
-\small
-\setlength{\tabcolsep}{3.2pt}
-\renewcommand{\arraystretch}{1.25}
-\begin{tabularx}{\textwidth}{|p{0.23\textwidth}|p{0.12\textwidth}|x|X|}
-\hline
-Metric Name &
-Kind &
-Computation &
-What it Measures \\
-\hline
-\hline
-LUT Count &
-Measured &
-Vivado utilization report &
-Total look-up tables used. \\
-\hline
-LUT Utilization &
-Measured &
-Vivado utilization report &
-LUT count as device percentage. \\
-\hline
-Flip-Flop Count &
-Measured &
-Vivado utilization report &
-Total register flip-flops used. \\
-\hline
-FF Utilization &
-Measured &
-Vivado utilization report &
-FF count as device percentage. \\
-\hline
-Block RAM Tiles &
-Measured &
-Vivado utilization report &
-On-chip BRAM tiles consumed. \\
-\hline
-DSP Blocks &
-Measured &
-Vivado utilization report &
-Dedicated DSP48E2 slices used. \\
-\hline
-Worst Negative Slack &
-Measured &
-Vivado timing report &
-Critical setup-timing margin, in ns. \\
-\hline
-Total On-Chip Power &
-Measured &
-Vivado power report &
-Estimated dynamic and static power. \\
-\hline
-\end{tabularx}
-\caption{Hardware cost metrics automatically extracted by \ac{Fatori-V} for every run.}
-\label{tab:metrics_hardware}
-\end{table}
-
-
 
 
 

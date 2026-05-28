@@ -4,27 +4,27 @@
 \contentsline {figure}{\numberline {2.1}{\ignorespaces SEM state transition diagram for mitigation modes \cite {PG187}.\relax }}{10}{figure.caption.60}%
 \addvspace {10\p@ }
 \contentsline {figure}{\numberline {3.1}{\ignorespaces Fatori-V Overview\relax }}{13}{figure.caption.64}%
-\contentsline {figure}{\numberline {3.2}{\ignorespaces Fatori-V repository hierarchy.\relax }}{15}{figure.caption.65}%
-\contentsline {figure}{\numberline {3.3}{\ignorespaces Input and config entry points.\relax }}{18}{figure.caption.70}%
-\contentsline {figure}{\numberline {3.4}{\ignorespaces Per-run results folder layout.\relax }}{18}{figure.caption.70}%
+\contentsline {figure}{\numberline {3.2}{\ignorespaces Fatori-V repository hierarchy.\relax }}{16}{figure.caption.65}%
+\contentsline {figure}{\numberline {3.3}{\ignorespaces Input and config entry points.\relax }}{19}{figure.caption.71}%
+\contentsline {figure}{\numberline {3.4}{\ignorespaces Per-run results directory layout.\relax }}{19}{figure.caption.71}%
 \addvspace {10\p@ }
-\contentsline {figure}{\numberline {4.1}{\ignorespaces VeeRwolf EL2 Overview\relax }}{19}{figure.caption.73}%
-\contentsline {figure}{\numberline {4.2}{\ignorespaces VeeR EL2's Full Pipeline\relax }}{20}{figure.caption.78}%
-\contentsline {figure}{\numberline {4.3}{\ignorespaces Planned Implementations for VeeR EL2\relax }}{21}{figure.caption.86}%
+\contentsline {figure}{\numberline {4.1}{\ignorespaces VeeRwolf EL2 Overview\relax }}{20}{figure.caption.76}%
+\contentsline {figure}{\numberline {4.2}{\ignorespaces VeeR EL2's Full Pipeline\relax }}{21}{figure.caption.81}%
+\contentsline {figure}{\numberline {4.3}{\ignorespaces Planned Implementations for VeeR EL2\relax }}{22}{figure.caption.89}%
 \addvspace {10\p@ }
-\contentsline {figure}{\numberline {5.1}{\ignorespaces Ibex Overview\relax }}{23}{figure.caption.89}%
-\contentsline {figure}{\numberline {5.2}{\ignorespaces Ibex LSU interface timing diagram. Ibex' perspective.\relax }}{29}{figure.caption.94}%
+\contentsline {figure}{\numberline {5.1}{\ignorespaces Ibex Overview\relax }}{24}{figure.caption.92}%
+\contentsline {figure}{\numberline {5.2}{\ignorespaces Ibex LSU interface timing diagram. Ibex' perspective.\relax }}{30}{figure.caption.97}%
 \addvspace {10\p@ }
 \addvspace {10\p@ }
-\contentsline {figure}{\numberline {7.1}{\ignorespaces \ac {Fatori-V} run flow from input run files to result tables.\relax }}{38}{figure.caption.100}%
+\contentsline {figure}{\numberline {7.1}{\ignorespaces \ac {Fatori-V} run flow from input run files to result tables.\relax }}{39}{figure.caption.103}%
 \addvspace {10\p@ }
-\contentsline {figure}{\numberline {8.1}{\ignorespaces Fault Injection flow phases.\relax }}{50}{figure.caption.107}%
+\contentsline {figure}{\numberline {8.1}{\ignorespaces Fault Injection flow phases.\relax }}{50}{figure.caption.110}%
 \addvspace {10\p@ }
-\contentsline {figure}{\numberline {9.1}{\ignorespaces Fatori-V system used in the experimental setup.\relax }}{58}{figure.caption.113}%
-\contentsline {figure}{\numberline {9.2}{\ignorespaces Pblock Model accuracy across the evaluated pblock targets.\relax }}{59}{figure.caption.114}%
-\contentsline {figure}{\numberline {9.3}{\ignorespaces Uniform profile.\relax }}{60}{figure.caption.116}%
-\contentsline {figure}{\numberline {9.4}{\ignorespaces Poisson and \ac {MMPP2} time profiles validation.\relax }}{60}{figure.caption.117}%
-\contentsline {figure}{\numberline {9.5}{\ignorespaces Ramp and Microburst time profiles validation.\relax }}{61}{figure.caption.118}%
+\contentsline {figure}{\numberline {9.1}{\ignorespaces Fatori-V system used in the experimental setup.\relax }}{58}{figure.caption.116}%
+\contentsline {figure}{\numberline {9.2}{\ignorespaces Pblock Model accuracy across the evaluated pblock targets.\relax }}{59}{figure.caption.117}%
+\contentsline {figure}{\numberline {9.3}{\ignorespaces Uniform profile.\relax }}{60}{figure.caption.119}%
+\contentsline {figure}{\numberline {9.4}{\ignorespaces Poisson and \ac {MMPP2} time profiles validation.\relax }}{60}{figure.caption.120}%
+\contentsline {figure}{\numberline {9.5}{\ignorespaces Ramp and Microburst time profiles validation.\relax }}{61}{figure.caption.121}%
 \addvspace {10\p@ }
 \addvspace {10\p@ }
 \addvspace {10\p@ }
