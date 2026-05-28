@@ -18,62 +18,17 @@
 \end{figure}
 
 
-\ac{Fatori-V} is an open-source Python platform designed to support the implementation and evaluation of \acp{FTM}. It allows users to run experiments on a \ac{RISC-V} \ac{SoC} by providing a simple, compact, human-readable \ac{UI} and automating the remaining steps. \Cref{fig:fatori_simple_overview} displays its two-layer system and the main components involved.
+\Cref{fig:fatori_simple_overview} illustrates the platform's two-layer architecture, which manages the transition from user-defined configurations to automated hardware deployment and data collection.
 
-The user sets up the platform using input and configuration files. For each
-experiment, a \texttt{.yaml} file is needed. \ac{Fatori-V} generates macro
-files, which are header files for SystemVerilog, firmware, benchmark
-configuration, and auxiliary scripts such as Vivado TCL hooks.
+The operational workflow begins with the user providing input and configuration files, specifically through \texttt{.yaml} files. \ac{Fatori-V} interprets these files to generate the necessary macro headers for SystemVerilog, firmware, benchmark configurations, and auxiliary Vivado TCL scripts. Subsequently, the Py2HWSW layer automates the compilation, bitstream generation, and \ac{FPGA} programming processes. During execution, the platform orchestrates benchmark sessions and integrates optional \ac{FI} campaigns, capturing logs and synthesising results into structured tables. Within this framework, a single run represents a specific architecture configuration, encompassing multiple benchmark sessions to ensure comprehensive testing.
 
-The Py2HWSW layer compiles the design, produces the bitstream, and programs
-the \ac{FPGA}. The platform executes benchmark sessions on the board and, when
-enabled, synchronizes them with an \ac{FI} campaign, collecting logs and
-creating results tables. One run represents one architecture configuration,
-which contains one session for each benchmark software executing in that
-architecture. Some other features of \ac{Fatori-V} are described below.
-Fatori-V is an open-source Python platform engineered to facilitate the
-implementation and evaluation of Fault Tolerance Mechanisms (FTMs) within RISC-V
-System-on-Chip (SoC) architectures. By providing a compact, human-readable
-interface that automates complex workflows, the platform streamlines the
-execution of experiments on FPGA hardware. As illustrated in Figure 3.1, the
-system architecture operates across two primary layers, managing the transition
-from user-defined configurations to automated hardware deployment and data
-collection.
+The platform offers extensive configurability across four primary domains. First, Architectural Configuration allows users to define performance features such as instruction cache settings and \ac{RISC-V} \ac{ISA} extensions. Additionally, it provides control over monitor depth and enables dynamic sizing of pblocks for native Ibex modules, allowing for precise control over logic utilisation.
 
-The operational workflow begins with the user providing input and configuration
-files, specifically through .yaml files. Fatori-V interprets these files to
-generate the necessary macro headers for SystemVerilog, firmware, benchmark
-configurations, and auxiliary Vivado TCL scripts. Subsequently, the Py2HWSW
-layer automates the compilation, bitstream generation, and FPGA programming
-processes. During execution, the platform orchestrates benchmark sessions and
-integrates optional Fault Injection (FI) campaigns, capturing logs and
-synthesizing results into structured tables. Within this framework, a single
-"run" represents a specific architecture configuration, encompassing multiple
-benchmark sessions to ensure comprehensive testing.
+Second, the Fault Tolerance and Injection capabilities support the selection and parameterisation of both native Ibex and platform-specific \acp{FTM}, including M-of-N redundancy schemes. Complementing this, the \ac{FI} module allows for temporal and spatial distribution of errors — ranging from uniform to burst distributions across various hardware targets — enabling unified injection into both configuration memory and registers.
 
-The platform offers extensive configurability across four primary
-domains. First, Architectural Configuration allows users to define performance
-features such as Instruction Cache settings and RISC-V ISA
-extensions. Additionally, it provides control over monitor depth and enables
-dynamic sizing of PBlocks for native Ibex modules, allowing for precise control
-over logic utilization.
+Third, the Batch Execution and Automation features maximise efficiency and reproducibility. The platform supports sequential batch processing of experiments and multiple benchmark sessions per run. Features such as fixed-seed trees, input auto-fixes, and dry mode debugging ensure that experiments remain reliable and traceable. Users can also incorporate standard benchmarks, such as CoreMark \cite{coremark} and Embench-IoT \cite{embench-iot}, or provide file overrides to bypass specific build steps.
 
-Second, the Fault Tolerance and Injection capabilities support the selection and
-parameterization of both native Ibex and platform-specific FTMs, including
-M-of-N redundancy schemes. Complementing this, the Fault Injection module allows
-for temporal and spatial distribution of errors—ranging from uniform to burst
-distributions across various hardware targets—enabling unified injection into
-both configuration memory and registers.
-
-Third, the Batch Execution and Automation features maximize efficiency and
-reproducibility. The platform supports sequential batch processing of
-experiments and multiple benchmark sessions per run. Features such as fixed-seed
-trees, input auto-fixes, and "dry mode" debugging ensure that experiments remain
-reliable and traceable. Users can also incorporate standard benchmarks, such as
-CoreMark and Embench-IoT, or provide file overrides to bypass specific build
-steps.
-
-Finally, the Data Logging and Reporting functionality automates the storage of per-run and per-session logs, governed by configurable verbosity levels and centralized message control. It facilitates performance analysis by exporting results to .csv and .xlsx formats, mirroring build artifacts for future inspection, and calculating derived metrics through centralized configuration files.
+Finally, the Data Logging and Reporting functionality automates the storage of per-run and per-session logs, governed by configurable verbosity levels and centralised message control. It facilitates performance analysis by exporting results to \texttt{.csv} and \texttt{.xlsx} formats, mirroring build artefacts for future inspection, and calculating derived metrics through centralised configuration files.
 
 % -------------------------------------------------------------
 \section{Implementation Layers and Platform Structure}
@@ -173,7 +128,7 @@ Benchmark-specific parameters, when applicable. \\
 Enables fault injection for enabled benchmarks. \\
 \hline
 \texttt{general.fault\_injection.area\_profile} &
-Selects the spacial injection policy (device, modules, target list, or input). \\
+Selects the spatial injection policy (device, modules, target list, or input). \\
 \hline
 \texttt{general.fault\_injection.time\_profile} &
 Selects the temporal injection distribution (uniform, ramp, Poisson, MMPP2, microburst, trace, or input). \\
