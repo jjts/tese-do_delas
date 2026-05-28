@@ -149,7 +149,9 @@ The fault manager implements fixed-width counters for the enabled Metric Level. 
 
 To implement the timing monitors, an internal cycle counter provides the time reference. The time-to-first-event registers store the cycle of the first minor or major event after reset. Detection latency stores the cycle of the last injection and compares it with the cycle of the next detected error. At the highest Metric Level, the manager also accumulates the latency sum and the number of latency samples.
 
-The fault manager can also define the response to major errors. When enabled, it disables instruction fetching so the core stops starting new instructions while the pipeline drains. It can then request a reset through \texttt{core\_reset\_req\_o}. Reset behaviour is configured through \texttt{FATORI\_RESET\_ON\_MAJOR} and \texttt{FATORI\_WAIT\_SLEEP\_BEFORE\_RESET}. The second macro delays the reset request until the core reports that it is idle.
+The fault manager also controls the system response to major errors. The user selects this behaviour through macros in \texttt{fatori\_features.svh}. The \texttt{FATORI\_RESET\_ON\_MAJOR} macro enables reset requests after major errors. The \texttt{FATORI\_WAIT\_SLEEP\_BEFORE\_RESET} macro delays that request until the pipeline flushes and \texttt{core\_sleep\_i} reports that the core is idle. The fault manager stops new instructions by driving \texttt{fetch\_enable\_o}, and requests reset through \texttt{core\_reset\_req\_o}. The Ibex fetch-control path uses multi-bit encoding, reducing the chance that single-bit corruption changes the fetch state.
+
+
 
 
 
@@ -159,7 +161,9 @@ The fault manager can also define the response to major errors. When enabled, it
 \subsection{Monitoring CSRs}
 \label{chap6:metrics_hw}
 
-The monitoring hardware reuses native Ibex performance \acp{CSR} and adds \ac{FT}-specific counters. The new monitor values are wired into \texttt{ibex\_cs\_registers} and exposed as read-only custom \acp{CSR} in the \texttt{0xBC0} address range. Firmware reads them with \texttt{csrr}.
+The fault manager measures fault events in hardware, but those values must be readable by firmware so they can be provided to the user. For this reason, the monitor outputs are exposed through custom read-only \acp{CSR}. Firmware can then read with \texttt{csrr}, serialize the values, and send them to the upper layers of \ac{Fatori-V}.
+
+Ibex already implements a \ac{CSR} access block, \texttt{ibex\_cs\_registers}, and leaves address space for custom \acp{CSR}. The new \ac{Fatori-V} monitor \acp{CSR} use this path instead of memory-mapped loads and stores. The measured values remain implemented in \texttt{fatori\_fault\_mgr}, where the counters are updated, and are wired to \texttt{ibex\_cs\_registers}. This block exposes the corresponding value when firmware reads the matching \ac{CSR} address. This also keeps the added \acp{CSR} easier to gate according to the Metric Level selected in \cref{tab:fatori_metric_levels}.
 
 \begin{table}[h]
 \centering
@@ -230,99 +234,4 @@ Counts detection latency samples. \\
 \label{tab:fatori_ft_csrs}
 \end{table}
 
-The amount of monitoring hardware is selected through the Metric Level configured in \texttt{fatori\_features.svh}. Level 1 exposes only native Ibex hardware-performance counters. Level 2 adds basic fault counters and, when \ac{FI} is enabled, injection counters. Level 3 adds corrected-event counting and the major-error breakdown. Level 4 adds time-to-first-event registers and last detection latency. Level 5 adds latency sum and latency count.
-
-Each active \ac{CSR} is read by firmware through dedicated functions in \texttt{iob\_csr.h}. The enabled monitor values are sampled before and after each benchmark session. The firmware serializes these samples into a buffer, together with benchmark-specific values, and transfers the buffer over \ac{UART}. The host receives the transfer and writes the raw values into \texttt{metrics.txt}.
-
-
-
-
-
-
-
-
-% #############################################################################
-\section{Fault Monitoring and Control Hardware}
-\label{chap6:control_report}
-
-This section defines the error and metrics interface used by \ac{Fatori-V}. It shows how native and added \acp{FTM} signals are merged and counted in hardware, then exposed through custom \acp{CSR} for firmware and the Software Layer to read.
-
-% -------------------------------------------------------------
-\subsection{Fault Monitor Hardware}
-\label{chap6:metrics_hw}
-
-\ac{Fatori-V} extends Ibex's native Error Interface detailed in \cref{chap5:ibex_ft}, providing a 5 signal interface containing:
-(i) the native Ibex \texttt{minor} and \texttt{major} error channels report a continuous system-health signal, (ii) two new pulses, \texttt{new\_min} and \texttt{new\_maj}, that pulse each new error, and (iii) a \texttt{scrub\_occurred} pulse that reports corrections performed by replication voters. The other signals of \cref{chap5:ibex_ft} still remain.
-
-All error signals are aggregated (via the OR operator) progressively as they propagate upwards. At each hierarchy level, locally generated events (e.g., a voter disagreement) are merged with events coming from below (e.g., errors produced inside a replicated module, including those raised by wrapped registers within that module). Merging is done per clock cycle: multiple pulses of the same class in the same cycle collapse into a single pulse.
-
-The Hardware Layer implements monitors used to evaluate \ac{FT} experiments by reusing the native Ibex performance \acp{CSR} (\cref{chap5:ibex_overview}) and extending them with \ac{FT}-specific hardware counters. The exported monitoring \acp{CSR} added in this work are listed in \cref{tab:fatori_ft_csrs}.
-
-\begin{table}[H]
-\centering
-\begin{tabularx}{\textwidth}{|l|l|X|}
-\hline
-New \ac{CSR} name & \ac{CSR} Addr & Counts\\
-\hline
-\texttt{CSR\_FATORI\_MINOR\_CNT}          & \texttt{0xBC1} & minor error count\\
-\hline
-\texttt{CSR\_FATORI\_MAJOR\_CNT}          & \texttt{0xBC2} & major error count\\
-\hline
-\texttt{CSR\_FATORI\_REG\_INJ\_CNT}       & \texttt{0xBC3} & register fault injection count\\
-\hline
-\texttt{CSR\_FATORI\_LOGIC\_INJ\_CNT}     & \texttt{0xBC4} & logic fault injection count\\
-\hline
-\texttt{CSR\_FATORI\_CORRECTED\_CNT}      & \texttt{0xBC5} & corrected (scrub) count\\
-\hline
-\texttt{CSR\_FATORI\_MAJOR\_INTERNAL\_CNT}& \texttt{0xBC6} & internal-major error count\\
-\hline
-\texttt{CSR\_FATORI\_MAJOR\_BUS\_CNT}     & \texttt{0xBC7} & bus-major error count\\
-\hline
-\texttt{CSR\_FATORI\_DOUBLE\_FAULT\_CNT}  & \texttt{0xBC8} & double-fault count\\
-\hline
-\texttt{CSR\_FATORI\_CYCLES\_MIN}         & \texttt{0xBC9} & cycles to first minor\\
-\hline
-\texttt{CSR\_FATORI\_CYCLES\_MAJ}         & \texttt{0xBCA} & cycles to first major\\
-\hline
-\texttt{CSR\_FATORI\_DETECT\_LATENCY}     & \texttt{0xBCB} & last injection-to-detection latency\\
-\hline
-\texttt{CSR\_FATORI\_LATENCY\_SUM}        & \texttt{0xBCC} & detection-latency sum\\
-\hline
-\texttt{CSR\_FATORI\_LATENCY\_CNT}        & \texttt{0xBCD} & detection-latency count\\
-\hline
-\end{tabularx}
-\caption{\ac{Fatori-V} new \acp{CSR} counters implemented in this work.}
-\label{tab:fatori_ft_csrs}
-\end{table}
-
-All \ac{FT} hardware monitors are implemented in the developed Fault Manager (\cref{chap6:fault_mgr}). Aggregated error and correction pulses (\cref{chap6:error_agg}) increment counters when asserted. Injection counting uses the one-cycle injection pulses from \texttt{fi\_coms} (\cref{chap8:fi_coms}). Time-to-first-event latches capture the cycle count on the first occurrence after reset. Detection latency subtracts the last injection timestamp from the first subsequent error observation, and latencies are also accumulated into a sum and count. All monitors are exposed to firmware through custom read-only \acp{CSR} in the \texttt{0xBC0} range, read via \texttt{csrr}.
-
-The amount of monitoring hardware included is configurable through five Metric Levels defined via \texttt{fatori\_features.svh}. Level 1 exports only native Ibex HPM counters. Level 2 adds basic fault counters and, when \ac{FI} is enabled, injection counts. Level 3 adds corrected count and the major-fault breakdown. Level 4 adds time to first event and per-injection detection latency. Level 5 adds latency statistics.
-
-After the hardware monitors are published to \acp{CSR}, firmware uses the \texttt{csrr} instruction to read them. This is actually considered to be part of \ac{Fatori-V}'s Software Layer (see \cref{chap7:fatori_software}), but in order to keep metrics measuring and computing explained together, this section details how the hardware metrics reach the result tables.
-
-Each \ac{CSR} in \cref{tab:fatori_ft_csrs} is read by a dedicated function in the firmware, implemented through the created \texttt{iob\_csr.h} file and gated by the active Metrics Level. The full set is serialized into a static buffer, called twice in the firmware wrapper: once before the benchmark (\texttt{[pre]} stage) and once after (\texttt{[post]} stage). The resulting buffer contains the \texttt{pre}, \texttt{post} and \texttt{benchmark} (added by each benchmark's wrapper) metrics:
-
-\begin{lstlisting}[float=h, style=iob_python, caption={Data measured by the \ac{RTL} and written into a text file by the firmware.}]
-[pre]  mcycle,0x000000000001A2B3
-[pre]  fatori_minor_cnt,0
-[benchmark]  coremark_size,36
-[post] mcycle,0x000000000008F4C1
-[post] fatori_minor_cnt,7
-\end{lstlisting}
-
-Once populated, the firmware transmits the buffer over \ac{UART} using the functions by IOBundle. The Py2HWSW console, running in the host, converts the buffer into a text file, naming it \texttt{metrics.txt}. On the host, the IOb-Console script intercepts this transfer and writes the file to disk under the \ac{FPGA} build directory. This is the only point at which \texttt{metrics.txt} is created as a physical file, the \ac{FPGA} itself never accesses the filesystem.
-
-The \texttt{metrics.txt} file is considered a raw metrics file. The Results Stage of the Software Layer (\cref{chap7:results_stage}) will use these raw metrics as operands in the formulas defined centrally in the configuration files (see \cref{chap3:ui_config}), creating the results tables that are displayed in \cref{chap3:ui_results}.
-
-
-
-% -------------------------------------------------------------
-\subsection{Fault Manager Hardware Module}
-\label{chap6:fault_mgr}
-
-The \texttt{fatori\_fault\_mgr} hardware module designed and implemented in this work is the main \ac{FT} hardware controller in \ac{Fatori-V}. It receives the aggregated error interface described in \cref{chap5:ibex_ft,chap6:error_agg} and drives the system control outputs that affect instruction fetch and reset. Depending on the selected Metric Level (\cref{chap6:metrics_hw_impl}), it also implements the hardware monitors later published as custom \acp{CSR}. Its interface includes the aggregated error inputs, \texttt{core\_sleep\_i} to indicate when the core is idle, \texttt{fetch\_enable\_o} to freeze or enable fetch, and \texttt{core\_reset\_req\_o} to request reset. Additional monitor inputs and counter outputs are present when \ac{FI} and higher Metric Levels are enabled.
-
-Inside the block, all incoming error signals are merged into two internal event pulses: one for minor-class events and one for major-class events. These pulses are then used as the increment and latch enables for the exported counters and timing registers, for example, they increment the minor and major counters and, on the first occurrence after reset, they latch the current cycle count to record time-to-first-event. Ibex fetch control uses a multi-bit encoded signal to reduce the chance that a single-bit upset flips the enable state. The manager drives that signal to disable fetch on major events and drain the pipeline. 
-
-The block is configurable through build-time macros defined in \texttt{fatori\_features.svh}. Reset is controlled by a small \ac{FSM}, controlled by: \texttt{FATORI\_RESET\_ON\_MAJOR} that requests a reset after a major event, and \texttt{FATORI\_WAIT\_SLEEP\_BEFORE\_RESET} that delays that request until \texttt{core\_sleep\_i} confirms the core is idle. Other macros define the Metric Level and whether \ac{FI} is enabled. The monitors themselves are implemented as event-driven counters and latches, using the aggregated error pulses (\cref{chap6:error_agg}) and the single-cycle injection pulses from the \ac{FI} router (\cref{chap8:fi_coms}). Most monitors follow the same pattern: a pulse increments a counter, and selected events latch the current cycle count once. Measurements that depend on time use an internal cycle counter and stored timestamps, for example injection-to-detection latency is computed from the last injection timestamp and the next observed error pulse, and optional latency statistics accumulate a sum and count. All internal registers follow the same wrapping approach described in \cref{chap6:reg_wrap}. The resulting monitor values are wired into \texttt{ibex\_cs\_registers} and exposed as custom read-only \acp{CSR} in the \texttt{0xBC0} address range (\cref{chap6:metrics_hw_impl}), so firmware can read them with \texttt{csrr} and the Software Layer (\cref{chap7:fatori_software}) can build the results tables.
+The \ac{CSR} names and addresses are defined in the Ibex package source files, while the read path is added to the Ibex \ac{CSR} block. Each read-only entry returns the corresponding signal produced by \texttt{fatori\_fault\_mgr}. If a Metric Level does not include a monitor, the related hardware and read path are not synthesized.
