@@ -11,42 +11,20 @@
 \label{chap1:motivation}
 Space is a harsh operating environment for electronics. Ionizing radiation can induce \acp{SEU} that flip bits in digital systems, corrupting architectural state and causing failures that are difficult to predict and reproduce. The problem is particularly relevant in \acp{FPGA}. Beyond \acp{FF} and memories, an \ac{FPGA} stores its logic and routing in configuration memory, which means that an \ac{SEU} may alter the circuit itself and corrupt behaviour until corrected. To protect architectures from such events, hardware \acp{FTM} are implemented at the \ac{RTL} level.
 
-Developing and integrating \acp{FTM} introduces trade-offs in hardware cost, power, performance, and design complexity. Selecting the appropriate mechanism for a given architecture requires understanding these trade-offs through a comparative analysis across a representative set of \acp{FTM}. Some architectures implement multiple \acp{FTM}, which can serve as a partial comparison, but they are not designed as \ac{FTM}-testing platforms. Users are expected to use the provided mechanisms, with little support for adding new ones or evaluating them under the same conditions. A rigorous comparison further depends on injecting faults in a controlled, repeatable way and quantifying the outcomes to measure fault coverage. The lack of reproducible, user-facing platforms that combine \ac{FTM} integration with controlled \ac{FI} and metric extraction is a major reason why broad comparative studies remain scarce.
+Developing and integrating \acp{FTM} introduces trade-offs in hardware cost, power, performance, and design complexity. Selecting the appropriate mechanism for a given architecture requires understanding these trade-offs through a comparative analysis across a representative set of \acp{FTM}. Some architectures implement multiple \acp{FTM}, which can serve as a partial comparison, but they are not designed as \ac{FTM}-testing platforms. Users are expected to use the provided mechanisms, with little support for adding new ones or evaluating them under the same conditions.
+
+A rigorous comparison further depends on injecting faults in a controlled, repeatable way and quantifying the outcomes to measure fault coverage. The lack of reproducible, user-facing platforms that combine \ac{FTM} integration with controlled \ac{FI} and metric extraction is a major reason why broad comparative studies remain scarce.
 
 The present thesis addresses that gap by developing a reproducible workflow to implement and evaluate \acp{FTM} on a configurable \ac{RISC-V} \ac{SoC} targeting \acp{FPGA}, enabling controlled \ac{FI} and quantitative fault coverage measurement alongside a comparative trade-off analysis of \acp{FTM}.
 
 
-% #############################################################################
-\section{Requirements}
-\label{chap1:requirements}
-
-A consistent comparison of \acp{FTM} requires a common platform in which each mechanism can be integrated, configured, exposed to controlled \ac{FI}, executed with real software, and evaluated with the same metrics. The main requirement of this work was the development of \ac{Fatori-V} as that platform. Due to the project's time constraints, \ac{Fatori-V} platform required an existing \ac{RISC-V} \ac{RTL} baseline to be built on top of. The second requirement of the project is selecting that baseline. Even with a fixed \ac{ISA}, choosing an unsuitable \ac{SoC} foundation could introduce major setbacks and consume a significant portion of the available time. The following baseline requirements, used as selection criteria to educate the baseline choice presented in \cref{chap2:analysis}, are organized from most to least significant.
-
-\begin{enumerate}[noitemsep, topsep=0pt, parsep=0pt, partopsep=0pt]
-    \item \textbf{Open-Source Availability}. The core and \ac{SoC} must be accessible, modifiable, and redistributable as part of the research work.
-    \item \textbf{Documentation Quality}. Since the project requires extensive \ac{RTL} changes, user guides, micro-architecture documentation, and integration notes are needed to avoid reverse-engineering behaviour during the thesis.
-    \item \textbf{Readability and Ease of Modification}. The \ac{RTL} must have a clear structure and modular design to support analysis and modification.
-    \item \textbf{Complete \ac{SoC} Workflow}. The platform should provide a runnable system from the start, including build, firmware, and simulation support, to reduce setup and integration work.
-    \item \textbf{Existing \ac{FT} Infrastructure}. Native \acp{FTM}, fault signaling, and error-handling hooks reduce implementation effort and match the platform goals.
-    \item \textbf{Local Development Access}. Direct contact with maintainers is useful when required changes exceed the documented workflow.
-    \item \textbf{Hardware Resource Cost}. Low-overhead designs are preferred because space applications are one of the motivations for the platform.
-    \item \textbf{Performance}. Higher baseline performance and built-in validation support are preferred.
-    \item \textbf{Community Activity}. Active maintenance, external adoption, and alignment with current practices support development.
-\end{enumerate}
-
-
-
-
-
-
-% #############################################################################
-\section{Objectives and Contributions}
+\section{Objective and Contributions}
 \label{chap1:objectives}
 
-The main objective of this work was to compare \acp{FTM} under common experimental conditions. This required a configurable \ac{RISC-V} \ac{SoC} platform with native and added \acp{FTM}, controlled \ac{FI}, real benchmark execution, and common metric extraction. This work implemented \ac{Fatori-V} and used it to evaluate a representative set of \acp{FTM}. The objectives and contributions are summarized below.
+The primary objective of this work was to develop \ac{Fatori-V} as a configurable \ac{RISC-V} platform for \ac{FTM} integration, controlled fault injection, and comparative evaluation. The following contributions were made.
 
 \begin{enumerate}
-    \item \textbf{Select and build the \ac{RISC-V} baseline.} Candidate \acp{SoC} were compared, VeeRwolf EL2 \cite{veer_el2} was studied as the first implementation path, and the final baseline moved to Ibex \cite{ibex} integrated into IOb-\ac{SoC} \cite{iob-soc}. The final IOb-SoC-Ibex \cite{iob-soc-ibex} baseline includes the Ibex-to-\ac{AXI} bridge, Py2HWSW integration \cite{py2hwsw}, build-flow hooks for external Vivado Tcl and benchmark selection, native Ibex \acp{FTM}, and register wrapping.
+    \item \textbf{Select and integrate the \ac{RISC-V} baseline.} The final baseline is IOb-SoC-Ibex \cite{iob-soc-ibex}, comprising the Ibex-to-\ac{AXI} bridge, Py2HWSW integration \cite{py2hwsw}, build-flow hooks for external Vivado Tcl and benchmark selection, native Ibex \acp{FTM}, and register wrapping.
 
     \item \textbf{Develop \ac{Fatori-V}.} The platform uses a single \texttt{.yaml} run file to configure hardware features, \acp{FTM}, benchmarks, \ac{FI} campaigns, generated files, and reported metrics. It automates validation, file generation, file movement, build execution, benchmark execution, logging, and result-table generation.
 
@@ -73,7 +51,7 @@ The main objective of this work was to compare \acp{FTM} under common experiment
 \section{Document outline}
 The remainder of the document is organized as follows:
 \begin{itemize}
-    \item \textbf{Chapter 2} introduces the background concepts required for this project. It then presents the \ac{FT}/\ac{FI} testing platform state of the art and surveys \ac{SoC} candidate architectures for \ac{Fatori-V}'s baseline, comparing them against the criteria defined in \cref{chap1:requirements}. An initial hardware backbone for \ac{Fatori-V} is chosen.
+    \item \textbf{Chapter 2} introduces the background concepts required for this project. It then presents the \ac{FT}/\ac{FI} testing platform state of the art and surveys \ac{SoC} candidate architectures for \ac{Fatori-V}'s baseline. An initial hardware backbone for \ac{Fatori-V} is chosen.
     
     \item \textbf{Chapter 3} provides a complete overview of the proposed and later developed \ac{Fatori-V} platform, its layers, \ac{UI}, and the experiment workflow.
     

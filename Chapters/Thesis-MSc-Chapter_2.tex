@@ -190,7 +190,7 @@ Self-testing checks a block by applying predefined inputs and comparing the prod
 \section{State of the Art on Fault Tolerance Testing Platforms}
 \label{chap2:existing_tools}
 
-The lack of complete \ac{FT}/\ac{FI} platforms noted in \cref{chap1:motivation} that motivated the implementation of \ac{Fatori-V}, is further displayed in \cref{tab:fi_platforms_gap}, which compares state of the art platforms according to the features needed to develop and test \acp{FTM}. Full \ac{RTL} shows whether the platform provides a modifiable hardware implementation, matching the baseline access required in \cref{chap1:requirements}. \ac{FT} Interface shows whether \acp{FTM} can be integrated and observed without building all fault signalling from scratch. Memory Types shows whether available \ac{FI} can cover the relevant \ac{FPGA} areas, including configuration memory and register/\ac{FF} memory. Readable \ac{UI} shows whether experiments can be defined through a user-facing configuration instead of per-run code edits. \ac{FI} Setup shows whether injection time and target selection can be reused across campaigns. Metrics shows whether \ac{FT}, performance, and hardware-cost results are extracted in a comparable form. The entries use Yes, Partial, and No to indicate whether each point is provided as part of an integrated workflow.
+The lack of complete \ac{FT}/\ac{FI} platforms noted in \cref{chap1:motivation} that motivated the implementation of \ac{Fatori-V}, is further displayed in \cref{tab:fi_platforms_gap}, which compares state of the art platforms according to the features needed to develop and test \acp{FTM}. Full \ac{RTL} shows whether the platform provides a modifiable hardware implementation, matching the baseline access required for this project. \ac{FT} Interface shows whether \acp{FTM} can be integrated and observed without building all fault signalling from scratch. Memory Types shows whether available \ac{FI} can cover the relevant \ac{FPGA} areas, including configuration memory and register/\ac{FF} memory. Readable \ac{UI} shows whether experiments can be defined through a user-facing configuration instead of per-run code edits. \ac{FI} Setup shows whether injection time and target selection can be reused across campaigns. Metrics shows whether \ac{FT}, performance, and hardware-cost results are extracted in a comparable form. The entries use Yes, Partial, and No to indicate whether each point is provided as part of an integrated workflow.
 
 
 \begin{table}[h]
@@ -268,7 +268,7 @@ Yes & Yes & Yes & Yes & Yes & Yes \\
 \label{chap2:analysis}
 
 
-\ac{Fatori-V} required an existing open-source \ac{RISC-V} \ac{RTL} baseline that supported \ac{RTL} modification, \ac{FTM} integration, software execution, and \ac{FPGA} implementation. This section compares candidate state of the art \acp{SoC} against the requirements defined in \cref{chap1:requirements}.
+\ac{Fatori-V} required an existing open-source \ac{RISC-V} \ac{RTL} baseline that supported \ac{RTL} modification, \ac{FTM} integration, software execution, and \ac{FPGA} implementation. This section compares candidate state of the art \acp{SoC} against the baseline selection criteria.
 
 The surveyed candidates were CVA6 \cite{CVA6}, a 64-bit Linux-capable core; CV32E40P \cite{cv32e40p}, a 32-bit embedded core from the PULP lineage; Ibex \cite{ibex}, a 32-bit embedded core with build-time configuration and native \ac{FT} support; PicoRV32 \cite{picorv32}, a small multi-cycle core with minimal \ac{SoC} examples; Rocket Chip \cite{rocket_chip}, a Chisel-based generated \ac{SoC}; VeeR EL2 through VeeRwolf \cite{VeeRwolf}, a 32-bit embedded core with a runnable \ac{SoC}, debug tools, and course material; and VexRiscv \cite{vexriscv}, a SpinalHDL-generated configurable core. \Cref{tab:candidate_comparison_fullcriteria} reports the comparison using public documentation, superficial source inspection, and reported implementation data. Documentation is graded from 0 to 10. Readability, workflow, \ac{FT} infrastructure, development access, and community activity are qualitative. Published area and performance values are supporting indicators because they may come from different configurations and devices.
 
@@ -373,7 +373,7 @@ Local SoC Implementation &
 High \\
 \hline
 \end{tabular}
-\caption{Comparison of open-source \ac{RISC-V} candidates against the criteria from \cref{chap1:requirements}. Values marked with * come from specific published configurations.}
+\caption{Comparison of open-source \ac{RISC-V} candidates against the baseline selection criteria. Values marked with * come from specific published configurations.}
 \label{tab:candidate_comparison_fullcriteria}
 \end{table}
 
