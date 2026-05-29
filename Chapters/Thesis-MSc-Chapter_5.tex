@@ -11,6 +11,8 @@
 \section{Ibex Overview}
 \label{chap5:ibex_overview}
 
+Ibex \cite{ibex} is the open-source \ac{RISC-V} core, developed by lowRISC, selected as the \ac{Fatori-V} baseline. \Cref{fig:ibex} shows its pipeline and its integration with IOb-SoC.
+
 \begin{figure}[h]
     \centering
     \begin{subfigure}{0.4\textwidth}
@@ -32,41 +34,41 @@
 
 Ibex is a 32-bit in-order \ac{RISC-V} core used across the lowRISC ecosystem, most notably in OpenTitan. It uses a 2-stage baseline pipeline with an optional writeback stage and exposes separate instruction and data memory ports through a request/grant/response handshake. Ibex supports either RV32I or RV32E and can be configured with the C, M, and B extensions, with selectable implementation variants such as multiplier style and B profiles (balanced, OTEarlGrey, or full). It also exposes several microarchitectural options that affect area, performance, and \ac{FT}, including a choice between prefetch buffer and instruction cache, multiple register-file implementations (\ac{FF}-based, \ac{FPGA}-oriented, or latch-based), and optional branch optimizations like a branch target \ac{ALU} and experimental static prediction for taken branches.
 
-Ibex implements the standard \ac{RISC-V} \ac{CSR} set, which in this work was mainly used for performance monitoring and communication with the firmware. The cycle counter \texttt{mcycle} (\ac{CSR} address \texttt{0xB00}) and the retired instruction counter \texttt{minstret} (\ac{CSR} address \texttt{0xB02}) are always available and 64-bit wide. Optional event counters \texttt{mhpmcounterX} (\texttt{0xB03} and above) and \texttt{mhpmcounterXh} (\texttt{0xB83} and above) can also be implemented, with a configurable number of counters and counter width at synthesis time. Counters can be individually enabled or disabled through \texttt{mcountinhibit} (\ac{CSR} address \texttt{0x320}): bit 0 controls \texttt{mcycle}, bit 2 controls \texttt{minstret}, and bit X controls \texttt{mhpmcounterX}. Reads are non-destructive, so values can be sampled at benchmark boundaries and subtracted to obtain per-run metrics. While developing \ac{Fatori-V}, to validate the \ac{CSR} read system, \texttt{marchid} (a static \ac{CSR} with address \texttt{0xF12}) was read and compared against its documented fixed value \texttt{0x0000\_0016}. \Cref{tab:ibex_perf_csrs_example} displays the most relevant \acp{CSR} for this work.
+Ibex implements the standard \ac{RISC-V} \ac{CSR} set, which in this work was mainly used for performance monitoring and communication with the firmware. The cycle counter \texttt{mcycle} (\ac{CSR} address \texttt{0xB00}) and the retired instruction counter \texttt{minstret} (\ac{CSR} address \texttt{0xB02}) are always available and 64-bit wide. Optional event counters \texttt{mhpmcounterX} (\texttt{0xB03} and above) and \texttt{mhpmcounterXh} (\texttt{0xB83} and above) can also be implemented, with a configurable number of counters and counter width at synthesis time. Counters can be individually enabled or disabled through \texttt{mcountinhibit} (\ac{CSR} address \texttt{0x320}): bit 0 controls \texttt{mcycle}, bit 2 controls \texttt{minstret}, and bit X controls \texttt{mhpmcounterX}. \Cref{tab:ibex_perf_csrs_example} lists the \acp{CSR} used as counters in this work.
 
 \begin{table}[h]
 \centering
-\begin{tabularx}{\textwidth}{|l|l|X|}
+\begin{tabularx}{\textwidth}{|l|l|l|X|}
 \hline
-CSR name (platform) & Ibex CSR & Counts\\
+Address & Name & Fatori-V Alias & Description\\
 \hline
 \hline
-\texttt{mcycle} & \texttt{mcycle} (\texttt{0xB00}) & Total cycles (64-bit; upper half at \texttt{0xB80})\\
+\texttt{0xB00} & \texttt{mcycle} & \texttt{mcycle} & Total cycles; upper 32 bits at \texttt{0xB80}\\
 \hline
-\texttt{minstret} & \texttt{minstret} (\texttt{0xB02}) & Retired instructions (64-bit; upper half at \texttt{0xB82})\\
+\texttt{0xB02} & \texttt{minstret} & \texttt{minstret} & Retired instructions; upper 32 bits at \texttt{0xB82}\\
 \hline
-\texttt{hpm\_lsu\_busy} & \texttt{mhpmcounter3} (\texttt{0xB03}) & Cycles waiting for data memory (\texttt{NumCyclesLSU})\\
+\texttt{0xB03} & \texttt{mhpmcounter3} & \texttt{hpm\_lsu\_busy} & Cycles waiting for data memory (\texttt{NumCyclesLSU})\\
 \hline
-\texttt{hpm\_ifetch\_stall} & \texttt{mhpmcounter4} (\texttt{0xB04}) & Cycles waiting for instruction fetch (\texttt{NumCyclesIF})\\
+\texttt{0xB04} & \texttt{mhpmcounter4} & \texttt{hpm\_ifetch\_stall} & Cycles waiting for instruction fetch (\texttt{NumCyclesIF})\\
 \hline
-\texttt{hpm\_loads} & \texttt{mhpmcounter5} (\texttt{0xB05}) & Number of loads (\texttt{NumLoads})\\
+\texttt{0xB05} & \texttt{mhpmcounter5} & \texttt{hpm\_loads} & Number of loads (\texttt{NumLoads})\\
 \hline
-\texttt{hpm\_stores} & \texttt{mhpmcounter6} (\texttt{0xB06}) & Number of stores (\texttt{NumStores})\\
+\texttt{0xB06} & \texttt{mhpmcounter6} & \texttt{hpm\_stores} & Number of stores (\texttt{NumStores})\\
 \hline
-\texttt{hpm\_jumps} & \texttt{mhpmcounter7} (\texttt{0xB07}) & Number of jumps (\texttt{NumJumps})\\
+\texttt{0xB07} & \texttt{mhpmcounter7} & \texttt{hpm\_jumps} & Number of jumps (\texttt{NumJumps})\\
 \hline
-\texttt{hpm\_branches} & \texttt{mhpmcounter8} (\texttt{0xB08}) & Number of branches (\texttt{NumBranches})\\
+\texttt{0xB08} & \texttt{mhpmcounter8} & \texttt{hpm\_branches} & Number of branches (\texttt{NumBranches})\\
 \hline
-\texttt{hpm\_branches\_taken} & \texttt{mhpmcounter9} (\texttt{0xB09}) & Taken branches (\texttt{NumBranchesTaken})\\
+\texttt{0xB09} & \texttt{mhpmcounter9} & \texttt{hpm\_branches\_taken} & Taken branches (\texttt{NumBranchesTaken})\\
 \hline
-\texttt{hpm\_compressed} & \texttt{mhpmcounter10} (\texttt{0xB0A}) & Compressed instr. retired (\texttt{NumInstrRetC})\\
+\texttt{0xB0A} & \texttt{mhpmcounter10} & \texttt{hpm\_compressed} & Compressed instructions retired (\texttt{NumInstrRetC})\\
 \hline
-\texttt{hpm\_multiply\_stalls} & \texttt{mhpmcounter11} (\texttt{0xB0B}) & Cycles waiting for multiply (\texttt{NumCyclesMulWait})\\
+\texttt{0xB0B} & \texttt{mhpmcounter11} & \texttt{hpm\_multiply\_stalls} & Cycles waiting for multiply (\texttt{NumCyclesMulWait})\\
 \hline
-\texttt{hpm\_divide\_stalls} & \texttt{mhpmcounter12} (\texttt{0xB0C}) & Cycles waiting for divide (\texttt{NumCyclesDivWait})\\
+\texttt{0xB0C} & \texttt{mhpmcounter12} & \texttt{hpm\_divide\_stalls} & Cycles waiting for divide (\texttt{NumCyclesDivWait})\\
 \hline
 \end{tabularx}
-\caption{\ac{CSR} counters used in this work.}
+\caption{Ibex \acp{CSR} used as counters. All entries are R/W in M-mode; writes are used only to reset counters to zero.}
 \label{tab:ibex_perf_csrs_example}
 \end{table}
 
@@ -78,7 +80,7 @@ CSR name (platform) & Ibex CSR & Counts\\
 \section{Ibex and Fault Tolerance}
 \label{chap5:ibex_ft}
 
-Ibex was selected partly because it includes native \ac{FT}-related support. This section introduces the native Ibex \acp{FTM} and detail native \ac{FT} features that are relevant for \ac{Fatori-V}'s development.
+Ibex was selected partly because it includes native \ac{FT}-related support. This section reviews the native Ibex \acp{FTM} and details the native \ac{FT} features relevant to \ac{Fatori-V}'s development.
 
 The native SecureIbex configuration enables Ibex' \acp{FTM}, mostly already introduced in \Cref{chap2:ftms}. Dual-Core Lockstep instantiates a shadow core, delays the inputs and outputs used for comparison, and raises an internal major alert when the compared outputs diverge. Shadow \acp{CSR} protect selected control registers by keeping complemented copies and checking consistency. Register-file \ac{ECC} widens register-file data with check bits and raises an internal major alert when corruption is detected. ICache \ac{ECC} protects cache tag and data banks and raises a minor alert on detected errors.
 
@@ -88,7 +90,7 @@ Data Independent Timing removes selected data-dependent timing paths, such as br
 
 Ibex does not provide complete error handling hardware by default, but it exposes control and status ports that can be used by integration logic to detect faults and trigger recovery. These ports, listed in \Cref{tab:ibex_error_ports}, include three alert outputs, a multi-bit fetch-enable input that can stop instruction fetching, a sleep indicator that reports core activity, and a double-fault flag.
 
-However, Ibex only exposes these ports. It does not aggregate errors across the \ac{SoC}, count error occurrences, or compute any \ac{FT}-related. Furthermore, alert outputs are status signals, not counters, meaning that they remain asserted until cleared. Counting detections, extracting quantitative \ac{FT} metrics, and reacting to reported errors requires the implementation of a fault manager.
+However, Ibex only exposes these ports. It does not aggregate errors across the \ac{SoC}, count error occurrences, or compute any \ac{FT}-related metrics. Furthermore, alert outputs are status signals, not counters, meaning that they remain asserted until cleared. Counting detections, extracting quantitative \ac{FT} metrics, and reacting to reported errors requires the implementation of a fault manager.
 
 \begin{table}[h]
 \centering
@@ -133,7 +135,7 @@ Goes high when the core has flushed, with no outstanding transactions. &
 \section{System-on-Chip Integration}
 \label{chap5:soc-integration}
 
-The main reason behind abandoning the VeeRwolf EL2's path in \Cref{chap4:summary} was the unexpected implementation complexity that arose during development. This time, the locally developed IOb-\ac{SoC} system was chosen to improve support and mitigate integration constraints later. The integration process resulted in IOb-\ac{SoC}-Ibex, a \ac{SoC} plus \ac{CPU} system analogous to IOb-\ac{SoC}, that rely on the Py2HWSW python framework for hardware generation and building. Both the python platform and the actual integration process are detailed next in \Cref{chap5:py2hwsw,chap5:iob-soc-ibex}.
+The main reason behind abandoning the VeeRwolf EL2's path in \Cref{chap4:summary} was the unexpected implementation complexity that arose during development. This time, the locally developed IOb-\ac{SoC} system was chosen to improve support and mitigate integration constraints later. The integration process resulted in IOb-\ac{SoC}-Ibex, a \ac{SoC} plus \ac{CPU} system analogous to IOb-\ac{SoC}, that relies on the Py2HWSW Python framework for hardware generation and building. Both the python platform and the actual integration process are detailed next in \Cref{chap5:py2hwsw,chap5:iob-soc-ibex}.
 
 
 
@@ -155,7 +157,7 @@ The Setup Directory is the user repository and the place where development chang
 
 IOb-SoC-Ibex, developed in this work, is analogous in structure to IOb-SoC, but is built from scratch to host Ibex as the \ac{CPU}. The Ibex core is provided through a separate wrapper repository, IOb-Ibex \cite{iob-ibex}, also developed in this work, which includes the official Ibex repositories as submodules and provides the hardware integration required by the Py2HWSW structure. To achieve a functioning system, two classes of modifications were required: build workflow integration (to generate and synchronize native Ibex sources within the Py2HWSW structure) and hardware interfacing (to connect the Ibex memory handshake to the \ac{SoC} bus). The build workflow was organized into three layers, visible in \Cref{fig:ibex+iob}, each added as a Git submodule of the upper one. 
 
-The top layer, IOb-SoC-Ibex , acts as the \ac{SoC} project and is forked from IOb-SoC. At this level, the first step was selecting Ibex as the \ac{CPU} in \texttt{iob\_soc.py} with \texttt{"cpu": "iob\_ibex"}, so that the Py2HWSW flow searches for \texttt{iob\_ibex.py} in the project's submodules. Since this layer is meant to be controlled by \ac{Fatori-V}, two hook mechanisms were added to controll the Vivado TCL flow and benchmark compiling. For the Vivado side, the main \texttt{build.tcl} script was modified to call \texttt{source\_probe} at fixed stages of execution (pre synthesis, post opt, post route, pre bitstream, and post bitstream). If the user provides the Makefile argument \texttt{VIVADO\_INPUT} pointing to a directory containing any of these files, each one is sourced automatically at the corresponding point of the Vivado flow. On the software side, the default firmware flow was extended so that a benchmark can be selected from an external directory through the Makefile argument \texttt{BENCHMARK\_DIR}. If this argument is provided, the build system compiles the benchmark sources from that directory instead of the default Hello World program, and the firmware wrapper calls a \texttt{main} function defined in \texttt{benchmark.h}, a mandatory file for any benchmark integrated in this system. Together, these two hooks made the top layer externally configurable without requiring permanent edits to the base \ac{SoC} sources for each experiment. Since Ibex relies on SystemVerilog packages, and the Py2HWSW is designed only for Verilog source files, the default \ac{FPGA} build flow's compilation ordering was changed so that \texttt{*\_pkg.sv} files are compiled before other source files that import them. This change was implemented in the \ac{FPGA} Makefile, as shown in \Cref{lst:src_order}.
+The top layer, IOb-SoC-Ibex , acts as the \ac{SoC} project and is forked from IOb-SoC. At this level, the first step was selecting Ibex as the \ac{CPU} in \texttt{iob\_soc.py} with \texttt{"cpu": "iob\_ibex"}, so that the Py2HWSW flow searches for \texttt{iob\_ibex.py} in the project's submodules. Since this layer is meant to be controlled by \ac{Fatori-V}, two hook mechanisms were added to control the Vivado \ac{TCL} flow and benchmark compiling. For the Vivado side, the main \texttt{build.tcl} script was modified to call \texttt{source\_probe} at fixed stages of execution (pre synthesis, post opt, post route, pre bitstream, and post bitstream). If the user provides the Makefile argument \texttt{VIVADO\_INPUT} pointing to a directory containing any of these files, each one is sourced automatically at the corresponding point of the Vivado flow. On the software side, the default firmware flow was extended so that a benchmark can be selected from an external directory through the Makefile argument \texttt{BENCHMARK\_DIR}. If this argument is provided, the build system compiles the benchmark sources from that directory instead of the default Hello World program, and the firmware wrapper calls a \texttt{main} function defined in \texttt{benchmark.h}, a mandatory file for any benchmark integrated in this system. Together, these two hooks made the top layer externally configurable without requiring permanent edits to the base \ac{SoC} sources for each experiment. Since Ibex relies on SystemVerilog packages, and the Py2HWSW is designed only for Verilog source files, the default \ac{FPGA} build flow's compilation ordering was changed so that \texttt{*\_pkg.sv} files are compiled before other source files that import them. This change was implemented in the \ac{FPGA} Makefile, as shown in \Cref{lst:src_order}.
 
 
 \begin{lstlisting}[float=h,language=matlabfloz,caption={Portion of the modified Py2HWSW \ac{FPGA} Makefile enforcing package ordering}, label={lst:src_order}]
@@ -296,11 +298,14 @@ Write response and response status returned by the \ac{AXI} slave. \\
 \label{tab:ibex2axi}
 \end{table}
 
-The hardware bridge implements the signals described in \Cref{tab:ibex2axi} through direct combinational assignments. Since the Ibex data interface uses \texttt{ibex\_data\_we\_i} to distinguish loads from stores, the same request signal is routed either to the \ac{AXI} read address channel, $\texttt{dbus\_arvalid\_o} = \texttt{ibex\_data\_req\_i} \; \& \; \sim\texttt{ibex\_data\_we\_i}$, or to the write address and write data channels, $\texttt{dbus\_awvalid\_o} = \texttt{dbus\_wvalid\_o} = \texttt{ibex\_data\_req\_i} \; \& \; \texttt{ibex\_data\_we\_i}$. The address signals \texttt{dbus\_awaddr\_o} and \texttt{dbus\_araddr\_o} are driven from \texttt{ibex\_data\_addr\_i}, while \texttt{dbus\_wdata\_o} and \texttt{dbus\_wstrb\_o} are driven from \texttt{ibex\_data\_wdata\_i} and \texttt{ibex\_data\_be\_i}, simply forwarding the data and address signals.  The response valid signal is computed as $\texttt{ibex\_data\_rvalid\_o} = \texttt{dbus\_rvalid\_i} \; || \; \texttt{dbus\_bvalid\_i}$, because Ibex expects one response indication per request, while \ac{AXI} reports load completion through the read data channel and store completion through the write response channel. The response channels are fixed through \texttt{dbus\_bready\_o=1}, \texttt{dbus\_rready\_o=1}, and \texttt{ibus\_rready\_o=1}, since Ibex does not provide a separate response interface. Unused \ac{AXI} fields are tied to default values, including \texttt{*\_len\_o=0}, \texttt{*\_burst\_o=0}, and \texttt{dbus\_wlast\_o=1}, which restricts this bridge to single transfers.
+The hardware bridge implements the signals in \Cref{tab:ibex2axi} through direct combinational assignments. Since the Ibex data interface uses \texttt{ibex\_data\_we\_i} to distinguish loads from stores, the same request signal is routed either to the \ac{AXI} read address channel, $\texttt{dbus\_arvalid\_o} = \texttt{ibex\_data\_req\_i} \; \& \; \sim\texttt{ibex\_data\_we\_i}$, or to the write address and write data channels, $\texttt{dbus\_awvalid\_o} = \texttt{dbus\_wvalid\_o} = \texttt{ibex\_data\_req\_i} \; \& \; \texttt{ibex\_data\_we\_i}$. The address signals \texttt{dbus\_awaddr\_o} and \texttt{dbus\_araddr\_o} are driven from \texttt{ibex\_data\_addr\_i}, while \texttt{dbus\_wdata\_o} and \texttt{dbus\_wstrb\_o} are driven from \texttt{ibex\_data\_wdata\_i} and \texttt{ibex\_data\_be\_i}, simply forwarding the data and address signals.  The response valid signal is computed as $\texttt{ibex\_data\_rvalid\_o} = \texttt{dbus\_rvalid\_i} \; || \; \texttt{dbus\_bvalid\_i}$, because Ibex expects one response indication per request, while \ac{AXI} reports load completion through the read data channel and store completion through the write response channel. The response channels are fixed through \texttt{dbus\_bready\_o=1}, \texttt{dbus\_rready\_o=1}, and \texttt{ibus\_rready\_o=1}, since Ibex does not provide a separate response interface. Unused \ac{AXI} fields are tied to default values, including \texttt{*\_len\_o=0}, \texttt{*\_burst\_o=0}, and \texttt{dbus\_wlast\_o=1}, which restricts this bridge to single transfers.
 
 
+% #############################################################################
+\section{Summary}
+\label{chap5:summary}
 
-
+This chapter presented the IOb-SoC-Ibex baseline. The Ibex core was introduced, covering its pipeline, configuration options, \ac{CSR}-based performance monitoring interface, and native \ac{FT} mechanisms. The integration work that produced IOb-SoC-Ibex was then described: the Py2HWSW build infrastructure and its three-directory model, the three-layer repository structure that separates the \ac{SoC} project, the Ibex wrapper, and the official Ibex sources, and the \ac{AXI} bridge developed to connect the Ibex memory handshake to the IOb-SoC bus. \Cref{chap6:fatori_hardware} details the \ac{FTM} hardware and fault manager built on top of this baseline.
 
 
 
