@@ -1057,7 +1057,7 @@ The IF Stage passes for all valid configurations, including \(N=1\), \(M=1\). Th
 
 Increasing \(N\) is only useful when it increases the number of faulty replicas that can be tolerated. The \(N=4\), \(M=3\) configuration has the same correction margin as \(N=3\), \(M=2\), since both tolerate one faulty replica. The first margin increase appears at \(N=5\), \(M=3\), which tolerates two faulty replicas. The \(N=7\), \(M=4\) configuration tolerates three, but adds higher cost and timing pressure.
 
-All experiments in \Cref{tab:chap9-logicRedundancy-status} were repeated with \textt{HOLD} enabled, and the benchmark classification did not change. \textt{HOLD} makes a wrapper output the last valid voted value when the voter cannot form a quorum. For the tested campaigns, \textt{HOLD} did not affect execution.
+All experiments in \Cref{tab:chap9-logicRedundancy-status} were repeated with \texttt{HOLD} enabled, and the benchmark classification did not change. \texttt{HOLD} makes a wrapper output the last valid voted value when the voter cannot form a quorum. For the tested campaigns, \texttt{HOLD} did not affect execution.
 
 
 
