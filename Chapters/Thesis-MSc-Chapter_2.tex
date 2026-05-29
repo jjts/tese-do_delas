@@ -46,7 +46,7 @@ Protecting against these effects requires either preventing faults from reaching
 \subsection{Memory Types and Fault Targets}
 \label{chap8:fi_targets}
 
-\ac{SRAM}-based \acp{FPGA} contain multiple memory types that may be affected by \acp{SEU} \cite{PG187,Kastensmidt2006}. Listed in order of decreasing size — and therefore decreasing probability of being hit by a random upset — they are as follows.
+\ac{SRAM}-based \acp{FPGA} contain multiple memory types that may be affected by \acp{SEU} \cite{SEM,Kastensmidt2006}. Listed in order of decreasing size — and therefore decreasing probability of being hit by a random upset — they are as follows.
 
 Configuration memory stores the programmed configuration of the device, defining \ac{LUT} equations, routing connections, and \ac{I/O} behaviour. An upset here alters the implemented circuit rather than merely corrupting data, making it both the most structurally significant and statistically the most probable fault target.
 
@@ -74,7 +74,7 @@ The system's behaviour changes with its current state in \ac{SEM}'s \ac{FSM}, di
 \begin{figure}[h]
   \centering
   \includegraphics[width=0.88\linewidth]{Images/SEM_State_Machine.png}
-  \caption{SEM state transition diagram for mitigation modes \cite{PG187}.}
+  \caption{SEM state transition diagram for mitigation modes \cite{SEM}.}
   \label{fig:sem_state}
 \end{figure}
 
@@ -358,7 +358,7 @@ Medium, simple demo system &
 Full, 7+ FTMs + FT Interface &
 No &
 16.85\,kGE* (micro) \cite{ibex} &
-3.13\,CoreMark/\newline MHz* (maxperf) \cite{Ibex_maxperf} &
+3.13\,CoreMark/\newline MHz* (maxperf) &
 Very high \\
 \hline
 PicoRV32 &

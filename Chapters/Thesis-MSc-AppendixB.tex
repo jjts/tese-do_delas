@@ -4,7 +4,7 @@
 \chapter{SEM Monitor Interface Reference}
 \label{app_b:sem_monitor}
 
-This appendix lists a small subset of SEM monitor commands and the typical responses observed during bring-up and automated fault-injection. The exact command set and report fields depend on the SEM version and device family; the examples below follow the UltraScale SEM controller monitor logs \cite{PG187}.
+This appendix lists a small subset of SEM monitor commands and the typical responses observed during bring-up and automated fault-injection. The exact command set and report fields depend on the SEM version and device family; the examples below follow the UltraScale SEM controller monitor logs \cite{SEM}.
 
 \begin{table}[H]
 \centering
@@ -31,7 +31,7 @@ D & Enter Detect Only. Prints SC 20 and the prompt becomes D. \\
 U & Diagnostic scan. Prints SC 40, then reports detected errors (if any), then returns to I. \\
 \hline
 \end{tabularx}
-\caption{Selected SEM monitor commands and expected response patterns \cite{PG187}.}
+\caption{Selected SEM monitor commands and expected response patterns \cite{SEM}.}
 \label{tab:sem_cmds}
 \end{table}
 
