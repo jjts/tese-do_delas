@@ -31,13 +31,28 @@ The firmware reads the \acp{CSR} and sends the metrics to the user desktop conso
 During execution, faults are injected (green paths in \Cref{fig:chap9_exp_setup}) using the \ac{FI} \ac{UART}, and decoded either as "R" commands (register injections), or \ac{SEM} commands (configuration-memory injections).
 
 
+
+
+
 %####################################################################
 \section{Fatori-V Validation} 
 \label{chap9:fatori_validation} 
 
-Before evaluating the \acp{FTM}, a set of experiments was performed to validate \ac{Fatori-V} itself, focusing on whether faults are injected in the intended area and whether the implemented time distributions match their configuration.
+Before evaluating the \acp{FTM}, a set of experiments was performed to validate \ac{Fatori-V} itself. These experiments checked whether configuration memory injections reached the intended physical regions and whether the implemented time profiles followed their configured behaviour.
 
-The area precision was evaluated through the Pblock Model. For each pblock target, the estimated target size was compared with the real required size reported afterwards by Vivado, using the normalized absolute difference between the two values with \(A = 100*|S_{\mathrm{real}} - S_{\mathrm{est}}|/S_{\mathrm{est}}\). Targets with configurable parameters (such as the \ac{ALU}, the Controller, and others) were evaluated in the baseline configuration and two increasingly complex extra configurations. Targets without configurable parameters (such as the Writeback Stage, the Prefetch Buffer or the Branch Predictor) were evaluated once. The Pblock Model accuracy results are shown in \Cref{fig:chap9-pblock-model-accuracy}.
+The area precision was evaluated through the Pblock Model. For each pblock target, the estimated target size was compared with the real required size later reported by Vivado. The normalized size error was computed as:
+
+\[
+E_{\mathrm{pblock}} = 100 \cdot \frac{|S_{\mathrm{real}} - S_{\mathrm{est}}|}{S_{\mathrm{est}}}
+\]
+
+The corresponding accuracy was computed as:
+
+\[
+A_{\mathrm{pblock}} = 100 - E_{\mathrm{pblock}}
+\]
+
+Targets with configurable parameters, such as the \ac{ALU} and the Controller, were evaluated in the baseline configuration and in two additional configurations with more enabled options. Targets without configurable parameters, such as the Writeback Stage, the Prefetch Buffer, and the Branch Predictor, were evaluated once. The Pblock Model accuracy results are shown in \Cref{fig:chap9-pblock-model-accuracy}.
 
 \begin{figure}[h]
     \centering
@@ -46,10 +61,25 @@ The area precision was evaluated through the Pblock Model. For each pblock targe
     \label{fig:chap9-pblock-model-accuracy}
 \end{figure} 
 
-The Pblock Model reached 100\% accuracy in non-configurable targets, such as the Branch Predictor or the Prefetch Buffer, 85\% in the most complex configurations of parameterizable targets, such as the ID Stage and the \ac{LSU}, and 91.63\% on average. The lower scores occur in targets that allow the most configuration (features with different implementations, replication factors, and others).
+The Pblock Model reached 100\% accuracy for non-configurable targets, such as the Branch Predictor and the Prefetch Buffer, 85\% for the most complex configurations of parameterizable targets, such as the ID Stage and the \ac{LSU}, and 91.63\% on average.
 
-The time profiles were evaluated by running timestamped \ac{FI} campaigns for each implemented profile. Each campaign was configured to produce approximately 12000 injections. The measured timestamps were then used to reconstruct the observed behaviour and compare it with the ideal profile generated from the same configuration. The Uniform, Poisson, and \ac{MMPP2} profiles are evaluated as inter-injection period distributions, while Ramp and Microburst profiles are evaluated as timestamp-derived local rate profiles.
+The time profiles were evaluated by running timestamped \ac{FI} campaigns for each implemented profile. Each campaign was configured to produce approximately 12000 injections. The measured timestamps were used to reconstruct the observed profile and compare it with the ideal profile generated from the same configuration. The Uniform, Poisson, and \ac{MMPP2} profiles were evaluated as inter-injection period distributions. The Ramp and Microburst profiles were evaluated by grouping timestamps into time bins and comparing the measured injection rate in each bin with the configured rate.
 
+For each profile, the measured and ideal profiles were compared using the same bins. The profile error was computed from the normalized absolute difference between the measured value \(y_i\) and the ideal value \(y^{\mathrm{ideal}}_i\) in each bin:
+
+\[
+E_{\mathrm{profile}} =
+\frac{\sum_{i=1}^{n} |y_i - y^{\mathrm{ideal}}_i|}
+{\sum_{i=1}^{n} y^{\mathrm{ideal}}_i}
+\]
+
+The profile match score was computed as:
+
+\[
+\mathrm{Profile\ Match} = 100 \cdot (1 - E_{\mathrm{profile}})
+\]
+
+A higher profile match means that the measured profile follows the configured profile more closely.
 
 \begin{figure}[h]
     \centering
@@ -57,31 +87,6 @@ The time profiles were evaluated by running timestamped \ac{FI} campaigns for ea
     \caption{Uniform profile.}
     \label{fig:chap9-uniform-profile}
 \end{figure} 
-% \begin{figure}[h]
-%     \centering
-%     \includegraphics[width=0.8\linewidth]{Images/poisson_profile_overlay.png}
-%     \caption{Poisson profile.}
-%     \label{fig:chap9-poisson-profile}
-% \end{figure} 
-% \begin{figure}[h]
-%     \centering
-%     \includegraphics[width=0.8\linewidth]{Images/mmpp2_profile_overlay.png}
-%     \caption{\ac{MMPP2} profile.}
-%     \label{fig:chap9-mmpp2-profile}
-% \end{figure}
-% \begin{figure}[h]
-%     \centering
-%     \includegraphics[width=0.8\linewidth]{Images/ramp_profile_line.png}
-%     \caption{Ramp profile.}
-%     \label{fig:chap9-ramp-profile}
-% \end{figure} 
-% \begin{figure}[h]
-%     \centering
-%     \includegraphics[width=0.8\linewidth]{Images/microburst_profile_unconnected.png}
-%     \caption{Microburst profile.}
-%     \label{fig:chap9-microburst-profile}
-% \end{figure}
-
 
 \begin{figure}[h]
     \centering
@@ -98,7 +103,7 @@ The time profiles were evaluated by running timestamped \ac{FI} campaigns for ea
         \caption{\ac{MMPP2} profile.}
         \label{fig:chap9-mmpp2-profile}
     \end{subfigure}
-    \caption{Poisson and \ac{MMPP2} time profiles validation.}
+    \caption{Poisson and \ac{MMPP2} time profile validation.}
     \label{fig:chap9-poisson-profiles}
 \end{figure}
 
@@ -117,13 +122,13 @@ The time profiles were evaluated by running timestamped \ac{FI} campaigns for ea
         \caption{Microburst profile.}
         \label{fig:chap9-microburst-profile}
     \end{subfigure}
-    \caption{Ramp and Microburst time profiles validation.}
+    \caption{Ramp and Microburst time profile validation.}
     \label{fig:chap9-ramp-microburst-profiles}
 \end{figure}
 
-The Uniform and Poisson profiles in \Cref{fig:chap9-uniform-profile,fig:chap9-poisson-profile} were configured with a 100 Hz mean rate, corresponding to an expected 10 ms mean period, and the measured distributions concentrate around that value. The \ac{MMPP2} profile combines a 60 Hz low-rate state and a 180 Hz high-rate state, with transition probabilities of 0.12 from low to high and 0.08 from high to low. These probabilities give stationary proportions of 0.40 and 0.60, resulting in an expected mean period of \(0.40 \cdot 1000/60 + 0.60 \cdot 1000/180 = 10\ \mathrm{ms}\), which is confirmed by \Cref{fig:chap9-mmpp2-profile}. The Ramp and Microburst results in \Cref{fig:chap9-ramp-profile,fig:chap9-microburst-profile} confirm their intended behaviour.
+The Uniform and Poisson profiles in \Cref{fig:chap9-uniform-profile,fig:chap9-poisson-profile} were configured with a 100 Hz mean rate, corresponding to an expected 10 ms mean period. The measured distributions concentrate around that value. The \ac{MMPP2} profile combines a 60 Hz low-rate state and a 180 Hz high-rate state, with transition probabilities of 0.12 from low to high and 0.08 from high to low. These probabilities give stationary proportions of 0.40 and 0.60, resulting in an expected mean period of \(0.40 \cdot 1000/60 + 0.60 \cdot 1000/180 = 10\ \mathrm{ms}\), which matches \Cref{fig:chap9-mmpp2-profile}. The Ramp profile follows the configured rate increase, and the Microburst profile shows the configured alternation between burst and non-burst periods.
 
-\Cref{tab:chap9-time-profile-accuracy} shows the accuracy of each measured profile against the ideal profile generated with the same configuration, using the accuracy equation defined above.
+\Cref{tab:chap9-time-profile-accuracy} shows the profile match score for each measured profile.
 
 \begin{table}[h]
 \centering
@@ -160,22 +165,25 @@ Microburst &
 
 
 
+
+
 % #############################################################################
 \section{Comparison of Fault Tolerance Mechanisms}
 \label{chap9:general-ftm-testing}
 
+This section compares the evaluated \acp{FTM} under the same \ac{FI} conditions. Each hardware setup contains a defined set of enabled \acp{FTM}. In the individual \ac{FTM} experiments, only the mechanism under test is enabled. The comparison also includes a Baseline with no \acp{FTM}, SecureIbex with the native Ibex \acp{FTM} enabled, and one setup with all evaluated \acp{FTM} enabled.
 
-This section performs the comparison mentioned in \Cref{chap1:motivation} by evaluating 11 \acp{FTM}, an Ibex baseline, the native SecureIbex \ac{FTM} set, and a system with all implemented \acp{FTM} enabled. The native Ibex \acp{FTM} considered in this comparison are Lockstep, Dummy Instructions, Data Independent Timing, Hardened \ac{PC}, PMP, RegFile \ac{ECC}, RegFile RADDR glitch checks, \ac{RF} WE glitch checks, Secure Guards, and Shadow \acp{CSR}. The two \acp{FTM} implemented for \ac{Fatori-V} are Register Redundancy (Register M-of-N), and Logic Redundancy (Logic M-of-N). Register M-of-N was enabled for all 197 wrapped registers, with $N=3$, $M=2$, with the correction feature enabled. Logic M-of-N was enabled for all five supported logic targets listed in \Cref{chap6:mon} (\ac{ALU}, \ac{LSU}, Controller, Decoder, and IF Stage) with $N=3$ and $M=2$. 
+The native Ibex \acp{FTM} evaluated individually are Lockstep, Dummy Instructions, Data Independent Timing, Hardened \ac{PC}, PMP, RegFile \ac{ECC}, RegFile Glitch Checks, Secure Guards, and Shadow \acp{CSR}. RegFile Glitch Checks groups the RegFile RADDR and \ac{RF} WE glitch checks. The two \acp{FTM} implemented for \ac{Fatori-V} are Register Redundancy and Logic Redundancy.
 
-The Baseline contains no \acp{FTM}, but keeps the Fault Manager Redundancyitoring hardware enabled because these are required to retrieve \ac{FT} data. The Baseline uses Branch Predictor and Branch Target \ac{ALU}, and enables the M, C, and B \ac{ISA} extensions. The multiplier is the native Ibex Single Cycle multiplier, and the bit manipulation unit is the native Ibex Balanced implementation.
+Register Redundancy was enabled for all 197 wrapped registers, with \(N=3\), \(M=2\), and Correction enabled. Logic Redundancy was enabled for the five supported logic targets listed in \Cref{chap6:mon}, namely the \ac{ALU}, \ac{LSU}, Controller, Decoder, and IF Stage, with \(N=3\) and \(M=2\).
 
-The comparison uses one configuration per \ac{FTM}, with only that \ac{FTM} enabled. It also includes the Baseline, SecureIbex, which enables only Ibex's native \acp{FTM}, and one configuration with all \acp{FTM} enabled. For each configuration, \ac{Fatori-V} executes the same set of \ac{FI} experiments by varying the injection rate, the register/configuration ratio, and the injection scope, resulting in 588 experiments.
+The Baseline contains no \acp{FTM}, but keeps the Fault Manager and monitoring hardware enabled because these blocks are required to collect \ac{FT} data. It uses the Branch Predictor and Branch Target \ac{ALU}, and enables the M, C, and B \ac{ISA} extensions. The multiplier is the native Ibex Single Cycle multiplier, and the bit manipulation unit is the native Ibex Balanced implementation. All experiments use a \ac{CPU} frequency of 60 MHz.
 
-The \ac{FI} campaigns use two injection scopes, the full device and the selected Pblock targets. All injections use the Poisson time profile, a fixed duration of 120 s, and injection rates of 1 Hz, 10 Hz, 50 Hz, 100 Hz, 500 Hz, 1000 Hz, and 5000 Hz. The register/configuration ratio controls the distribution of injections between registers and configuration memory. A ratio of 0 injects only configuration faults, a ratio of 1 injects only register faults, and a ratio of 0.0001 combines both fault types. The mixed ratio approximates the proportion between the 197 wrapped registers and the 1837420 \ac{EBD} configuration addresses, since $197/1837420\approx0.0001$. \ac{Fatori-V} uses fixed seeds, the same benchmarks, and the same \ac{FI} configuration across experiments to keep them comparable. The \ac{FI} target pool from the first experiment was reused in the remaining experiments, so that each campaign followed the same injection targets and timing.
+For each hardware setup, \ac{Fatori-V} ran the same set of \ac{FI} campaigns. Each setup was tested with seven injection rates, three register/configuration memory ratios, and two injection scopes, producing 42 campaigns per setup and 588 experiments overall. The same seeds, benchmarks, \ac{FI} configuration, and target-pool replay were used across setups, so each setup followed the same injection targets and timing.
 
-The experiments ran the software benchmarks included with \ac{Fatori-V}, which were Fatori Stress with 100000 iterations and all targets enabled, CoreMark with 1000 iterations, and the Embench-IoT benchmarks crc32, cubic, edn, huffbench, matmult\_int, md5sum, minver, nbody, nettle\_aes, and nettle\_sha256. The benchmarks were configured to run until completion. The performance results were measured from CoreMark and Embench-IoT runs and experiment success was measured with Fatori Stress's checksum check.
+All campaigns use the Poisson time profile, a fixed duration of 120 s, and injection rates of 1 Hz, 10 Hz, 50 Hz, 100 Hz, 500 Hz, 1000 Hz, and 5000 Hz. The register/configuration memory ratio defines how injections are split between wrapped registers and configuration memory. A ratio of 0 injects only configuration memory faults, a ratio of 1 injects only register faults, and a ratio of 0.0001 combines both fault types. This mixed ratio approximates the proportion between the 197 wrapped registers and the 1837420 \ac{EBD} configuration addresses exported by Vivado for the Baseline, which represent the possible configuration memory injection locations. The two injection scopes are the full device and the selected Pblock targets.
 
-
+The same seeds, benchmarks, and \ac{FI} configurations were used across experiments. The \ac{FI} target pool from the first experiment was reused in the remaining experiments, so each campaign followed the same injection targets and timing. The executed benchmarks were Fatori Stress with 100000 iterations and all targets enabled, CoreMark with 1000 iterations, and the Embench-IoT benchmarks crc32, cubic, edn, huffbench, matmult\_int, md5sum, minver, nbody, nettle\_aes, and nettle\_sha256. Performance was measured from CoreMark and Embench-IoT. Experiment success was measured with the Fatori Stress checksum check.
 
 
 
@@ -183,12 +191,12 @@ The experiments ran the software benchmarks included with \ac{Fatori-V}, which w
 
 \subsection{Fault Tolerance}
 
-\Cref{tab:results_wd_all_ratios,tab:results_modules_all_ratios} summarize the results for the whole-device and Pblock-target injection scopes.
 
-The primary method for evaluating \ac{FT} is to identify which \acp{FTM} allow the system to execute correctly under \ac{FI}. In the following tables, a green cell means that the benchmark completed and produced the correct checksum, a yellow cell means that the benchmark completed but produced the wrong checksum, and a red cell means that the system hung, reset, timed out, or did not publish usable metrics.
+\Cref{tab:results_wd_all_ratios,tab:results_modules_all_ratios} summarize the \ac{FT} results for the whole-device and Pblock-target injection scopes.
 
-The percentage values inside the table cells provide a secondary analysis of the \acp{FTM} through Observability, defined as the share of injected faults detected by the enabled \acp{FTM}. They are included to show additional metrics exported by \ac{Fatori-V} and to expand the analysis beyond pass, fail, and crash.
+The main result is the benchmark classification. A green cell means that the benchmark completed with the correct checksum. A yellow cell means that the benchmark completed with a wrong checksum. A red cell means that the system crashed, hung, timed out, reset, or did not publish usable metrics. The tables group configurations that produced the same pass, fail, and crash behaviour.
 
+Observability is used as a secondary metric, and displayed as the percentage values inside the table cells. It is computed as the number of counted detections divided by the number of injected faults. 
 
 \providecommand{\ftpass}{\cellcolor{green!30}Pass}
 \providecommand{\ftfail}{\cellcolor{yellow!50}Fail}
@@ -309,18 +317,27 @@ All \acp{FTM} &
 \end{tabularx}
 \caption{Whole Device injection scope \ac{FTM} comparison for the three register/configuration ratios.}
 \label{tab:results_wd_all_ratios}
-\end{table}
+\end{table} 
 
 
-\Cref{tab:results_wd_all_ratios} shows that every system without Register Redundancy crashes when register faults are injected. This shows that register faults have stronger impact than configuration memory faults in the studied system. With Register Redundancy, the system passes every register-only rate, validating the implementation for the tested register faults.
+\Cref{tab:results_wd_all_ratios} shows that every configuration without Register Redundancy crashes when register faults are injected. With Register Redundancy, the system passes every register-only injection rate. This shows that Register Redundancy is able to protect the \ac{SoC} against \ac{FF}/register corruption, while the other evaluated mechanisms do not prevent crashes under the same fault type.
 
-Logic Redundancy also improves \ac{FT}. In the ratio 0 experiments, it keeps the benchmark passing for one additional injection rate compared with the configurations without Logic Redundancy. The Observability values for the same ratio show that detection remains low, which is expected because only the replicated logic targets can detect configuration memory faults. This also suggests that many whole-device configuration injections land outside the exercised or protected logic.
+In configuration-memory-only campaigns, the implemented Logic Redundancy \ac{FTM} is also able to improve the results. With whole-device injection, the configurations without Logic Redundancy pass up to 100 Hz and fail at 500 Hz. With Logic Redundancy, the benchmark passes up to 500 Hz and fails at 1000 Hz.
 
-In mixed injection experiments, as in any experiment with register injections, Register Redundancy is required. With it, the results become closer to ratio 0 because configuration memory injections dominate the \ac{FI} campaigns.
+Mixed campaigns are dominated by configuration memory injections due to the selected ratio. However, the experiments with only Logic Redundancy perform worse than the experiments with Register Redundancy. The way that that the \ac{FI} tool is implemented, the mixed target pool can still include a register fault before converging to the configured ratio average. In these campaigns, the first mixed injection is a register injection. This was confirmed by the per-type fault counts exported by \ac{Fatori-V}, and is also visible in the Observability values. 
 
-The native Ibex \acp{FTM} show the poorest results. They do not protect the system against the tested \acp{SEU}, which is consistent with \Cref{chap5:ibex_ft}, where most native mechanisms are described as side-channel hardening or specific integrity checks rather than correction mechanisms for register and configuration memory faults.
+In the Register Redundancy rows, 0.8333\% at 1 Hz corresponds to \(1/120\) (one register injection, 120 total injections), and 0.0833\% at 10 Hz corresponds to \(1/1200\) (one register injection, 1200 total injections). As a result, configurations without Register Redundancy still crash even at the lowest mixed rate.
 
-The whole-device results show the need for a more focused injection scope. The system passes several ratio 0 rates even without Logic Redundancy, and Observability remains low because many configuration memory injections are not detected. To concentrate faults in relevant logic, the same experiments were repeated with the injection scope limited to the Pblock targets described in \Cref{chap7:pblock}. This scope depends on the Pblock Model evaluated in \Cref{chap9:fatori_validation}, because the \ac{FI} tool uses the generated Pblock regions to select the configuration addresses for each target module. \Cref{tab:results_modules_all_ratios} summarizes the Pblock injection scope results.
+The native Ibex \acp{FTM} implementations did not increase the \ac{FT} of the \ac{SoC}. Data Independent Timing and Dummy Instructions do not detect or correct corrupted values, as predicted in \Cref{chap5:ibex_ft}, because they are not designed for \ac{SEU}-like corruption. 
+
+Most native \acp{FTM} only cover very specific and narrow parts of the core. Hardened \ac{PC}, PMP, RegFile Glitch Checks, and Secure Guards protect specific control, address, register-file, or protocol conditions. These mechanisms can detect \acp{SEU} when corruption reaches the specific core structures they monitor. However, their limited coverage makes them more suitable for protecting relevant core regions against targeted external attacks than for broad random-fault campaigns.
+
+Lockstep and Shadow \acp{CSR} provide broader detection, but they do not implement correction. Both mechanisms raise major errors, so the faults they are able to detect are also the faults most likely to make the system crash. A possible improvement would be to add recovery after detection, such as checkpoint rollback, local state repair, or voting with more than two replicas.
+
+Whole-device campaigns show how the implemented \ac{SoC} behaves when faults can affect any configuration memory location. This gives a system-level view of whether the enabled \acp{FTM} are enough for broad fault exposure. 
+
+However, the whole-device scope does not always test each \ac{FTM} within the region it is meant to protect. In ratio 0 campaigns, the benchmark still passes several rates without Logic Redundancy, while Observability remains low. This indicates that many injections either land outside the protected logic targets or affect regions that are not exercised by the benchmark. To study configuration memory faults in more relevant core regions, the same experiments were repeated with the injection scope limited to the Pblock targets described in \Cref{chap7:pblock}. This scope depends on the Pblock Model evaluated in \Cref{chap9:fatori_validation}, because the \ac{FI} tool uses the generated Pblock regions to select configuration addresses for each target module.
+
 
 
 \begin{table}[h]
@@ -356,13 +373,13 @@ Baseline, Lockstep, Dummy Instructions, DIT, Hardened \ac{PC}, PMP, RegFile \ac{
 &
 Experiments with Register Redundancy &
 Register Redundancy, All \acp{FTM} &
-\obspass{26.6667\%} &
-\obspass{26.5000\%} &
+\obspass{26.5337\%} &
+\obspass{26.5622\%} &
 \obspass{26.4667\%} &
 \obspass{26.4583\%} &
-\obspass{26.4600\%} &
-\obspass{26.4600\%} &
-\obspass{26.4600\%}\\
+\obspass{26.4410\%} &
+\obspass{26.4503\%} &
+\obspass{26.4410\%}\\
 \hline
 \hline
 \multirow{2}{*}{0} &
@@ -437,11 +454,1133 @@ All \acp{FTM} &
 \label{tab:results_modules_all_ratios}
 \end{table}
 
-Comparing \Cref{tab:results_wd_all_ratios,tab:results_modules_all_ratios} shows that the Pblock-target scope makes configuration memory faults fail the system earlier. Without Logic Redundancy, the first failure rate drops by 10 times, from 500 Hz to 50 Hz. With Logic Redundancy, it drops by 2 times, from 1000 Hz to 500 Hz. The smaller drop with Logic Redundancy shows that it protects the system against logic corruption.
 
-For experiments with ratio 1 and Register Redundancy enabled, the system passes every tested rate, but Observability remains close to 26.5\%, instead of 100\%. This suggests a limitation in the aggregation and counting path, rather than in the correction mechanism, caused by the merge of detection signals before being counted.
+Comparing \Cref{tab:results_wd_all_ratios,tab:results_modules_all_ratios} shows that the Pblock-target scope makes configuration memory faults affect the benchmark earlier. Without Logic Redundancy, the first failing rate moves from 500 Hz to 50 Hz. This indicates that the selected Pblock targets include regions that are more relevant to the executed workload than a random whole-device injection scope.
 
-For experiments with ratio 0, Observability remains low and decreases as the injection rate increases. This shows two limits of the current Logic Redundancy implementation. First, only five logic targets can detect configuration memory faults. Second, detected faults are not repaired, so detections are capped and additional injections do not lead to a proportional increase in detections.
+Logic Redundancy still improves the result under the Pblock-target scope. With Logic Redundancy, the first failing rate moves from 1000 Hz to 500 Hz, instead of from 500 Hz to 50 Hz. Observability is also higher than in the whole-device scope for the same ratio 0 campaigns. This supports the conclusion that Logic Redundancy is useful when configuration memory faults reach the protected logic, and that extending it to more modules would increase its coverage.
+
+The difference between the two scopes also explains the lower Observability values in the whole-device campaigns. Many configuration memory injections land outside the protected logic targets, or in regions that do not affect the executed benchmark. In those cases, the benchmark may still pass while no detection is counted.
+
+For ratio 1 with Register Redundancy enabled, for both scopes, the system passes every tested rate, but Observability remains close to 26.5\% instead of 100\%. Since register-only injections are expected to be detected and corrected by Register Redundancy, this points to the aggregation and counting path. Several detections can be merged before reaching the final counter. Observability therefore also exposes limitations in the monitoring path, not only the behaviour of the \acp{FTM}.
+
+For ratio 0, Observability remains low and decreases as the injection rate increases. This reflects two limits of the current Logic Redundancy implementation. Only five logic targets can detect configuration memory faults, and detected configuration memory faults are not repaired. Corrupted configuration bits can therefore remain in the design and contribute to later failures.
+
+
+
+\subsection{Performance and Hardware Resources}
+
+The experiments in \Cref{tab:results_wd_all_ratios,tab:results_modules_all_ratios} showed no performance differences between the evaluated \acp{FTM}. All valid runs reported \ac{IPC}=0.28, CoreMark score 44, and Embench-IoT score 0.076. These results show that the tested \acp{FTM} did not change the measured benchmark performance.
+
+Native Ibex \acp{FTM} did not change the \ac{FT} breaking points in these campaigns, so any induced overhead was never worth it. Register Redundancy and Logic Redundancy add more hardware, but they were the only individual \acp{FTM} that changed the pass, fail, and crash results.
+
+The All \acp{FTM} configuration gives the best \ac{FT} result in the general comparison, but its hardware cost is dominated by mechanisms that did not improve the measured \ac{FT} behaviour. The results indicate that the useful subset for these campaigns is formed by Register Redundancy and Logic Redundancy. This conclusion is specific to the tested fault model, targets, and benchmarks.
+
+\begin{table}[h]
+\centering
+\scriptsize
+\setlength{\tabcolsep}{3.2pt}
+\renewcommand{\arraystretch}{1.15}
+\begin{tabularx}{\textwidth}{|p{0.15\textwidth}|X|r|r|c|c|}
+\hline
+Experiment &
+Configuration &
+\acp{LUT} &
+\acp{FF} &
+Power (W) &
+Slack (ns) \\
+\hline
+\hline
+\rowcolor{green!25}
+Baseline &
+Baseline, Fault Manager and Metrics Level HW enabled &
+5833 &
+3066 &
+0.616 &
+2.173 \\
+\hline
+\rowcolor{yellow!10}
+Native Ibex &
+Simpler than baseline, measurement infrastructure disabled &
+4752 &
+2304 &
+0.590 &
+2.518 \\
+\hline
+\rowcolor{yellow!10}
+Lockstep &
+Lockstep &
+10127 &
+5287 &
+0.634 &
+2.652 \\
+\hline
+\rowcolor{yellow!10}
+Dummy Instructions &
+Dummy Instructions &
+5915 &
+3141 &
+0.616 &
+3.159 \\
+\hline
+\rowcolor{yellow!10}
+Data Independent Timing &
+Data Independent Timing &
+5939 &
+3066 &
+0.619 &
+2.282 \\
+\hline
+\rowcolor{yellow!10}
+Hardened \ac{PC} &
+Hardened \ac{PC} &
+5888 &
+3083 &
+0.616 &
+2.968 \\
+\hline
+\rowcolor{yellow!10}
+PMP &
+PMP &
+10934 &
+3665 &
+0.635 &
+1.187 \\
+\hline
+\rowcolor{yellow!10}
+Register Redundancy &
+Register M-of-N, $N=3$, $M=2$, correction on &
+14622 &
+6706 &
+0.639 &
+1.240 \\
+\hline
+\rowcolor{yellow!10}
+Logic Redundancy &
+Logic M-of-N, $N=3$, $M=2$, hold off, no correction &
+19081 &
+7762 &
+0.661 &
+0.500 \\
+\hline
+\rowcolor{yellow!10}
+RegFile \ac{ECC} &
+RegFile \ac{ECC} &
+5949 &
+3082 &
+0.616 &
+2.670 \\
+\hline
+\rowcolor{yellow!10}
+RegFile Glitches &
+RegFile RADDR/WE glitch checks &
+7319 &
+4068 &
+0.620 &
+2.967 \\
+\hline
+\rowcolor{yellow!10}
+Secure Guards &
+Secure Guards &
+5882 &
+3066 &
+0.616 &
+2.825 \\
+\hline
+\rowcolor{yellow!10}
+Shadow \acp{CSR} &
+Shadow \acp{CSR} &
+5874 &
+3107 &
+0.616 &
+3.133 \\
+\hline
+\rowcolor{orange!20}
+SecureIbex &
+All native \acp{FTM} except both Redundancy \acp{FTM} &
+22445 &
+9199 &
+0.668 &
+0.857 \\
+\hline
+\rowcolor{orange!20}
+All \acp{FTM} &
+All \acp{FTM} enabled &
+107763 &
+35661 &
+0.779 &
+0.020 \\
+\hline
+\end{tabularx}
+\caption{General \ac{FTM} comparison in terms of hardware cost and timing.}
+\label{tab:chap9-general-ftm-perf-hw}
+\end{table}
+
+
+
+
+
+
+
+% #############################################################################
+\section{Register Redundancy}
+\label{chap9:register-Redundancy}
+
+\Cref{chap9:general-ftm-testing} showed that Register Redundancy is the most relevant mechanism for the tested register faults. This section isolates this \ac{FTM} to evaluate Correction and the replication factor \(N\). All experiments use register-only injection campaigns, a whole-device injection scope, and configurations with only the Baseline and Register Redundancy enabled.
+
+
+
+\subsection{Fault Tolerance}
+
+\Cref{tab:chap9-regRedundancy-status} displays the Register Redundancy \ac{FT} results. The cell colors have the same meaning as in \Cref{chap9:general-ftm-testing}. Green means that the benchmark completed with the correct checksum, yellow means that the benchmark completed with a wrong checksum, and red means that the system crashed, hung, timed out, or did not publish usable metrics.
+
+The table also reports Observability for the experiments used to compare the counted detection rate. These values are shown for the \(N=3\), \(M=2\) injection-rate sweep and for the 10 Hz sweep across different \(N\) and \(M\) values.
+
+\begin{table}[h]
+\centering
+\scriptsize
+\setlength{\tabcolsep}{1.4pt}
+\renewcommand{\arraystretch}{1.15}
+\begin{tabularx}{\textwidth}{|c|c|c|*{7}{>{\centering\arraybackslash}X|}}
+\hline
+Correction &
+\(N\) &
+\(M\) &
+1 Hz &
+10 Hz &
+50 Hz &
+100 Hz &
+500 Hz &
+1000 Hz &
+5000 Hz \\
+\hline
+\hline
+\multirow{6}{*}{on} &
+1 &
+1 &
+\ftbroke &
+\ftbroke &
+\ftbroke &
+\ftbroke &
+\ftbroke &
+\ftbroke &
+\ftbroke \\
+\cline{2-10}
+&
+2 &
+2 &
+\ftbroke &
+\ftbroke &
+\ftbroke &
+\ftbroke &
+\ftbroke &
+\ftbroke &
+\ftbroke \\
+\cline{2-10}
+&
+3 &
+2 &
+\obspass{26.6667\%} &
+\obspass{26.5000\%} &
+\obspass{26.4667\%} &
+\obspass{26.4583\%} &
+\obspass{26.4600\%} &
+\obspass{26.4600\%} &
+\obspass{26.4600\%} \\
+\cline{2-10}
+&
+4 &
+3 &
+\ftpass &
+\obspass{26.6250\%} &
+\ftpass &
+\ftpass &
+\ftpass &
+\ftpass &
+\ftpass \\
+\cline{2-10}
+&
+5 &
+3 &
+\ftpass &
+\obspass{27.0833\%} &
+\ftpass &
+\ftpass &
+\ftpass &
+\ftpass &
+\ftpass \\
+\cline{2-10}
+&
+7 &
+4 &
+\ftpass &
+\obspass{27.7500\%} &
+\ftpass &
+\ftpass &
+\ftpass &
+\ftpass &
+\ftpass \\
+\hline
+\hline
+\multirow{6}{*}{off} &
+1 &
+1 &
+\ftbroke &
+\ftbroke &
+\ftbroke &
+\ftbroke &
+\ftbroke &
+\ftbroke &
+\ftbroke \\
+\cline{2-10}
+&
+2 &
+2 &
+\ftbroke &
+\ftbroke &
+\ftbroke &
+\ftbroke &
+\ftbroke &
+\ftbroke &
+\ftbroke \\
+\cline{2-10}
+&
+3 &
+2 &
+\obspass{26.7300\%} &
+\ftbroke &
+\ftbroke &
+\ftbroke &
+\ftbroke &
+\ftbroke &
+\ftbroke \\
+\cline{2-10}
+&
+4 &
+3 &
+\ftpass &
+\ftbroke &
+\ftbroke &
+\ftbroke &
+\ftbroke &
+\ftbroke &
+\ftbroke \\
+\cline{2-10}
+&
+5 &
+3 &
+\ftpass &
+\obsfail{9.4813\%} &
+\ftbroke &
+\ftbroke &
+\ftbroke &
+\ftbroke &
+\ftbroke \\
+\cline{2-10}
+&
+7 &
+4 &
+\ftpass &
+\obspass{17.4540\%} &
+\ftfail &
+\ftbroke &
+\ftbroke &
+\ftbroke &
+\ftbroke \\
+\hline
+\end{tabularx}
+\caption{Benchmark results and selected Observability values for the Register Redundancy Correction and \(N\) studies.}
+\label{tab:chap9-regRedundancy-status}
+\end{table}
+
+\Cref{tab:chap9-regRedundancy-status} confirms that register faults crash systems that don't have a Register Redundancy configuration able to form a correctable quorum. \(N=1\), \(M=1\) has no redundancy. \(N=2\), \(M=2\) duplicates the register, but does not contain enough replicas for a majority quorum.
+
+Correction is the main difference between the two \(N=3\), \(M=2\) sweeps. With Correction enabled, the system passes every tested injection rate. With Correction disabled, it only passes at 1 Hz. Without Correction, a corrupted replica remains corrupted until the register is overwritten by normal execution. If later injections corrupt enough replicas before that overwrite, the voter can forward corrupted data. Correction prevents this accumulation by writing the voted value back into the disagreeing replica.
+
+Increasing \(N\) improves the Correction-off case, because it increases the amount of corrupted replicas that the system withstands, but does not replace Correction. At 10 Hz, \(N=7\), \(M=4\) without Correction passes, while \(N=5\), \(M=3\) fails. With Correction enabled, all valid majority configurations pass at 10 Hz, starting at \(N=3\), \(M=2\), which supports enabling Correction before increasing \(N\).
+
+With Correction enabled, each detected error is corrected in the next cycle, so the affected replica can later produce another detection. With Correction disabled, a corrupted replica remains corrupted until normal execution overwrites it. Until that happens, the same stored corruption does not keep producing new counted detections, and it can contribute to later failures. This explains the lower 10 Hz Observability values without Correction, such as 9.4813\% for \(N=5\), \(M=3\), and 17.4540\% for \(N=7\), \(M=4\). With Correction enabled, Observability stays close to 26.5\% for the \(N=3\), \(M=2\) rate sweep, which is still consistent with the aggregation limitation identified in \Cref{chap9:general-ftm-testing}.
+
+
+
+\subsection{Performance and Hardware Resources}
+
+The Register Redundancy experiments showed no changes in performance. All configurations reported \ac{IPC}=0.28, CoreMark score 44, and Embench-IoT score 0.076. As in \Cref{chap9:general-ftm-testing}, performance is not the limiting factor in this comparison. \Cref{tab:chap9-regRedundancy-cost} displays hardware timing overhead.
+
+\begin{table}[h]
+\centering
+\scriptsize
+\setlength{\tabcolsep}{3.0pt}
+\renewcommand{\arraystretch}{1.15}
+\begin{tabularx}{\textwidth}{|>{\raggedright\arraybackslash}X|c|c|c|r|r|c|c|}
+\hline
+Configuration &
+$N$ &
+$M$ &
+Correction &
+\acp{LUT} &
+\acp{FF} &
+Power (W) &
+Slack (ns) \\
+\hline
+\hline
+\rowcolor{green!25}
+Baseline &
+1 &
+1 &
+off &
+4752 &
+2304 &
+0.590 &
+2.518 \\
+\hline
+\rowcolor{yellow!10}
+Register M-of-N &
+2 &
+2 &
+on &
+9909 &
+5899 &
+0.611 &
+2.135 \\
+\hline
+\rowcolor{yellow!10}
+Register M-of-N &
+3 &
+2 &
+on &
+13693 &
+7183 &
+0.633 &
+0.898 \\
+\hline
+\rowcolor{orange!20}
+Register M-of-N &
+3 &
+2 &
+off &
+12764 &
+5853 &
+0.639 &
+1.631 \\
+\hline
+\rowcolor{yellow!10}
+Register M-of-N &
+4 &
+3 &
+on &
+18567 &
+8467 &
+0.642 &
+0.317 \\
+\hline
+\rowcolor{yellow!10}
+Register M-of-N &
+5 &
+3 &
+on &
+24919 &
+9868 &
+0.675 &
+0.151 \\
+\hline
+\rowcolor{yellow!10}
+Register M-of-N &
+7 &
+4 &
+on &
+35946 &
+12261 &
+0.706 &
+0.047 \\
+\hline
+\rowcolor{orange!20}
+Register M-of-N &
+7 &
+4 &
+off &
+32705 &
+9547 &
+0.712 &
+0.780 \\
+\hline
+\end{tabularx}
+\caption{Register M-of-N hardware cost and timing across the evaluated configurations.}
+\label{tab:chap9-regRedundancy-cost}
+\end{table}
+
+\Cref{tab:chap9-regRedundancy-cost} shows that increasing \(N\) has a higher cost than enabling Correction at a lower replication factor. For \(N=3\), \(M=2\), enabling Correction adds less hardware than moving to higher \(N\) values and improves the \ac{FT} result from one passing rate to the full injection-rate sweep.
+
+Increasing \(N\) without Correction is less effective. The \(N=7\), \(M=4\) configuration without Correction uses more hardware than \(N=3\), \(M=2\) with Correction and still fails before the full sweep is completed. For the tested configurations, \(N=3\), \(M=2\), with Correction enabled, gives the best Register Redundancy trade-off between \ac{FT}, hardware cost, and timing.
+
+
+
+
+
+
+
+%############################################################################
+\section{Logic Redundancy} 
+\label{chap9:logic-Redundancy} 
+
+\Cref{chap9:general-ftm-testing} showed that Logic Redundancy was the only tested mechanism that improved execution under configuration memory corruption. This section isolates that \ac{FTM} by evaluating each supported target separately. The evaluated targets are the \ac{LSU}, Controller, Decoder, IF Stage, and \ac{ALU}. All experiments use configuration memory injections only.
+
+
+
+
+
+
+\subsection{Fault Tolerance}
+
+\Cref{tab:chap9-logicRedundancy-status} reports the \ac{FT} results for Whole Device and Target Only injection scopes. Each row enables Logic M-of-N in only one module. In the Whole Device scope, injections may affect any part of the \ac{SoC}, while only the listed module is protected. In the Target Only scope, injections are restricted to the same module that is protected.
+
+The Whole Device rows use 500 Hz because this was the first failing rate without Logic Redundancy in \Cref{tab:results_wd_all_ratios}. The Target Only rows use 50 Hz because this was the first failing rate without Logic Redundancy in \Cref{tab:results_modules_all_ratios}. Configurations marked with \(^{*}\) failed implementation due to timing and did not produce valid benchmark metrics.
+
+\begin{table}[h]
+\centering
+\scriptsize
+\setlength{\tabcolsep}{2.0pt}
+\renewcommand{\arraystretch}{1.15}
+\begin{tabularx}{\textwidth}{|p{0.16\textwidth}|p{0.13\textwidth}|*{6}{>{\centering\arraybackslash}X|}}
+\hline
+Injection scope &
+Logic M-of-N target &
+$N=1$/$M=1$ &
+$N=2$/$M=2$ &
+$N=3$/$M=2$ &
+$N=4$/$M=3$ &
+$N=5$/$M=3$ &
+$N=7$/$M=4$ \\
+\hline
+\hline
+\multirow{5}{*}{Whole Device, 500 Hz} &
+\ac{LSU} &
+\ftfail &
+\ftfail &
+\ftfail &
+\ftfail &
+\ftfail &
+\ftfail \\
+\cline{2-8}
+&
+Controller &
+\ftfail &
+\ftfail &
+\ftfail &
+\ftfail &
+\ftfail &
+\ftfail \\
+\cline{2-8}
+&
+Decoder &
+\ftfail &
+\ftfail &
+\ftfail &
+\ftfail &
+\ftfail &
+\ftfail \\
+\cline{2-8}
+&
+IF Stage &
+\ftfail &
+\ftfail &
+\ftfail &
+\ftbroke$^{*}$ &
+\ftbroke$^{*}$ &
+\ftbroke$^{*}$ \\
+\cline{2-8}
+&
+\ac{ALU} &
+\ftfail &
+\ftfail &
+\ftfail &
+\ftfail &
+\ftfail &
+\ftfail \\
+\hline
+\hline
+\multirow{5}{*}{Target Only, 50 Hz} &
+\ac{LSU} &
+\ftfail &
+\ftfail &
+\ftfail &
+\ftfail &
+\ftpass &
+\ftpass \\
+\cline{2-8}
+&
+Controller &
+\ftfail &
+\ftfail &
+\ftpass &
+\ftpass &
+\ftpass &
+\ftpass \\
+\cline{2-8}
+&
+Decoder &
+\ftfail &
+\ftfail &
+\ftpass &
+\ftpass &
+\ftpass &
+\ftpass \\
+\cline{2-8}
+&
+IF Stage &
+\ftpass &
+\ftpass &
+\ftpass &
+\ftbroke$^{*}$ &
+\ftbroke$^{*}$ &
+\ftbroke$^{*}$ \\
+\cline{2-8}
+&
+\ac{ALU} &
+\ftfail &
+\ftfail &
+\ftpass &
+\ftpass &
+\ftpass &
+\ftpass \\
+\hline
+\end{tabularx}
+\caption{Benchmark Pass results for the Logic M-of-N target study.}
+\label{tab:chap9-logicRedundancy-status}
+\end{table}
+
+The Whole Device rows show that protecting one logic target at a time is not enough to recover the full \ac{SoC} at 500 Hz. Faults can still affect unprotected logic, routing, memory interfaces, or regions not covered by the selected wrapper.
+
+The Target Only rows show the effect of each protected module more directly. The Controller, Decoder, and \ac{ALU} pass from \(N=3\), \(M=2\), where one faulty replica can be tolerated. The \ac{LSU} only passes from \(N=5\), \(M=3\), which indicates that one tolerated faulty replica was not enough for that target under this campaign. The IF Stage passes for the valid Target Only configurations, including \(N=1\), \(M=1\), so this specific target and rate do not isolate the benefit of redundancy. Higher IF Stage replication factors failed timing.
+
+Increasing \(N\) is only useful when it increases the number of faulty replicas that can be tolerated. The \(N=4\), \(M=3\) configuration has the same correction margin as \(N=3\), \(M=2\), since both tolerate one faulty replica. The first margin increase appears at \(N=5\), \(M=3\), which tolerates two faulty replicas. The \(N=7\), \(M=4\) configuration tolerates three, but adds higher cost and timing pressure.
+
+All experiments in \Cref{tab:chap9-logicRedundancy-status} were repeated with HOLD enabled, and the benchmark classification did not change. HOLD makes a wrapper output the last valid voted value when the voter cannot form a quorum. These results indicate that, for the tested campaigns, the previous-cycle output was not a useful replacement for the current-cycle output.
+
+
+
+
+
+
+\subsection{Performance and Hardware Resources}
+
+The Logic Redundancy experiments showed no changes in performance for configurations that produced valid metrics. Those configurations reported \ac{IPC}=0.28, CoreMark score 44, and Embench-IoT score 0.076. \Cref{tab:chap9-logicRedundancy-cost} therefore focuses on hardware cost and timing.
+
+\begin{table}[h]
+\centering
+\scriptsize
+\setlength{\tabcolsep}{4.5pt}
+\renewcommand{\arraystretch}{1.15}
+\begin{tabular}{|l|c|c|r|r|c|c|}
+\hline
+Configuration &
+\(N\) &
+\(M\) &
+\acp{LUT} &
+\acp{FF} &
+Power (W) &
+Slack (ns) \\
+\hline
+\hline
+\rowcolor{green!25}
+Baseline &
+1 &
+1 &
+4752 &
+2304 &
+0.590 &
+2.518 \\
+\hline
+\rowcolor{yellow!10}
+&
+3 &
+2 &
+4754 &
+2304 &
+0.591 &
+2.600 \\
+\cline{2-7}
+\rowcolor{yellow!10}
+\ac{LSU} &
+5 &
+3 &
+4754 &
+2304 &
+0.591 &
+2.550 \\
+\cline{2-7}
+\rowcolor{yellow!10}
+&
+7 &
+4 &
+4841 &
+2304 &
+0.589 &
+2.450 \\
+\hline
+\rowcolor{yellow!10}
+&
+3 &
+2 &
+5555 &
+2336 &
+0.590 &
+2.200 \\
+\cline{2-7}
+\rowcolor{yellow!10}
+Controller &
+5 &
+3 &
+6395 &
+2366 &
+0.594 &
+1.900 \\
+\cline{2-7}
+\rowcolor{yellow!10}
+&
+7 &
+4 &
+7005 &
+2425 &
+0.592 &
+1.600 \\
+\hline
+\rowcolor{yellow!10}
+&
+3 &
+2 &
+6171 &
+2306 &
+0.583 &
+2.100 \\
+\cline{2-7}
+\rowcolor{yellow!10}
+Decoder &
+5 &
+3 &
+7488 &
+2331 &
+0.586 &
+1.700 \\
+\cline{2-7}
+\rowcolor{yellow!10}
+&
+7 &
+4 &
+8686 &
+2333 &
+0.593 &
+1.400 \\
+\hline
+\rowcolor{yellow!10}
+&
+3 &
+2 &
+8018 &
+3084 &
+0.589 &
+0.068 \\
+\cline{2-7}
+\cellcolor{yellow!10}
+IF Stage &
+\cellcolor{orange!20}5 &
+\cellcolor{orange!20}3 &
+\cellcolor{orange!20}10358 &
+\cellcolor{orange!20}3898 &
+\cellcolor{orange!20}0.645 &
+\cellcolor{orange!20}-6.250 \\
+\cline{2-7}
+\cellcolor{yellow!10}
+&
+\cellcolor{orange!20}7 &
+\cellcolor{orange!20}4 &
+\cellcolor{orange!20}12628 &
+\cellcolor{orange!20}4598 &
+\cellcolor{orange!20}0.670 &
+\cellcolor{orange!20}-8.600 \\
+\hline
+\rowcolor{yellow!10}
+ &
+3 &
+2 &
+8357 &
+2327 &
+0.594 &
+1.500 \\
+\cline{2-7}
+\rowcolor{yellow!10}
+\ac{ALU} &
+5 &
+3 &
+10977 &
+2333 &
+0.596 &
+1.000 \\
+\cline{2-7}
+\rowcolor{yellow!10}
+&
+7 &
+4 &
+14828 &
+2364 &
+0.619 &
+0.500 \\
+\hline
+\end{tabular}
+\caption{Logic M-of-N hardware cost and timing across the evaluated targets and replication factors.}
+\label{tab:chap9-logicRedundancy-cost}
+\end{table}
+
+\Cref{tab:chap9-logicRedundancy-cost} shows that the hardware cost depends strongly on the protected target. The \ac{LSU} wrapper has the lowest cost, but \Cref{tab:chap9-logicRedundancy-status} shows that it needs \(N=5\), \(M=3\) to pass the Target Only campaign. The Controller, Decoder, and \ac{ALU} pass from \(N=3\), \(M=2\), but with higher \ac{LUT} use. Among those targets, the Controller has the lowest cost.
+
+The IF Stage is the most timing-sensitive target. It passes at \(N=3\), \(M=2\), but the slack is already close to zero. Higher replication factors violate timing and do not produce valid benchmark metrics. These configurations would require a lower core frequency or further \ac{RTL} optimization before being evaluated.
+
+The results support different \(N\) values for different logic targets. \(N=3\), \(M=2\) is enough for the Controller, Decoder, and \ac{ALU}. The \ac{LSU} requires \(N=5\), \(M=3\) in the tested Target Only campaign. \(N=7\), \(M=4\) should only be used when the extra tolerated replica justifies the added cost and timing reduction.
+
+A single protected target does not recover the Whole Device failing campaigns. The general comparison in \Cref{chap9:general-ftm-testing} showed that the combined Logic Redundancy configuration improves the configuration memory campaigns. These results suggest that Logic Redundancy should be expanded as a set of protected modules, potentially with different \(N\) and \(M\) values per target.
+
+
+
+
+
+
+% %############################################################################
+% \section{Logic Redundancy} 
+% \label{chap9:logic-Redundancy} 
+
+% \Cref{chap9:general-ftm-testing} showed that Logic M-of-N was the only tested mechanism that improved execution under configuration memory corruption. This section isolates that mechanism by evaluating the five supported targets (\ac{LSU}, Controller, Decoder, IF Stage, and \ac{ALU}). All experiments use only configuration memory injections, with register/configuration ratio equal to 0.
+
+
+
+% \subsection{Fault Tolerance}
+
+% \Cref{tab:chap9-logicRedundancy-status} reports Benchmark Pass results for two injection scopes. Each experiment enables Logic M-of-N in only one module, shown in the second column. In Whole Device campaigns, injections may affect any part of the \ac{SoC}, while only the listed module is protected. In Target Only campaigns, injections are restricted to the same module that is protected. The Whole Device campaigns use 500 Hz because it was the first failing rate in \Cref{tab:results_wd_all_ratios}. The Target Only campaigns use 50 Hz because it was the first failing rate in \Cref{tab:results_modules_all_ratios}. The $^{*}$ marks configurations that failed implementation due to timing issues.
+
+
+
+
+% \begin{table}[h]
+% \centering
+% \scriptsize
+% \setlength{\tabcolsep}{2.0pt}
+% \renewcommand{\arraystretch}{1.15}
+% \begin{tabularx}{\textwidth}{|p{0.16\textwidth}|p{0.13\textwidth}|*{6}{>{\centering\arraybackslash}X|}}
+% \hline
+% Injection scope &
+% Logic M-of-N target &
+% $N=1$/$M=1$ &
+% $N=2$/$M=2$ &
+% $N=3$/$M=2$ &
+% $N=4$/$M=3$ &
+% $N=5$/$M=3$ &
+% $N=7$/$M=4$ \\
+% \hline
+% \hline
+% \multirow{5}{*}{Whole Device, 500 Hz} &
+% \ac{LSU} &
+% \ftfail &
+% \ftfail &
+% \ftfail &
+% \ftfail &
+% \ftfail &
+% \ftfail \\
+% \cline{2-8}
+% &
+% Controller &
+% \ftfail &
+% \ftfail &
+% \ftfail &
+% \ftfail &
+% \ftfail &
+% \ftfail \\
+% \cline{2-8}
+% &
+% Decoder &
+% \ftfail &
+% \ftfail &
+% \ftfail &
+% \ftfail &
+% \ftfail &
+% \ftfail \\
+% \cline{2-8}
+% &
+% IF Stage &
+% \ftfail &
+% \ftfail &
+% \ftfail &
+% \ftbroke$^{*}$ &
+% \ftbroke$^{*}$ &
+% \ftbroke$^{*}$ \\
+% \cline{2-8}
+% &
+% \ac{ALU} &
+% \ftfail &
+% \ftfail &
+% \ftfail &
+% \ftfail &
+% \ftfail &
+% \ftfail \\
+% \hline
+% \hline
+% \multirow{5}{*}{Target Only, 50 Hz} &
+% \ac{LSU} &
+% \ftfail &
+% \ftfail &
+% \ftfail &
+% \ftfail &
+% \ftpass &
+% \ftpass \\
+% \cline{2-8}
+% &
+% Controller &
+% \ftfail &
+% \ftfail &
+% \ftpass &
+% \ftpass &
+% \ftpass &
+% \ftpass \\
+% \cline{2-8}
+% &
+% Decoder &
+% \ftfail &
+% \ftfail &
+% \ftpass &
+% \ftpass &
+% \ftpass &
+% \ftpass \\
+% \cline{2-8}
+% &
+% IF Stage &
+% \ftpass &
+% \ftpass &
+% \ftpass &
+% \ftbroke$^{*}$ &
+% \ftbroke$^{*}$ &
+% \ftbroke$^{*}$ \\
+% \cline{2-8}
+% &
+% \ac{ALU} &
+% \ftfail &
+% \ftfail &
+% \ftpass &
+% \ftpass &
+% \ftpass &
+% \ftpass \\
+% \hline
+% \end{tabularx}
+% \caption{Benchmark Pass results for the Logic M-of-N target study.}
+% \label{tab:chap9-logicRedundancy-status}
+% \end{table}
+
+
+
+
+
+% The Whole Device rows show that protecting a single Logic M-of-N target is not enough to recover the full \ac{SoC}, because faults can still affect unprotected logic and routing. The Target Only rows isolate each protected module and show the effect of the target and of $N$ more clearly. The \ac{LSU} passes only from $N=5$/$M=3$ onward, which indicates that one tolerated faulty replica is not enough for this target under the selected campaign. The Controller, Decoder, and \ac{ALU} pass from $N=3$/$M=2$ onward, where one faulty replica can be tolerated. The IF Stage passes for the valid configurations, but higher values of $N$ fail implementation due to timing and do not produce valid metrics.
+
+% The $N=4$/$M=3$ point does not improve the correction margin over $N=3$/$M=2$, because both tolerate only one faulty replica. The first margin increase appears at $N=5$/$M=3$, which tolerates two corrupted replicas, while $N=7$/$M=4$ tolerates three. The change in Target Only results when $N$ increases also supports the Pblock Model accuracy, because the extra replicas can only affect Benchmark Pass if the injected faults reach the intended protected target.
+
+% All experiments in \Cref{tab:chap9-logicRedundancy-status} were repeated with HOLD enabled, and the Benchmark Pass classification did not change. HOLD makes a Logic M-of-N wrapper output the last valid value when the voter cannot form a quorum. The unchanged results indicate that, in these campaigns, the previous-cycle output is not a useful replacement for the current-cycle output. A held output and a corrupted output, therefore, have similar impact on Benchmark Pass.
+
+
+
+
+% \subsection{Performance and Hardware Resources}
+
+% \begin{table}[h]
+% \centering
+% \scriptsize
+% \setlength{\tabcolsep}{1.6pt}
+% \renewcommand{\arraystretch}{1.15}
+% \begin{tabularx}{\textwidth}{|>{\raggedright\arraybackslash}X|c|c|c|c|>{\centering\arraybackslash}X|>{\centering\arraybackslash}X|>{\centering\arraybackslash}X|c|}
+% \hline
+% Target &
+% $N/M$ &
+% CoreMark &
+% \shortstack{Embench\\IoT} &
+% \ac{IPC} &
+% \shortstack{\acp{LUT}} &
+% \shortstack{\acp{FF}} &
+% \shortstack{Power} &
+% Slack \\
+% \hline
+% \hline
+% Baseline &
+% -- &
+% 44 &
+% 0.076 &
+% 0.28 &
+% 4752 &
+% 2304 &
+% 0.590 &
+% 2.518 \\
+% \hline
+% \ac{LSU} &
+% 3/2 &
+% 44 &
+% 0.076 &
+% 0.28 &
+% +2 &
+% +0 &
+% +0.001 &
+% 2.600 \\
+% \hline
+% \ac{LSU} &
+% 5/3 &
+% 44 &
+% 0.076 &
+% 0.28 &
+% +2 &
+% +0 &
+% +0.001 &
+% 2.550 \\
+% \hline
+% \ac{LSU} &
+% 7/4 &
+% 44 &
+% 0.076 &
+% 0.28 &
+% +89 &
+% +0 &
+% -0.001 &
+% 2.450 \\
+% \hline
+% Controller &
+% 3/2 &
+% 44 &
+% 0.076 &
+% 0.28 &
+% +803 &
+% +32 &
+% +0.000 &
+% 2.200 \\
+% \hline
+% Controller &
+% 5/3 &
+% 44 &
+% 0.076 &
+% 0.28 &
+% +1643 &
+% +62 &
+% +0.004 &
+% 1.900 \\
+% \hline
+% Controller &
+% 7/4 &
+% 44 &
+% 0.076 &
+% 0.28 &
+% +2253 &
+% +121 &
+% +0.002 &
+% 1.600 \\
+% \hline
+% Decoder &
+% 3/2 &
+% 44 &
+% 0.076 &
+% 0.28 &
+% +1419 &
+% +2 &
+% -0.007 &
+% 2.100 \\
+% \hline
+% Decoder &
+% 5/3 &
+% 44 &
+% 0.076 &
+% 0.28 &
+% +2736 &
+% +27 &
+% -0.004 &
+% 1.700 \\
+% \hline
+% Decoder &
+% 7/4 &
+% 44 &
+% 0.076 &
+% 0.28 &
+% +3934 &
+% +29 &
+% +0.003 &
+% 1.400 \\
+% \hline
+% IF Stage &
+% 3/2 &
+% 44 &
+% 0.076 &
+% 0.28 &
+% +3266 &
+% +780 &
+% -0.001 &
+% 0.068 \\
+% \hline
+% IF Stage &
+% 5/3 &
+% -- &
+% -- &
+% -- &
+% +5606 &
+% +1594 &
+% +0.055 &
+% -6.250 \\
+% \hline
+% IF Stage &
+% 7/4 &
+% -- &
+% -- &
+% -- &
+% +7876 &
+% +2294 &
+% +0.080 &
+% -8.600 \\
+% \hline
+% \ac{ALU} &
+% 3/2 &
+% 44 &
+% 0.076 &
+% 0.28 &
+% +3605 &
+% +23 &
+% +0.004 &
+% 1.500 \\
+% \hline
+% \ac{ALU} &
+% 5/3 &
+% 44 &
+% 0.076 &
+% 0.28 &
+% +6225 &
+% +29 &
+% +0.006 &
+% 1.000 \\
+% \hline
+% \ac{ALU} &
+% 7/4 &
+% 44 &
+% 0.076 &
+% 0.28 &
+% +10076 &
+% +60 &
+% +0.029 &
+% 0.500 \\
+% \hline
+% \end{tabularx}
+% \caption{Logic M-of-N performance and hardware cost across the evaluated targets and replication factors.}
+% \label{tab:chap9-logicRedundancy-cost}
+% \end{table}
+
+
+% \Cref{tab:chap9-logicRedundancy-cost} shows that Logic M-of-N mainly affects hardware cost and timing. CoreMark, Embench-IoT, and \ac{IPC} remain equal to the baseline whenever valid metrics are retrieved. The \ac{LSU} has the lowest cost, but \Cref{tab:chap9-logicRedundancy-status} shows that it only passes the 50 Hz Target Only campaign from $N=5$/$M=3$ onward. The Controller, Decoder, and \ac{ALU} pass from $N=3$/$M=2$, at the cost of higher \ac{LUT} usage. The IF Stage passes at $N=3$/$M=2$, but further replication violates timing and would require a lower core frequency. Since this version of \ac{Fatori-V} does not allow the core frequency to be changed directly from the run file, tracing the optimal frequency for those configurations is left for future work.
+
+% A single protected target does not recover the Whole Device failing campaigns. A combined set of Logic M-of-N targets, possibly with different values of $N$, could be evaluated in future work, but was not covered in this study. Increasing $N$ is useful only when it adds correction margin. $N=3$/$M=2$ is the first useful point, $N=5$/$M=3$ is the first point that increases the number of tolerated corrupted replicas, and $N=7$/$M=4$ should only be used when the extra protection justifies the cost.
+
+
+% \Cref{tab:chap9-logicRedundancy-cost} shows that Logic M-of-N mainly affects hardware cost and timing, while CoreMark, Embench-IoT, and \ac{IPC} remain equal to the baseline whenever valid metrics are retrieved. Using M-of-N in the \ac{LSU} has the lowest cost, but \Cref{tab:chap9-logicRedundancy-status} shows that it only passes the 50 Hz target only campaign from $N=5$/$M=3$ onward. The Controller, Decoder, and \ac{ALU} pass from $N=3$/$M=2$, showing that one tolerated corrupted replica is enough for those targets under the same campaign. The IF Stage also passes at $N=3$/$M=2$, but further replication requires lowering the core frequency. Since this first version of \ac{Fatori-V} does not allow the core frequency to be changed directly from the run file, tracing the optimal frequency for those configurations is left for future work. Overall, a single protected target does not recover the whole device failed experiments, there is still the option for a combined set of Logic M-of-N modules, maybe with different values of $N$, to do it, but that was not tackled in this research. Increasing $N$ is only useful when it adds majority margin. For example, $N=3$/$M=2$ is the first useful point, $N=5$/$M=3$ is the first point that increases the number of tolerated corrupted replicas, and $N=7$/$M=4$ should only be used when the extra protection justifies the cost.
+
+
+
+
+
 
 % A third analysis uses the \ac{EBD} counts exported by the \ac{Fatori-V}, which report how many \ac{EBD} bits belong to the complete \ac{SoC} and to each Pblock. The goal was to estimate how much configuration memory corruption the system tolerates in each scope. The estimated corruption is computed by dividing the number of configuration injections by the number of \ac{EBD} bits in the selected scope. \Cref{tab:chap9-ebd-scopes} reports this estimate for the ratio 0 campaigns, comparing both injection scopes with and without Logic M-of-N.
 
@@ -812,794 +1951,3 @@ For experiments with ratio 0, Observability remains low and decreases as the inj
 % \Cref{tab:chap9-ebd-scopes} suggests that the system fails when the selected scope reaches estimated corruption levels around 1.1789\% to 3.2654\% without Logic M-of-N, and around 4.4650\% to 4.4906\% with Logic M-of-N. The last passing points also move upward, from 0.2358\%--0.6531\% without Logic M-of-N to 0.8930\%--2.2453\% with Logic M-of-N. This supports that Logic M-of-N increases the corruption required before the benchmark starts failing.
 
 % The crash transition is less precise because these values come from the seven injection rates used in the general comparison. Across the two scopes, the system crashes between 2.3578\%--3.2654\% and 6.5309\%--11.7892\% without Logic M-of-N, and between 4.4650\%--4.4906\% and 8.9300\%--22.4529\% with Logic M-of-N. These values estimate corruption inside the selected injection scope, not uniform \ac{SoC}-wide corruption or corruption of one specific target. More injection rates around each transition point would be required to locate the fail and crash thresholds more precisely.
-
-
-
-\subsection{Performance and Hardware Resources}
-
-The experiments in \Cref{tab:results_wd_all_ratios,tab:results_modules_all_ratios} showed no changes in performance. All runs reported \ac{IPC}=0.28, CoreMark score 44, and Embench-IoT score 0.076. Since \ac{Fatori-V} was not optimized for performance, the constant result suggests that the bottleneck is outside the tested \acp{FTM}, possibly in the \ac{AXI}-to-Ibex bridge described detailed in \Cref{chap5:ibex2iob}. \Cref{tab:chap9-general-ftm-perf-hw} focuses on hardware cost and timing.
-
-Native Ibex \acp{FTM} have low or moderate cost, but did not improve the pass, fail, and crash results. Register Redundancy and Logic Redundancy add more hardware, but they are the only individual \acp{FTM} that changed the \ac{FT} results. Register Redundancy protects the system against register faults. Logic Redundancy improves the configuration memory campaigns. SecureIbex combines the native mechanisms and increases cost without improving these results. The All \acp{FTM} configuration has the best \ac{FT} result, but its cost is dominated by mechanisms that did not improve the \ac{FT} results. The best subset would be enabling just Logic and Register Redundancy.
-
-\begin{table}[h]
-\centering
-\scriptsize
-\setlength{\tabcolsep}{3.2pt}
-\renewcommand{\arraystretch}{1.15}
-\begin{tabularx}{\textwidth}{|p{0.15\textwidth}|X|r|r|c|c|}
-\hline
-Experiment &
-Configuration &
-\acp{LUT} &
-\acp{FF} &
-Power (W) &
-Slack (ns) \\
-\hline
-\hline
-\rowcolor{green!25}
-Baseline &
-Baseline, Fault Manager and Metrics Level HW enabled &
-5833 &
-3066 &
-0.616 &
-2.173 \\
-\hline
-\rowcolor{yellow!10}
-Native Ibex &
-Simpler than baseline, measurement infrastructure disabled &
-4752 &
-2304 &
-0.590 &
-2.518 \\
-\hline
-\rowcolor{yellow!10}
-Lockstep &
-Lockstep &
-10127 &
-5287 &
-0.634 &
-2.652 \\
-\hline
-\rowcolor{yellow!10}
-Dummy Instructions &
-Dummy Instructions &
-5915 &
-3141 &
-0.616 &
-3.159 \\
-\hline
-\rowcolor{yellow!10}
-Data Independent Timing &
-Data Independent Timing &
-5939 &
-3066 &
-0.619 &
-2.282 \\
-\hline
-\rowcolor{yellow!10}
-Hardened \ac{PC} &
-Hardened \ac{PC} &
-5888 &
-3083 &
-0.616 &
-2.968 \\
-\hline
-\rowcolor{yellow!10}
-PMP &
-PMP &
-10934 &
-3665 &
-0.635 &
-1.187 \\
-\hline
-\rowcolor{yellow!10}
-Register Redundancy &
-Register M-of-N, $N=3$, $M=2$, correction on &
-14622 &
-6706 &
-0.639 &
-1.240 \\
-\hline
-\rowcolor{yellow!10}
-Logic Redundancy &
-Logic M-of-N, $N=3$, $M=2$, hold off, no correction &
-19081 &
-7762 &
-0.661 &
-0.500 \\
-\hline
-\rowcolor{yellow!10}
-RegFile \ac{ECC} &
-RegFile \ac{ECC} &
-5949 &
-3082 &
-0.616 &
-2.670 \\
-\hline
-\rowcolor{yellow!10}
-RegFile Glitches &
-RegFile RADDR/WE glitch checks &
-7319 &
-4068 &
-0.620 &
-2.967 \\
-\hline
-\rowcolor{yellow!10}
-Secure Guards &
-Secure Guards &
-5882 &
-3066 &
-0.616 &
-2.825 \\
-\hline
-\rowcolor{yellow!10}
-Shadow \acp{CSR} &
-Shadow \acp{CSR} &
-5874 &
-3107 &
-0.616 &
-3.133 \\
-\hline
-\rowcolor{orange!20}
-SecureIbex &
-All native \acp{FTM} except both Redundancy \acp{FTM} &
-22445 &
-9199 &
-0.668 &
-0.857 \\
-\hline
-\rowcolor{orange!20}
-All \acp{FTM} &
-All \acp{FTM} enabled &
-107763 &
-35661 &
-0.779 &
-0.020 \\
-\hline
-\end{tabularx}
-\caption{General \ac{FTM} comparison in terms of hardware cost and timing.}
-\label{tab:chap9-general-ftm-perf-hw}
-\end{table}
-
-
-
-
-
-
-% #############################################################################
-\section{Register Redundancy}
-\label{chap9:register-Redundancy}
-
-\Cref{chap9:general-ftm-testing} already showed that Register M-of-N is required to protect the system from the tested register faults. This section isolates Register M-of-N to evaluate Correction and the replication factor $N$. All experiments use register-only injection campaigns, a whole-device injection scope, and configurations with only the Baseline and Register M-of-N enabled.
-
-\subsection{Fault Tolerance}
-
-\Cref{tab:chap9-regRedundancy-status} displays the Register Redundancy \ac{FT} results. The cell colors have the same meaning as in \Cref{chap9:general-ftm-testing}. Green means that the benchmark completed with the correct checksum, yellow means that the benchmark completed with a wrong checksum, and red means that the system crashed, hung, timed out, or did not publish usable metrics.
-
-In addition to the pass, fail, and crash results, the table reports Observability for experiments used to compare how Correction and replication factor affect detection. These values are shown for the $N=3$/$M=2$ injection-rate sweep and for the 10 Hz sweep across different $N$/$M$ values.
-
-\begin{table}[h]
-\centering
-\scriptsize
-\setlength{\tabcolsep}{1.4pt}
-\renewcommand{\arraystretch}{1.15}
-\begin{tabularx}{\textwidth}{|c|c|c|*{7}{>{\centering\arraybackslash}X|}}
-\hline
-Correction &
-$N$ &
-$M$ &
-1 Hz &
-10 Hz &
-50 Hz &
-100 Hz &
-500 Hz &
-1000 Hz &
-5000 Hz \\
-\hline
-\hline
-\multirow{6}{*}{on} &
-1 &
-1 &
-\ftbroke &
-\ftbroke &
-\ftbroke &
-\ftbroke &
-\ftbroke &
-\ftbroke &
-\ftbroke \\
-\cline{2-10}
-&
-2 &
-2 &
-\ftbroke &
-\ftbroke &
-\ftbroke &
-\ftbroke &
-\ftbroke &
-\ftbroke &
-\ftbroke \\
-\cline{2-10}
-&
-3 &
-2 &
-\obspass{26.6667\%} &
-\obspass{26.5000\%} &
-\obspass{26.4667\%} &
-\obspass{26.4583\%} &
-\obspass{26.4600\%} &
-\obspass{26.4600\%} &
-\obspass{26.4600\%} \\
-\cline{2-10}
-&
-4 &
-3 &
-\ftpass &
-\obspass{26.6250\%} &
-\ftpass &
-\ftpass &
-\ftpass &
-\ftpass &
-\ftpass \\
-\cline{2-10}
-&
-5 &
-3 &
-\ftpass &
-\obspass{27.0833\%} &
-\ftpass &
-\ftpass &
-\ftpass &
-\ftpass &
-\ftpass \\
-\cline{2-10}
-&
-7 &
-4 &
-\ftpass &
-\obspass{27.7500\%} &
-\ftpass &
-\ftpass &
-\ftpass &
-\ftpass &
-\ftpass \\
-\hline
-\hline
-\multirow{6}{*}{off} &
-1 &
-1 &
-\ftbroke &
-\ftbroke &
-\ftbroke &
-\ftbroke &
-\ftbroke &
-\ftbroke &
-\ftbroke \\
-\cline{2-10}
-&
-2 &
-2 &
-\ftbroke &
-\ftbroke &
-\ftbroke &
-\ftbroke &
-\ftbroke &
-\ftbroke &
-\ftbroke \\
-\cline{2-10}
-&
-3 &
-2 &
-\obspass{26.7300\%} &
-\ftbroke &
-\ftbroke &
-\ftbroke &
-\ftbroke &
-\ftbroke &
-\ftbroke \\
-\cline{2-10}
-&
-4 &
-3 &
-\ftpass &
-\ftbroke &
-\ftbroke &
-\ftbroke &
-\ftbroke &
-\ftbroke &
-\ftbroke \\
-\cline{2-10}
-&
-5 &
-3 &
-\ftpass &
-\obsfail{9.4813\%} &
-\ftbroke &
-\ftbroke &
-\ftbroke &
-\ftbroke &
-\ftbroke \\
-\cline{2-10}
-&
-7 &
-4 &
-\ftpass &
-\obspass{17.4540\%} &
-\ftfail &
-\ftbroke &
-\ftbroke &
-\ftbroke &
-\ftbroke \\
-\hline
-\end{tabularx}
-\caption{Benchmark results and selected Observability values for the Register M-of-N Correction and $N$ studies.}
-\label{tab:chap9-regRedundancy-status}
-\end{table}
-
-\Cref{tab:chap9-regRedundancy-status} confirms the result already observed in \Cref{chap9:general-ftm-testing}: without an effective register redundancy configuration, register faults crash the system. The new result here is the role of Correction. With $N=3$/$M=2$, Correction enabled passes the full injection-rate sweep, while Correction disabled only passes at 1 Hz.
-
-This difference follows from the Register M-of-N behaviour described in \Cref{chap6:mofn_reg}. With Correction disabled, a corrupted replica remains corrupted until the register is overwritten by normal execution. If later injections corrupt enough replicas before that overwrite, the voter can select corrupted data. Correction removes this accumulated state by restoring the corrupted replica after detection.
-
-Increasing $N$ helps the Correction-off case, but does not replace Correction in these experiments. At 10 Hz, $N=7$/$M=4$ without Correction passes, while $N=5$/$M=3$ fails. With Correction enabled, all valid majority configurations pass at 10 Hz, starting at $N=3$/$M=2$. The table therefore supports using Correction before increasing $N$.
-
-The selected Observability values should be read as detection counters, not as a direct measure of correction coverage. With Correction enabled, Observability stays close to 26.5\% for the $N=3$/$M=2$ rate sweep and only increases slightly when $N$ increases at 10 Hz. Since the benchmark still passes every tested rate with Correction enabled, these values are consistent with the aggregation limitation already identified in \Cref{chap9:general-ftm-testing}.
-
-\subsection{Performance and Hardware Resources}
-
-The Register M-of-N experiments showed no changes in performance. All configurations reported \ac{IPC}=0.28, CoreMark score 44, and Embench-IoT score 0.076. As in \Cref{chap9:general-ftm-testing}, performance is not the limiting factor in this comparison. \Cref{tab:chap9-regRedundancy-cost} focuses on hardware cost and timing.
-
-\begin{table}[h]
-\centering
-\scriptsize
-\setlength{\tabcolsep}{3.0pt}
-\renewcommand{\arraystretch}{1.15}
-\begin{tabularx}{\textwidth}{|>{\raggedright\arraybackslash}X|c|c|c|r|r|c|c|}
-\hline
-Configuration &
-$N$ &
-$M$ &
-Correction &
-\acp{LUT} &
-\acp{FF} &
-Power (W) &
-Slack (ns) \\
-\hline
-\hline
-\rowcolor{green!25}
-Baseline &
-1 &
-1 &
-off &
-4752 &
-2304 &
-0.590 &
-2.518 \\
-\hline
-\rowcolor{yellow!10}
-Register M-of-N &
-2 &
-2 &
-on &
-9909 &
-5899 &
-0.611 &
-2.135 \\
-\hline
-\rowcolor{yellow!10}
-Register M-of-N &
-3 &
-2 &
-on &
-13693 &
-7183 &
-0.633 &
-0.898 \\
-\hline
-\rowcolor{orange!20}
-Register M-of-N &
-3 &
-2 &
-off &
-12764 &
-5853 &
-0.639 &
-1.631 \\
-\hline
-\rowcolor{yellow!10}
-Register M-of-N &
-4 &
-3 &
-on &
-18567 &
-8467 &
-0.642 &
-0.317 \\
-\hline
-\rowcolor{yellow!10}
-Register M-of-N &
-5 &
-3 &
-on &
-24919 &
-9868 &
-0.675 &
-0.151 \\
-\hline
-\rowcolor{yellow!10}
-Register M-of-N &
-7 &
-4 &
-on &
-35946 &
-12261 &
-0.706 &
-0.047 \\
-\hline
-\rowcolor{orange!20}
-Register M-of-N &
-7 &
-4 &
-off &
-32705 &
-9547 &
-0.712 &
-0.780 \\
-\hline
-\end{tabularx}
-\caption{Register M-of-N hardware cost and timing across the evaluated configurations.}
-\label{tab:chap9-regRedundancy-cost}
-\end{table}
-
-\Cref{tab:chap9-regRedundancy-cost} shows that the cost grows with $N$, while slack decreases for the Correction-on configurations. At $N=3$/$M=2$, enabling Correction adds 929 \acp{LUT} and 1330 \acp{FF} compared with the same configuration without Correction, but changes the \ac{FT} result from one passing rate to the full injection-rate sweep. The $N=7$/$M=4$ configuration without Correction uses more than twice the \acp{LUT} of $N=3$/$M=2$ with Correction and still fails at 50 Hz. For the tested configurations, $N=3$/$M=2$ with Correction enabled gives the best Register M-of-N result at the lowest hardware cost among the configurations that pass the full rate sweep.
-
-
-
-
-
-
-
-
-
-
-
-%############################################################################
-\section{Logic Redundancy} 
-\label{chap9:logic-Redundancy} 
-
-\Cref{chap9:general-ftm-testing} showed that Logic M-of-N was the only tested mechanism that improved execution under configuration memory corruption. This section isolates that mechanism by evaluating the five supported targets (\ac{LSU}, Controller, Decoder, IF Stage, and \ac{ALU}). All experiments use only configuration memory injections, with register/configuration ratio equal to 0.
-
-
-
-\subsection{Fault Tolerance}
-
-\Cref{tab:chap9-logicRedundancy-status} reports Benchmark Pass results for two injection scopes. Each experiment enables Logic M-of-N in only one module, shown in the second column. In Whole Device campaigns, injections may affect any part of the \ac{SoC}, while only the listed module is protected. In Target Only campaigns, injections are restricted to the same module that is protected. The Whole Device campaigns use 500 Hz because it was the first failing rate in \Cref{tab:results_wd_all_ratios}. The Target Only campaigns use 50 Hz because it was the first failing rate in \Cref{tab:results_modules_all_ratios}. The $^{*}$ marks configurations that failed implementation due to timing issues.
-
-
-
-
-\begin{table}[h]
-\centering
-\scriptsize
-\setlength{\tabcolsep}{2.0pt}
-\renewcommand{\arraystretch}{1.15}
-\begin{tabularx}{\textwidth}{|p{0.16\textwidth}|p{0.13\textwidth}|*{6}{>{\centering\arraybackslash}X|}}
-\hline
-Injection scope &
-Logic M-of-N target &
-$N=1$/$M=1$ &
-$N=2$/$M=2$ &
-$N=3$/$M=2$ &
-$N=4$/$M=3$ &
-$N=5$/$M=3$ &
-$N=7$/$M=4$ \\
-\hline
-\hline
-\multirow{5}{*}{Whole Device, 500 Hz} &
-\ac{LSU} &
-\ftfail &
-\ftfail &
-\ftfail &
-\ftfail &
-\ftfail &
-\ftfail \\
-\cline{2-8}
-&
-Controller &
-\ftfail &
-\ftfail &
-\ftfail &
-\ftfail &
-\ftfail &
-\ftfail \\
-\cline{2-8}
-&
-Decoder &
-\ftfail &
-\ftfail &
-\ftfail &
-\ftfail &
-\ftfail &
-\ftfail \\
-\cline{2-8}
-&
-IF Stage &
-\ftfail &
-\ftfail &
-\ftfail &
-\ftbroke$^{*}$ &
-\ftbroke$^{*}$ &
-\ftbroke$^{*}$ \\
-\cline{2-8}
-&
-\ac{ALU} &
-\ftfail &
-\ftfail &
-\ftfail &
-\ftfail &
-\ftfail &
-\ftfail \\
-\hline
-\hline
-\multirow{5}{*}{Target Only, 50 Hz} &
-\ac{LSU} &
-\ftfail &
-\ftfail &
-\ftfail &
-\ftfail &
-\ftpass &
-\ftpass \\
-\cline{2-8}
-&
-Controller &
-\ftfail &
-\ftfail &
-\ftpass &
-\ftpass &
-\ftpass &
-\ftpass \\
-\cline{2-8}
-&
-Decoder &
-\ftfail &
-\ftfail &
-\ftpass &
-\ftpass &
-\ftpass &
-\ftpass \\
-\cline{2-8}
-&
-IF Stage &
-\ftpass &
-\ftpass &
-\ftpass &
-\ftbroke$^{*}$ &
-\ftbroke$^{*}$ &
-\ftbroke$^{*}$ \\
-\cline{2-8}
-&
-\ac{ALU} &
-\ftfail &
-\ftfail &
-\ftpass &
-\ftpass &
-\ftpass &
-\ftpass \\
-\hline
-\end{tabularx}
-\caption{Benchmark Pass results for the Logic M-of-N target study.}
-\label{tab:chap9-logicRedundancy-status}
-\end{table}
-
-
-
-
-
-The Whole Device rows show that protecting a single Logic M-of-N target is not enough to recover the full \ac{SoC}, because faults can still affect unprotected logic and routing. The Target Only rows isolate each protected module and show the effect of the target and of $N$ more clearly. The \ac{LSU} passes only from $N=5$/$M=3$ onward, which indicates that one tolerated faulty replica is not enough for this target under the selected campaign. The Controller, Decoder, and \ac{ALU} pass from $N=3$/$M=2$ onward, where one faulty replica can be tolerated. The IF Stage passes for the valid configurations, but higher values of $N$ fail implementation due to timing and do not produce valid metrics.
-
-The $N=4$/$M=3$ point does not improve the correction margin over $N=3$/$M=2$, because both tolerate only one faulty replica. The first margin increase appears at $N=5$/$M=3$, which tolerates two corrupted replicas, while $N=7$/$M=4$ tolerates three. The change in Target Only results when $N$ increases also supports the Pblock Model accuracy, because the extra replicas can only affect Benchmark Pass if the injected faults reach the intended protected target.
-
-All experiments in \Cref{tab:chap9-logicRedundancy-status} were repeated with HOLD enabled, and the Benchmark Pass classification did not change. HOLD makes a Logic M-of-N wrapper output the last valid value when the voter cannot form a quorum. The unchanged results indicate that, in these campaigns, the previous-cycle output is not a useful replacement for the current-cycle output. A held output and a corrupted output, therefore, have similar impact on Benchmark Pass.
-
-
-
-
-\subsection{Performance and Hardware Resources}
-
-\begin{table}[h]
-\centering
-\scriptsize
-\setlength{\tabcolsep}{1.6pt}
-\renewcommand{\arraystretch}{1.15}
-\begin{tabularx}{\textwidth}{|>{\raggedright\arraybackslash}X|c|c|c|c|>{\centering\arraybackslash}X|>{\centering\arraybackslash}X|>{\centering\arraybackslash}X|c|}
-\hline
-Target &
-$N/M$ &
-CoreMark &
-\shortstack{Embench\\IoT} &
-\ac{IPC} &
-\shortstack{\acp{LUT}} &
-\shortstack{\acp{FF}} &
-\shortstack{Power} &
-Slack \\
-\hline
-\hline
-Baseline &
--- &
-44 &
-0.076 &
-0.28 &
-4752 &
-2304 &
-0.590 &
-2.518 \\
-\hline
-\ac{LSU} &
-3/2 &
-44 &
-0.076 &
-0.28 &
-+2 &
-+0 &
-+0.001 &
-2.600 \\
-\hline
-\ac{LSU} &
-5/3 &
-44 &
-0.076 &
-0.28 &
-+2 &
-+0 &
-+0.001 &
-2.550 \\
-\hline
-\ac{LSU} &
-7/4 &
-44 &
-0.076 &
-0.28 &
-+89 &
-+0 &
--0.001 &
-2.450 \\
-\hline
-Controller &
-3/2 &
-44 &
-0.076 &
-0.28 &
-+803 &
-+32 &
-+0.000 &
-2.200 \\
-\hline
-Controller &
-5/3 &
-44 &
-0.076 &
-0.28 &
-+1643 &
-+62 &
-+0.004 &
-1.900 \\
-\hline
-Controller &
-7/4 &
-44 &
-0.076 &
-0.28 &
-+2253 &
-+121 &
-+0.002 &
-1.600 \\
-\hline
-Decoder &
-3/2 &
-44 &
-0.076 &
-0.28 &
-+1419 &
-+2 &
--0.007 &
-2.100 \\
-\hline
-Decoder &
-5/3 &
-44 &
-0.076 &
-0.28 &
-+2736 &
-+27 &
--0.004 &
-1.700 \\
-\hline
-Decoder &
-7/4 &
-44 &
-0.076 &
-0.28 &
-+3934 &
-+29 &
-+0.003 &
-1.400 \\
-\hline
-IF Stage &
-3/2 &
-44 &
-0.076 &
-0.28 &
-+3266 &
-+780 &
--0.001 &
-0.068 \\
-\hline
-IF Stage &
-5/3 &
--- &
--- &
--- &
-+5606 &
-+1594 &
-+0.055 &
--6.250 \\
-\hline
-IF Stage &
-7/4 &
--- &
--- &
--- &
-+7876 &
-+2294 &
-+0.080 &
--8.600 \\
-\hline
-\ac{ALU} &
-3/2 &
-44 &
-0.076 &
-0.28 &
-+3605 &
-+23 &
-+0.004 &
-1.500 \\
-\hline
-\ac{ALU} &
-5/3 &
-44 &
-0.076 &
-0.28 &
-+6225 &
-+29 &
-+0.006 &
-1.000 \\
-\hline
-\ac{ALU} &
-7/4 &
-44 &
-0.076 &
-0.28 &
-+10076 &
-+60 &
-+0.029 &
-0.500 \\
-\hline
-\end{tabularx}
-\caption{Logic M-of-N performance and hardware cost across the evaluated targets and replication factors.}
-\label{tab:chap9-logicRedundancy-cost}
-\end{table}
-
-
-\Cref{tab:chap9-logicRedundancy-cost} shows that Logic M-of-N mainly affects hardware cost and timing. CoreMark, Embench-IoT, and \ac{IPC} remain equal to the baseline whenever valid metrics are retrieved. The \ac{LSU} has the lowest cost, but \Cref{tab:chap9-logicRedundancy-status} shows that it only passes the 50 Hz Target Only campaign from $N=5$/$M=3$ onward. The Controller, Decoder, and \ac{ALU} pass from $N=3$/$M=2$, at the cost of higher \ac{LUT} usage. The IF Stage passes at $N=3$/$M=2$, but further replication violates timing and would require a lower core frequency. Since this version of \ac{Fatori-V} does not allow the core frequency to be changed directly from the run file, tracing the optimal frequency for those configurations is left for future work.
-
-A single protected target does not recover the Whole Device failing campaigns. A combined set of Logic M-of-N targets, possibly with different values of $N$, could be evaluated in future work, but was not covered in this study. Increasing $N$ is useful only when it adds correction margin. $N=3$/$M=2$ is the first useful point, $N=5$/$M=3$ is the first point that increases the number of tolerated corrupted replicas, and $N=7$/$M=4$ should only be used when the extra protection justifies the cost.
-
-
-
-
-
-
-\Cref{tab:chap9-logicRedundancy-cost} shows that Logic M-of-N mainly affects hardware cost and timing, while CoreMark, Embench-IoT, and \ac{IPC} remain equal to the baseline whenever valid metrics are retrieved. Using M-of-N in the \ac{LSU} has the lowest cost, but \Cref{tab:chap9-logicRedundancy-status} shows that it only passes the 50 Hz target only campaign from $N=5$/$M=3$ onward. The Controller, Decoder, and \ac{ALU} pass from $N=3$/$M=2$, showing that one tolerated corrupted replica is enough for those targets under the same campaign. The IF Stage also passes at $N=3$/$M=2$, but further replication requires lowering the core frequency. Since this first version of \ac{Fatori-V} does not allow the core frequency to be changed directly from the run file, tracing the optimal frequency for those configurations is left for future work. Overall, a single protected target does not recover the whole device failed experiments, there is still the option for a combined set of Logic M-of-N modules, maybe with different values of $N$, to do it, but that was not tackled in this research. Increasing $N$ is only useful when it adds majority margin. For example, $N=3$/$M=2$ is the first useful point, $N=5$/$M=3$ is the first point that increases the number of tolerated corrupted replicas, and $N=7$/$M=4$ should only be used when the extra protection justifies the cost.
-
-
-
-
-

@@ -10,7 +10,7 @@
 \section{VeeRwolf EL2 Overview}
 \label{chap4:el2_overview}
 
-Imagination Technologies' Veerwolf is a reference \ac{SoC} platform in teaching and Academia \cite{rvteaching1 , rvteaching2}, being chosen as a possible candidate to implement \acp{FTM} on. Through the VeeR EL2 configuration, shown in \cref{fig:el2}, the platform combines the EL2 core with the peripherals, interconnect, memory blocks, and build support required to execute software in simulation and on selected \acp{FPGA}.
+Imagination Technologies' Veerwolf is a reference \ac{SoC} platform in teaching and Academia \cite{rvteaching1 , rvteaching2}. Through the VeeR EL2 configuration, shown in \Cref{fig:el2}, the platform combines the EL2 core with the peripherals, interconnect, memory blocks, and build support required to execute software in simulation and on selected \acp{FPGA}.
 
 \begin{figure}[h]
     \centering
@@ -40,7 +40,7 @@ The VeeR EL2 \cite{veer_el2} is a 32-bit, scalar, in-order, machine-mode-only \a
     \label{fig:el2_pipeline}
 \end{figure}
 
-The EL2 pipeline, shown in \cref{fig:el2_pipeline}, is organized into Fetch, Decode, Execute/Memory, and Retire stages.
+The EL2 pipeline, shown in \Cref{fig:el2_pipeline}, is organized into Fetch, Decode, Execute/Memory, and Retire stages.
 
 Fetch computes the next \ac{PC} and accesses the instruction source, either the instruction cache or \ac{ICCM}.
 The Decode stage aligns and decodes instructions and generates the control signals to select operands.
@@ -88,10 +88,10 @@ Furthermore, the EL2 architecture exhibits strong coupling between control logic
 
 As the scope of the \ac{Fatori-V} project became more clearly defined, it became evident that the project requirements extended beyond the integration of fault-tolerance mechanisms within a processor core. The platform additionally required support for controlled \ac{FI}, metric collection, automated benchmark execution, configuration file generation, \ac{IP} generation, and integration with the Vivado design flow. Under these conditions, continued development based on the EL2 platform would shift a disproportionate amount of effort toward understanding, adapting, and stabilizing the baseline architecture, rather than advancing the intended \ac{FTM} evaluation framework.
 
-Consequently, the EL2-based approach was abandoned in favor of the second candidate identified in \cref{chap2:analysis}, lowRISC's Ibex core, detailed in the following chapter.
-%\cref{chap5:ibex}.
+Consequently, the EL2-based approach was abandoned in favor of the second candidate identified in \Cref{chap2:analysis}, lowRISC's Ibex core, detailed in the following chapter.
+%\Cref{chap5:ibex}.
 
-%As the intended scope of \ac{Fatori-V} became clearer, the project required more than adding protection logic to a core. It also required controlled \ac{FI}, metric collection, generated configuration files, benchmark automation, \ac{IP} generation, and Vivado-flow integration. Continuing with EL2 would therefore move too much effort into understanding and stabilizing the baseline instead of building the \ac{FTM} evaluation platform. For this reason, the EL2 path was abandoned, and the work moved to the second candidate discussed in \cref{chap2:analysis}, lowRISC's Ibex, described next in \cref{chap5:ibex}.
+%As the intended scope of \ac{Fatori-V} became clearer, the project required more than adding protection logic to a core. It also required controlled \ac{FI}, metric collection, generated configuration files, benchmark automation, \ac{IP} generation, and Vivado-flow integration. Continuing with EL2 would therefore move too much effort into understanding and stabilizing the baseline instead of building the \ac{FTM} evaluation platform. For this reason, the EL2 path was abandoned, and the work moved to the second candidate discussed in \Cref{chap2:analysis}, lowRISC's Ibex, described next in \Cref{chap5:ibex}.
 
 
 
