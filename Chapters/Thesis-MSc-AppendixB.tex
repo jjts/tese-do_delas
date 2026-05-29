@@ -1,79 +1,323 @@
-% ---------------------------------------------------------------------------
-% Appendix B (place in your appendices file)
-% ---------------------------------------------------------------------------
-\chapter{SEM Monitor Interface Reference}
-\label{app_b:sem_monitor}
+% #############################################################################
+% This is Appendix B
+% !TEX root = ../main.tex
+% #############################################################################
+\chapter{Appendix B: Fatori-V Computed Metrics}
+\label{app_b:metrics}
 
-This appendix lists a small subset of SEM monitor commands and the typical responses observed during bring-up and automated fault-injection. The exact command set and report fields depend on the SEM version and device family; the examples below follow the UltraScale SEM controller monitor logs \cite{SEM}.
+\ac{Fatori-V} implements a centralized metric system, explained in \Cref{chap7:sw_logging}, that allows users to dynamically add new computed metrics to the \ac{Fatori-V}'s results tables. \Cref{tab:metrics_performance,tab:metrics_hardware,tab:metrics_ft} list the metrics exported by \ac{Fatori-V} in its current version.
 
-\begin{table}[H]
+\begin{table}[h]
 \centering
-\begin{tabularx}{\textwidth}{|l|X|}
+\small
+\setlength{\tabcolsep}{3.2pt}
+\renewcommand{\arraystretch}{1.25}
+\begin{tabularx}{\textwidth}{|p{0.23\textwidth}|p{0.12\textwidth}|X|X|}
 \hline
-Command & Typical behaviour and response pattern \\
+Metric Name &
+Kind &
+Computation &
+What it Measures \\
 \hline
-I & Enter Idle. Prints SC 00 and the prompt becomes I. Idle is the injection-accepting state. \\
 \hline
-O & Enter Observation. Prints SC 02 and the prompt becomes O. In mitigation modes, scanning and correction occur while observing. \\
+LUT Count &
+Measured &
+Vivado utilization report &
+Total look-up tables used. \\
 \hline
-S & Status summary. Prints a short report (including maximum frames and current state). \\
+LUT Utilization &
+Measured &
+Vivado utilization report &
+LUT count as device percentage. \\
 \hline
-N packed\_addr & Inject one configuration bit flip at the addressed location. If injection is enabled, prints SC 10 then SC 00 and returns to I. \\
+Flip-Flop Count &
+Measured &
+Vivado utilization report &
+Total register flip-flops used. \\
 \hline
-R fs & Software reset. Prints a banner, enters initialization (SC 01), reports initialization steps, then enters observation (SC 02). \\
+FF Utilization &
+Measured &
+Vivado utilization report &
+FF count as device percentage. \\
 \hline
-T addr & Frame address translation. Prints a translated address representation on a single line. \\
+Block RAM Tiles &
+Measured &
+Vivado utilization report &
+On-chip BRAM tiles consumed. \\
 \hline
-Q addr & Query frame. Prints multiple lines of readback data (one per word), then returns to I. \\
+DSP Blocks &
+Measured &
+Vivado utilization report &
+Dedicated DSP48E2 slices used. \\
 \hline
-D & Enter Detect Only. Prints SC 20 and the prompt becomes D. \\
+Worst Negative Slack &
+Measured &
+Vivado timing report &
+Critical setup-timing margin, in ns. \\
 \hline
-U & Diagnostic scan. Prints SC 40, then reports detected errors (if any), then returns to I. \\
+Total On-Chip Power &
+Measured &
+Vivado power report &
+Estimated dynamic and static power. \\
 \hline
 \end{tabularx}
-\caption{Selected SEM monitor commands and expected response patterns \cite{SEM}.}
-\label{tab:sem_cmds}
+\caption{Hardware cost metrics automatically extracted by \ac{Fatori-V} for every run.}
+\label{tab:metrics_hardware}
 \end{table}
 
-Example injection and state control (injection enabled):
-\begin{lstlisting}
-I N C000A098000
-SC 10
-SC 00
-I O
-SC 02
-O
-\end{lstlisting}
 
-Example software reset and initialization sequence:
-\begin{lstlisting}
-I R 04
-SEM_ULTRA_V3_1
-SC 01
-FS 04
-AF 01
-ICAP OK
-RDBK OK
-INIT OK
-SC 02
-O
-\end{lstlisting}
 
-Example error report in observation (classification disabled):
-\begin{lstlisting}
-O
-RI 00
-SC 04
-ECC
-TS 00000971
-PA 00180200
-LA 0000A098
-COR
-WD 22 BT 10
-END
-FC 00
-SC 08
-FC 40
-SC 02
-O
-\end{lstlisting}
+
+\begin{table}[h]
+\centering
+\small
+\setlength{\tabcolsep}{3.2pt}
+\renewcommand{\arraystretch}{1.25}
+\begin{tabularx}{\textwidth}{|p{0.23\textwidth}|p{0.12\textwidth}|X|X|}
+\hline
+Metric Name &
+Kind &
+Computation &
+What it Measures \\
+\hline
+\hline
+Number of Cycles &
+Measured &
+Post\,$-$\,Pre snapshot &
+Total benchmark execution cycles. \\
+\hline
+Instructions Retired &
+Measured &
+Post\,$-$\,Pre snapshot &
+Total instructions committed. \\
+\hline
+LSU Busy Cycles &
+Measured &
+Post\,$-$\,Pre snapshot &
+Cycles with active memory transaction. \\
+\hline
+I-Fetch Stall Cycles &
+Measured &
+Post\,$-$\,Pre snapshot &
+Cycles stalled on instruction fetch. \\
+\hline
+Load Count &
+Measured &
+Post\,$-$\,Pre snapshot &
+Memory-read operations retired. \\
+\hline
+Store Count &
+Measured &
+Post\,$-$\,Pre snapshot &
+Memory-write operations retired. \\
+\hline
+Jump Count &
+Measured &
+Post\,$-$\,Pre snapshot &
+Unconditional jumps retired. \\
+\hline
+Branch Count &
+Measured &
+Post\,$-$\,Pre snapshot &
+Conditional branches evaluated. \\
+\hline
+Taken Branch Count &
+Measured &
+Post\,$-$\,Pre snapshot &
+Conditional branches taken. \\
+\hline
+Compr. Instruction Count &
+Measured &
+Post\,$-$\,Pre snapshot &
+RV32C instructions retired. \\
+\hline
+Multiply Stall Cycles &
+Measured &
+Post\,$-$\,Pre snapshot &
+Cycles stalled on multiplier. \\
+\hline
+Divide Stall Cycles &
+Measured &
+Post\,$-$\,Pre snapshot &
+Cycles stalled on divider. \\
+\hline
+CoreMark Score &
+Measured &
+Directly from benchmark &
+Iterations per second throughput. \\
+\hline
+CoreMark Integrity CRCs &
+Measured &
+Directly from benchmark &
+Per-kernel output correctness check. \\
+\hline
+CoreMark Auxiliary Metrics &
+Measured &
+Directly from benchmark &
+Code size, time, and iteration metadata. \\
+\hline
+Embench Aggregate Score &
+Measured &
+Directly from benchmark &
+Overall Embench-IoT score. \\
+\hline
+Embench Per-Test Metrics &
+Measured &
+Directly from benchmark &
+Per-program cycles, pass flag, and ratio. \\
+\hline
+Fatori Stress Checksums &
+Measured &
+Directly from benchmark &
+Total correct checksums. \\
+\hline
+Fatori Stress Result &
+Measured &
+Directly from benchmark &
+Pass or fail result and mismatch descriptor. \\
+\hline
+Instructions per Cycle &
+Computed &
+\(\mathrm{minstret}/\mathrm{mcycle}\) &
+Average instruction throughput per cycle. \\
+\hline
+Taken-Branch Rate &
+Computed &
+\(100\cdot\mathrm{hpm\_branches\_taken}/\mathrm{hpm\_branches}\) &
+Percentage of branches taken. \\
+\hline
+Compr. Instruction Rate &
+Computed &
+\(100\cdot\mathrm{hpm\_compressed}/\mathrm{minstret}\) &
+Share of retired RV32C instructions. \\
+\hline
+\end{tabularx}
+\caption{Performance metrics automatically extracted and computed by \ac{Fatori-V} for every run.}
+\label{tab:metrics_performance}
+\end{table}
+
+
+
+
+\begin{table}[h]
+\centering
+\small
+\setlength{\tabcolsep}{3.2pt}
+\renewcommand{\arraystretch}{1.25}
+\begin{tabularx}{\textwidth}{|p{0.23\textwidth}|p{0.12\textwidth}|X|X|}
+\hline
+Metric Name &
+Kind &
+Computation &
+What it Measures \\
+\hline
+\hline
+Minor Event Count &
+Measured &
+Post\,$-$\,Pre snapshot &
+Cumulative recoverable faults detected. \\
+\hline
+Major Event Count &
+Measured &
+Post\,$-$\,Pre snapshot &
+Cumulative non-recoverable faults detected. \\
+\hline
+Internal Major Count &
+Measured &
+Post\,$-$\,Pre snapshot &
+Major faults originating from internal CPU logic. \\
+\hline
+Bus Major Count &
+Measured &
+Post\,$-$\,Pre snapshot &
+Major faults originating from bus or memory. \\
+\hline
+Double Fault Count &
+Measured &
+Post\,$-$\,Pre snapshot &
+Number of double faults detected. \\
+\hline
+Corrected Event Count &
+Measured &
+Post\,$-$\,Pre snapshot &
+Faults corrected by M-of-N scrubbing. \\
+\hline
+Register Injection Count &
+Measured &
+Post\,$-$\,Pre snapshot &
+Register injections issued by the \ac{FI} system. \\
+\hline
+Logic Injection Count &
+Measured &
+Post\,$-$\,Pre snapshot &
+Logic injections issued by the \ac{FI} system. \\
+\hline
+\ac{EBD} Count &
+Measured &
+Directly from the generated \ac{EBD} data &
+Number of \ac{EBD} bits contained in each target region, including the full \ac{SoC}. \\
+\hline
+Cycles to First Minor Event &
+Measured &
+Post\,$-$\,Pre snapshot &
+Cycles from reset until first recoverable fault. \\
+\hline
+Cycles to First Major Event &
+Measured &
+Post\,$-$\,Pre snapshot &
+Cycles from reset until first non-recoverable fault. \\
+\hline
+Last Detection Latency &
+Measured &
+Post\,$-$\,Pre snapshot &
+Injection-to-detection cycles for last detection. \\
+\hline
+Detection Latency Sum &
+Measured &
+Post\,$-$\,Pre snapshot &
+Sum of per-injection detection latencies. \\
+\hline
+Detection Latency Count &
+Measured &
+Post\,$-$\,Pre snapshot &
+Number of latency samples accumulated. \\
+\hline
+Total Injection Count &
+Computed &
+\(\mathrm{reg\_inj\_cnt} + \mathrm{logic\_inj\_cnt}\) &
+Total fault injections issued. \\
+\hline
+Total Fault Detection &
+Computed &
+\(\mathrm{minor\_cnt} + \mathrm{major\_cnt}\) &
+Total fault events detected. \\
+\hline
+Correction Efficacy &
+Computed &
+\(\mathrm{corrected\_cnt}/\mathrm{minor\_cnt}\) &
+Fraction of detected minor faults corrected. \\
+\hline
+Average Detection Latency &
+Computed &
+\(\mathrm{latency\_sum}/\mathrm{latency\_cnt}\) &
+Mean injection-to-detection latency. \\
+\hline
+Observability &
+Computed &
+\((\mathrm{minor\_cnt} + \mathrm{major\_cnt})/\mathrm{total\_inj\_cnt}\) &
+Fraction of injections detected. \\
+\hline
+Masking Rate &
+Computed &
+\(1 - \mathrm{fault\_sensitivity}\) &
+Fraction of injections undetected. \\
+\hline
+Fault Sensitivity &
+Computed &
+\(\mathrm{major\_cnt}/\mathrm{total\_inj\_cnt}\) &
+Fraction of injections that caused system failure. \\
+\hline
+\end{tabularx}
+\caption{\ac{FT} metrics automatically extracted and computed by \ac{Fatori-V} for every run.}
+\label{tab:metrics_ft}
+\end{table}
