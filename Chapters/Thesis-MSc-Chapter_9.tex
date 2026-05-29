@@ -9,8 +9,13 @@
 % #############################################################################
 \section{Experimental Setup}
 \label{chap9:experimental_setup}
+ 
+%Tas section presents the experiments made using the \ac{Fatori-V} platform. Each experiment is fully defined with a single \texttt{.yaml} file, which describes the target hardware configuration (architecture options and enabled \acp{FTM}), software benchmarks, and fault-injection campaign parameters. For each run, \ac{Fatori-V} automatically builds the \ac{FPGA} image, programs the board, launches the required host-side consoles, executes the benchmark suite, and produces run directories containing logs and results tables. The software benchmarks include a Hello World program, new Fatori Stress software, and two standard benchmarks, CoreMark and Embench-IoT. 
 
-This section presents the experiments made using the \ac{Fatori-V} platform. Each experiment is fully defined with a single \texttt{.yaml} file, which describes the target hardware configuration (architecture options and enabled \acp{FTM}), software benchmarks, and fault-injection campaign parameters. For each run, \ac{Fatori-V} automatically builds the \ac{FPGA} image, programs the board, launches the required host-side consoles, executes the benchmark suite, and produces run directories containing logs and results tables. The software benchmarks include a Hello World program, new Fatori Stress software, and two standard benchmarks, CoreMark and Embench-IoT. All experiments can be reproduced by using the main \ac{Fatori-V} GitHub repository in \cite{FatoriV}, using the \texttt{python3 fatori-v.py} command.
+The experimental setup is illustrated in \Cref{fig:chap9_exp_setup}. The main script (\texttt{fatori-v.py}) runs all experiments, each defined in its own \texttt{.yaml} file.
+
+Each test session synthesizes and implements its custom hardware, programs the FPGA, configures the \ac{FI}, and waits for the firmware to finish execution and to produce a text file containing the measured results. This results file is analyzed to generate readable result tables.
+
 
 \begin{figure}[h]
   \centering
@@ -18,8 +23,6 @@ This section presents the experiments made using the \ac{Fatori-V} platform. Eac
   \caption{Fatori-V system used in the experimental setup.}
   \label{fig:chap9_exp_setup}
 \end{figure}
-
-\Cref{fig:chap9_exp_setup} shows the system used in the experiments. The \texttt{fatori-v.py} script runs all \texttt{.yaml} tests. Each test synthesizes and implements the FPGA hardware, programs the FPGA, configures the \ac{FI}, and waits for the firmware to finish execution. Next, the text file produced by the firmware, containing the measured results, is analyzed to generate the result tables.
 
 %orange
 All \acp{FTM} implemented in this work report their error signals to the central \texttt{fault manager} (orange paths in \Cref{fig:chap9_exp_setup}). The fault manager writes the error data to the implemented Ibex \acp{CSR}.
@@ -30,6 +33,8 @@ The firmware reads the \acp{CSR} and sends the metrics to the user desktop conso
 %green
 During execution, faults are injected (green paths in \Cref{fig:chap9_exp_setup}) using the \ac{FI} \ac{UART}, and decoded either as "R" commands (register injections), or \ac{SEM} commands (configuration-memory injections).
 
+
+The complete experimental system is available in \cite{FatoriV}, allowing for result reproducibility and verification as well as further independent research.
 
 
 
@@ -171,21 +176,24 @@ Microburst &
 \section{Comparison of Fault Tolerance Mechanisms}
 \label{chap9:general-ftm-testing}
 
-This section compares the evaluated \acp{FTM} under the same \ac{FI} conditions. Each hardware setup contains a defined set of enabled \acp{FTM}. In the individual \ac{FTM} experiments, only the mechanism under test is enabled. The comparison also includes a Baseline with no \acp{FTM}, SecureIbex with the native Ibex \acp{FTM} enabled, and one setup with all evaluated \acp{FTM} enabled.
+%This section compares the evaluated \acp{FTM} under the same \ac{FI} conditions. Each hardware setup contains a defined set of enabled \acp{FTM}. In the individual \ac{FTM} experiments, only the mechanism under test is enabled. The comparison also includes a Baseline with no \acp{FTM}, SecureIbex with the native Ibex \acp{FTM} enabled, and one setup with all evaluated \acp{FTM} enabled.
 
-The native Ibex \acp{FTM} evaluated individually are Lockstep, Dummy Instructions, Data Independent Timing, Hardened \ac{PC}, PMP, RegFile \ac{ECC}, RegFile Glitch Checks, Secure Guards, and Shadow \acp{CSR}. RegFile Glitch Checks groups the RegFile RADDR and \ac{RF} WE glitch checks. The two \acp{FTM} implemented for \ac{Fatori-V} are Register Redundancy and Logic Redundancy.
+%The native Ibex \acp{FTM} evaluated individually are Lockstep, Dummy Instructions, Data Independent Timing, Hardened \ac{PC}, PMP, RegFile \ac{ECC}, RegFile Glitch Checks, Secure Guards, and Shadow \acp{CSR}. RegFile Glitch Checks groups the RegFile RADDR and \ac{RF} WE glitch checks. The two \acp{FTM} implemented for \ac{Fatori-V} are Register Redundancy and Logic Redundancy.
 
-Register Redundancy was enabled for all 197 wrapped registers, with \(N=3\), \(M=2\), and Correction enabled. Logic Redundancy was enabled for the five supported logic targets listed in \Cref{chap6:mon}, the \ac{ALU}, \ac{LSU}, Controller, Decoder, and IF Stage, with \(N=3\) and \(M=2\).
+%Register Redundancy was enabled for all 197 wrapped registers, with \(N=3\), \(M=2\), and Correction enabled. Logic Redundancy was enabled for the five supported logic targets listed in \Cref{chap6:mon}, the \ac{ALU}, \ac{LSU}, Controller, Decoder, and IF Stage, with \(N=3\) and \(M=2\).
 
-The Baseline contains no \acp{FTM}, but keeps the Fault Manager and monitoring hardware enabled because these blocks are required to collect \ac{FT} data. It uses the Branch Predictor and Branch Target \ac{ALU}, and enables the M, C, and B \ac{ISA} extensions. The multiplier is the native Ibex Single Cycle multiplier, and the bit manipulation unit is the native Ibex Balanced implementation. All experiments use a \ac{CPU} frequency of 60 MHz and the Kintex Ultrascale XCKU040 \cite{xcku040} (xcku040-fbva676-1-c) \ac{FPGA} board.
+%The Baseline contains no \acp{FTM}, but keeps the Fault Manager and monitoring hardware enabled because these blocks are required to collect \ac{FT} data. It uses the Branch Predictor and Branch Target \ac{ALU}, and enables the M, C, and B \ac{ISA} extensions. The multiplier is the native Ibex Single Cycle multiplier, and the bit manipulation unit is the native Ibex Balanced implementation. All experiments use a \ac{CPU} frequency of 60 MHz and the Kintex Ultrascale XCKU040 \cite{xcku040} (xcku040-fbva676-1-c) \ac{FPGA} board.
 
-For each hardware setup, \ac{Fatori-V} ran the same set of \ac{FI} campaigns. Each setup was tested with seven injection rates, three register/configuration memory ratios, and two injection scopes, producing 42 campaigns per setup and 588 experiments overall. The same seeds, benchmarks, \ac{FI} configuration, and Target Pool were used across setups, so each equivalent setup followed the same injection targets and timing.
+%For each hardware setup, \ac{Fatori-V} ran the same set of \ac{FI} campaigns. Each setup was tested with seven injection rates, three register/configuration memory ratios, and two injection scopes, producing 42 campaigns per setup and 588 experiments overall. The same seeds, benchmarks, \ac{FI} configuration, and Target Pool were used across setups, so each equivalent setup followed the same injection targets and timing.
 
-All campaigns use the Poisson time profile, a fixed duration of 120 s, and injection rates of 1 Hz, 10 Hz, 50 Hz, 100 Hz, 500 Hz, 1000 Hz, and 5000 Hz. The register/configuration memory ratio defines how injections are split between wrapped registers and configuration memory. A ratio of 0 injects only configuration memory faults, a ratio of 1 injects only register faults, and a ratio of 0.0001 combines both fault types. This mixed ratio approximates the proportion between the 197 wrapped registers and the 1837420 \ac{EBD} configuration addresses exported by Vivado for the Baseline, which represent the possible configuration memory injection locations. The two injection scopes are the full device and the selected Pblock targets.
+%All campaigns use the Poisson time profile, a fixed duration of 120 s, and injection rates of 1 Hz, 10 Hz, 50 Hz, 100 Hz, 500 Hz, 1000 Hz, and 5000 Hz. The register/configuration memory ratio defines how injections are split between wrapped registers and configuration memory. A ratio of 0 injects only configuration memory faults, a ratio of 1 injects only register faults, and a ratio of 0.0001 combines both fault types. This mixed ratio approximates the proportion between the 197 wrapped registers and the 1837420 \ac{EBD} configuration addresses exported by Vivado for the Baseline, which represent the possible configuration memory injection locations. The two injection scopes are the full device and the selected Pblock targets.
 
-The same seeds, benchmarks, and \ac{FI} configurations were used across equivalent experiments. The \ac{FI} target pool from the first experiment was reused in the remaining experiments, so each campaign followed the same injection targets and timing. The executed benchmarks were Fatori Stress with 100000 iterations and all targets enabled, CoreMark with 1000 iterations, and the Embench-IoT benchmarks crc32, cubic, edn, huffbench, matmult\_int, md5sum, minver, nbody, nettle\_aes, and nettle\_sha256. Performance was measured from CoreMark and Embench-IoT. Experiment success was measured with the Fatori Stress checksum check.
+%The same seeds, benchmarks, and \ac{FI} configurations were used across equivalent experiments. The \ac{FI} target pool from the first experiment was reused in the remaining experiments, so each campaign followed the same injection targets and timing. The executed benchmarks were Fatori Stress with 100000 iterations and all targets enabled, CoreMark with 1000 iterations, and the Embench-IoT benchmarks crc32, cubic, edn, huffbench, matmult\_int, md5sum, minver, nbody, nettle\_aes, and nettle\_sha256. Performance was measured from CoreMark and Embench-IoT. Experiment success was measured with the Fatori Stress checksum check.
 
 
+The evaluated \acp{FTM} were compared under identical \ac{FI} conditions using individual and combined protection configurations. The comparison included a Baseline without \acp{FTM}, SecureIbex native protections, and the two \ac{Fatori-V} mechanisms: Register Redundancy and Logic Redundancy. All experiments were executed on a 60 MHz Kintex Ultrascale XCKU040 \cite{xcku040} (xcku040-fbva676-1-c) \ac{FPGA} platform.
+
+Each hardware setup executed the same set of \ac{FI} campaigns, varying injection rate, injection scope, and register/configuration memory fault ratio, resulting in 588 experiments overall. Equivalent experiments reused the same seeds, benchmarks, and injection targets to ensure consistent conditions across setups. Evaluation was performed using Fatori Stress, CoreMark, and Embench-IoT benchmarks, with performance measured through CoreMark and Embench-IoT, and experiment success determined through the Fatori Stress checksum validation.
 
 
 
