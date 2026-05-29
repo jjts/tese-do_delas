@@ -17,6 +17,8 @@ The validation in \Cref{chap9:fatori_validation} showed that the Pblock Model re
 
 The studies in \Cref{chap9:register-Redundancy,chap9:logic-Redundancy} showed that $N=3$, $M=2$ with Correction enabled was the best tested Register M-of-N trade-off. Logic M-of-N improved configuration memory campaigns, but its effect was limited to the five protected targets and by the absence of configuration memory correction. The observability results also exposed two limits in the current implementation. Register M-of-N protects the system, but the aggregation path can merge several detections into one counted event. Logic M-of-N can mask corrupted replica outputs, but it does not repair corrupted configuration memory.
 
+%The fact that we could compare so many things from so many ftms, is a form of validating Fatori as a analysis platform
+
 % #############################################################################
 \section{Future Work}
 \label{chap10:future}
@@ -30,3 +32,9 @@ Logic M-of-N should be extended with configuration memory correction. The curren
 The \ac{ST} \ac{FTM} should be completed and evaluated. Future work should finalize the test patterns, select scheduling policies, measure execution overhead, and compare its detection results with Register M-of-N and Logic M-of-N under the same \ac{FI} campaigns.
 
 \ac{Fatori-V} should also be expanded with more benchmarks, automatic parameter sweeps, finer injection-rate steps near failure transitions, more \acp{FPGA}, and more \acp{CPU} and \acp{SoC}. The Ibex-to-\ac{AXI} bridge can be extended with burst support, and the logging flow can be made more resilient so metrics are preserved when a campaign causes a hang or reset.
+
+%frequency control
+
+%more MoN targets
+
+%Perform an analysis on FTMs with other already exported Fatori-V metrics
