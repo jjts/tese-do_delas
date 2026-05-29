@@ -31,7 +31,7 @@ Imagination Technologies' Veerwolf is a reference \ac{SoC} platform in teaching 
     \label{fig:el2}
 \end{figure}
 
-The VeeR EL2 \cite{veer_el2} is a 32-bit, scalar, in-order, machine-mode-only \ac{CPU} with a four-stage pipeline. It implements RV32I with the compressed (C), multiplication and division (M), and a subset of bit-manipulation extensions. EL2 is delivered as a core complex with optional \ac{ICCM} and \ac{DCCM} memories, an optional instruction cache, three master ports for instruction fetch, load-store access, debug, and one slave \ac{DMA} port for external access to core memories. The external bus protocol can be configured as 64-bit \ac{AXI} or \ac{AHB}-Lite.
+VeeR EL2 \cite{veer_el2}, surveyed in \Cref{chap2:analysis}, is a 32-bit embedded \ac{RISC-V} core that served as the first Fatori-V backbone candidate. It is delivered as a core complex with optional \ac{ICCM} and \ac{DCCM} memories, an optional instruction cache, three master ports for instruction fetch, load-store access, and debug, and one slave \ac{DMA} port for external access to core memories. The external bus protocol can be configured as 64-bit \ac{AXI} or \ac{AHB}-Lite.
 
 \begin{figure}[h]
 \centering
@@ -40,19 +40,13 @@ The VeeR EL2 \cite{veer_el2} is a 32-bit, scalar, in-order, machine-mode-only \a
     \label{fig:el2_pipeline}
 \end{figure}
 
-The EL2 pipeline, shown in \Cref{fig:el2_pipeline}, is organized into Fetch, Decode, Execute/Memory, and Retire stages.
-
-Fetch computes the next \ac{PC} and accesses the instruction source, either the instruction cache or \ac{ICCM}.
-The Decode stage aligns and decodes instructions and generates the control signals to select operands.
-Execute/Memory performs arithmetic and control-flow operations while generates memory addresses for write-back.
-Finnally the Retire stage completes memory and register writes.
+The EL2 pipeline, shown in \Cref{fig:el2_pipeline}, is organized into Fetch, Decode, Execute/Memory, and Retire stages. Fetch computes the next \ac{PC} and accesses the instruction source, either the instruction cache or \ac{ICCM}. Decode aligns and decodes instructions and generates control signals to select operands. Execute/Memory performs arithmetic and control-flow operations and generates memory addresses. Retire completes memory and register writes.
 
 The EL2 implementation separates the arithmetic and control-flow path from the memory path, shown respectively as the I-pipe and LSU-pipe in the figure. In the chosen configuration, \ac{DCCM} accesses include \ac{ECC} protection, stores use a write buffer, and bypass paths forward results from later stages back to Decode to reduce stalls.
 
 VeeRwolf adds the \ac{SoC} blocks needed to execute software around the EL2 core complex. These include a boot ROM, system controller, \ac{UART}, \ac{SPI}, memory and peripheral interconnects, and an \ac{AXI}-to-Wishbone bridge. Since the available board at this stage was the Basys3 \cite{basys3}, the implementation followed the RVfpgaEL2-Basys3 flow, which uses the VeeRwolfX variant. This variant adds \ac{GPIO}, a \ac{PTC} timer, a controller for the four-digit seven-segment displays, \ac{AXI} RAM, \ac{JTAG} boundary-scan logic, and a clock generator.
 
 The study on the VeeRwolf EL2 configuration was mainly supported by the RVfpgaEL2-Basys3 course, which provided examples for simulation and \ac{FPGA} execution, as well as a debug toolchain.
-%The same environment also provides RVfpgaEL2-Trace for internal waveforms, RVfpgaEL2-Pipeline for pipeline visualization, RVfpgaEL2-ViDBo for virtual-board simulation, Whisper for instruction-set simulation, and PlatformIO projects for selected examples.
 
 
 
@@ -71,28 +65,12 @@ After studying the EL2 pipeline, three \ac{FTM} integration paths were planned a
 
 When implementation began, the guided material and labs proved less useful for such low-level \ac{RTL} modification than anticipated. The planned mechanisms were harder to isolate than the diagram suggested, because EL2 contains long cross-module signal paths and tightly coupled control logic, so each modification required checking that pipeline behaviour, bypassing, memory access, and control dependencies were not being broken. To reduce this complexity before adding protection mechanisms, the design was first pruned into a simpler baseline. The branch predictor was removed, the multiplication and division paths were disabled, the bit-manipulation portion of the \ac{ALU} was removed, and both instruction and data caches were disabled so that instruction and data accesses relied on \ac{ICCM} and \ac{DCCM}. After this reduced baseline was operational, the planned implementations were attempted.
 
-Pipeline-register \ac{TMR} was implemented by modifying the existing register wrapper to instantiate three register copies, vote their outputs with a newly developed voter, and propagate only the quorum value. \ac{TMR} was then applied to pipeline adders. The \ac{PC} adder and data-address adder were successfully triplicated because their interfaces were small and their signal boundaries were clear. The full \ac{ALU} \ac{TMR} was not completed because its integration reintroduced the same cross-module dependency problem and left unresolved implementation warnings. The final attempted extension was \ac{ECC} for additional memories beyond the already protected \ac{DCCM}. This was not completed. In EL2, close memory accesses still interact with the \ac{DMA} path, so extending memory protection required a deeper modification of the memory subsystem than the available time allowed. For this reason, the EL2-based implementation path was abandoned. The causes and consequences of this decision are discussed in \Cref{chap4:el2_lessons}.
+Pipeline-register \ac{TMR} was implemented by modifying the existing register wrapper to instantiate three register copies, vote their outputs with a newly developed voter, and propagate only the quorum value. \ac{TMR} was then applied to pipeline adders. The \ac{PC} adder and data-address adder were successfully triplicated because their interfaces were small and their signal boundaries were clear. The full \ac{ALU} \ac{TMR} was not completed because its integration reintroduced the same cross-module dependency problem and left unresolved implementation warnings. The final attempted extension was \ac{ECC} for additional memories beyond the already protected \ac{DCCM}. This was not completed. In EL2, close memory accesses still interact with the \ac{DMA} path, so extending memory protection required a deeper modification of the memory subsystem than the available time allowed. For this reason, the EL2-based implementation path was abandoned. The causes and consequences of this decision are discussed in \Cref{chap4:summary}.
 
 
 
 % #############################################################################
-\section{Conclusions and Course of Action}
-\label{chap4:el2_lessons}
+\section{Summary}
+\label{chap4:summary}
 
-%The conducted study and development on the VeeRwolf EL2 showed that the available RVfpgaEL2-Basys3 material was not enough for the low-level \ac{RTL} modifications required to develop \ac{Fatori-V}. The course was useful for understanding the system at a top level, executing examples, and using the available simulation and debug tools. However, it provided less support for restructuring \ac{RTL}, inserting new \acp{FTM}, and validating the design after deep modifications. Since the EL2 implementation contains tightly coupled control, memory, bypass, and \ac{SoC} interactions, each local \ac{FTM} change required broader verification across the pipeline and memory subsystem. This severely slowed the planned implementations.
-
-The study and development of the VeeRwolf EL2 platform demonstrated that the available RVfpgaEL2-Basys3 documentation and provided toolchain were insufficient to support the low-level \ac{RTL} modifications required for the implementation of \ac{Fatori-V}. Although the provided material was adequate for high-level system comprehension, execution of reference designs, and utilization of the available simulation and debugging infrastructure, it offered limited guidance for extensive architectural modifications, including \ac{RTL} restructuring, integration of new \acp{FTM}, and post-modification design validation.
-
-Furthermore, the EL2 architecture exhibits strong coupling between control logic, memory interfaces, bypass paths, and \ac{SoC} components. Consequently, even localized \ac{FTM} modifications required extensive verification across multiple pipeline and memory subsystems, significantly increasing validation complexity and slowing the overall development process.
-
-
-As the scope of the \ac{Fatori-V} project became more clearly defined, it became evident that the project requirements extended beyond the integration of fault-tolerance mechanisms within a processor core. The platform additionally required support for controlled \ac{FI}, metric collection, automated benchmark execution, configuration file generation, \ac{IP} generation, and integration with the Vivado design flow. Under these conditions, continued development based on the EL2 platform would shift a disproportionate amount of effort toward understanding, adapting, and stabilizing the baseline architecture, rather than advancing the intended \ac{FTM} evaluation framework.
-
-Consequently, the EL2-based approach was abandoned in favor of the second candidate identified in \Cref{chap2:analysis}, lowRISC's Ibex core, detailed in the following chapter.
-%\Cref{chap5:ibex}.
-
-%As the intended scope of \ac{Fatori-V} became clearer, the project required more than adding protection logic to a core. It also required controlled \ac{FI}, metric collection, generated configuration files, benchmark automation, \ac{IP} generation, and Vivado-flow integration. Continuing with EL2 would therefore move too much effort into understanding and stabilizing the baseline instead of building the \ac{FTM} evaluation platform. For this reason, the EL2 path was abandoned, and the work moved to the second candidate discussed in \Cref{chap2:analysis}, lowRISC's Ibex, described next in \Cref{chap5:ibex}.
-
-
-
-
+This chapter documented the first Fatori-V implementation attempt, based on the VeeRwolf EL2 platform. The EL2 core and VeeRwolfX \ac{SoC} were studied, a pruned baseline was established, and partial implementations of pipeline-register \ac{TMR}, pipeline-adder \ac{TMR}, and \ac{ECC} extension for additional memories were attempted. The tight coupling between EL2's control logic, memory interfaces, and bypass paths made each \ac{FTM} insertion significantly harder to verify than anticipated, and the available course material was insufficient to support the required depth of \ac{RTL} modification. As the scope of \ac{Fatori-V} became clearer, it also became evident that the platform required controlled \ac{FI}, metric collection, automated benchmark execution, configuration file generation, \ac{IP} generation, and Vivado-flow integration — requirements that could not be met by continuing to adapt the EL2 baseline. The EL2-based approach was therefore abandoned in favour of lowRISC's Ibex core, described in \Cref{chap5:ibex}.
