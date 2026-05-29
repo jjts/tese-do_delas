@@ -40,13 +40,9 @@ VeeR EL2 \cite{veer_el2}, surveyed in \Cref{chap2:analysis}, is a 32-bit embedde
     \label{fig:el2_pipeline}
 \end{figure}
 
-The EL2 pipeline, shown in \Cref{fig:el2_pipeline}, is organized into Fetch, Decode, Execute/Memory, and Retire stages. Fetch computes the next \ac{PC} and accesses the instruction source, either the instruction cache or \ac{ICCM}. Decode aligns and decodes instructions and generates control signals to select operands. Execute/Memory performs arithmetic and control-flow operations and generates memory addresses. Retire completes memory and register writes.
+The EL2 pipeline separates the arithmetic and control-flow path from the memory path, with \ac{DCCM} accesses including \ac{ECC} protection, stores using a write buffer, and bypass paths forwarding results to reduce stalls.
 
-The EL2 implementation separates the arithmetic and control-flow path from the memory path, shown respectively as the I-pipe and LSU-pipe in the figure. In the chosen configuration, \ac{DCCM} accesses include \ac{ECC} protection, stores use a write buffer, and bypass paths forward results from later stages back to Decode to reduce stalls.
-
-VeeRwolf adds the \ac{SoC} blocks needed to execute software around the EL2 core complex. These include a boot ROM, system controller, \ac{UART}, \ac{SPI}, memory and peripheral interconnects, and an \ac{AXI}-to-Wishbone bridge. Since the available board at this stage was the Basys3 \cite{basys3}, the implementation followed the RVfpgaEL2-Basys3 flow, which uses the VeeRwolfX variant. This variant adds \ac{GPIO}, a \ac{PTC} timer, a controller for the four-digit seven-segment displays, \ac{AXI} RAM, \ac{JTAG} boundary-scan logic, and a clock generator.
-
-The study on the VeeRwolf EL2 configuration was mainly supported by the RVfpgaEL2-Basys3 course, which provided examples for simulation and \ac{FPGA} execution, as well as a debug toolchain.
+VeeRwolf adds the \ac{SoC} blocks needed to execute software around the EL2 core complex, including a boot ROM, \ac{UART}, \ac{SPI}, memory and peripheral interconnects, and an \ac{AXI}-to-Wishbone bridge. Since the available board was the Basys3 \cite{basys3}, the implementation followed the RVfpgaEL2-Basys3 course flow, which also provided simulation examples and a debug toolchain.
 
 
 

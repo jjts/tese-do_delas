@@ -13,7 +13,7 @@
 
 \acp{FPGA} are integrated circuits whose logic and interconnect can be programmed after manufacture. Unlike \acp{ASIC}, where the circuit topology is fixed during fabrication, an \ac{FPGA} implements a user-defined circuit by configuring a fabric of programmable resources \cite{Kastensmidt2006}. The dominant commercial technology stores this configuration in \ac{SRAM} cells, which makes the device fully reconfigurable but also sensitive to radiation, as discussed in \Cref{chap2:radiation}.
 
-An \ac{SRAM}-based \ac{FPGA} is organised around three main categories of programmable resources. \acp{CLB} are the basic computation units; each contains one or more \acp{LUT}, a set of \acp{FF}, and carry-chain logic. A $k$-input \ac{LUT} implements any combinational Boolean function of $k$ variables by storing $2^k$ output bits in a small \ac{SRAM} array, so any function can be mapped to it at configuration time. \acp{FF} inside the \ac{CLB} register intermediate results and pipeline data between clock cycles. Routing resources — programmable switch matrices and interconnect segments — connect \ac{CLB} outputs to \ac{CLB} inputs; each routing switch is controlled by one or more \ac{SRAM} bits. Additional hard blocks, including dedicated block \ac{SRAM} arrays, \ac{DSP} slices, \acp{PLL}, and high-speed transceivers, are distributed across the device.
+An \ac{SRAM}-based \ac{FPGA} is organised around three main categories of programmable resources. \acp{CLB} are the basic computation units; each contains one or more \acp{LUT}, a set of \acp{FF}, and carry-chain logic. \acp{FF} inside the \ac{CLB} register intermediate results and pipeline data between clock cycles. Routing resources — programmable switch matrices and interconnect segments — connect \ac{CLB} outputs to \ac{CLB} inputs; each routing switch is controlled by one or more \ac{SRAM} bits. Additional hard blocks, including dedicated block \ac{SRAM} arrays, \ac{DSP} slices, \acp{PLL}, and high-speed transceivers, are distributed across the device.
 
 All of these resources — which \ac{LUT} implements which function, which routing switches are closed, how the \ac{I/O} pads behave — are determined by the \emph{configuration memory}: a large \ac{SRAM} array that holds the complete bitstream loaded into the device at power-up. The configuration memory is not user-accessible during normal operation; it is written once at startup and then drives the logic and routing fabric continuously. A change to any bit in the configuration memory changes the implemented circuit.
 
@@ -40,8 +40,6 @@ Protecting against these effects requires either preventing faults from reaching
 
 \ac{FI} techniques can be classified by the mechanism used to introduce faults \cite{Hsueh1997}. Simulation-based \ac{FI} modifies a hardware model at \ac{RTL} or gate level and observes the simulated response; it is accurate but does not capture implementation-specific timing and layout effects. Physical irradiation exposes real hardware to a particle beam or radiation source; it is the most realistic method but requires specialised facilities and is not easily reproducible. Emulation-based \ac{FI} uses a physical device — typically an \ac{FPGA} — and exploits its configuration interfaces or dedicated on-chip hardware to inject faults at runtime, combining hardware-accurate behaviour with controllability and repeatability. This work adopts emulation-based \ac{FI}.
 
-\ac{FI} is the deliberate perturbation of a running system by provoking bit-flips in its memory elements, used to observe how faults propagate through the architecture and how detection, recovery, and masking mechanisms behave. \ac{FI} allows \acp{SEU} to be emulated without relying on particle beams or in-flight tests, enabling controlled and repeatable validation of \acp{FTM}.
-
 % -------------------------------------------------------------
 \subsection{Memory Types and Fault Targets}
 \label{chap8:fi_targets}
@@ -67,8 +65,7 @@ Of these, configuration memory and registers/\acp{FF} are the two types targeted
 
 Configuration-memory injections are executed using Xilinx's \ac{SEM} \ac{IP}, an on-chip controller that monitors and mitigates soft errors in \ac{FPGA} configuration memory. \ac{SEM} interacts with the configuration system through the \ac{ICAP}, which provides read and write access to configuration frames, using the device's built-in error-detection hardware to observe and correct configuration-memory errors.
 
-In addition to its internal configuration connections, \ac{SEM} exposes multiple interfaces: a monitor interface (ASCII command console), a status interface (state, flags, heartbeat), optional \ac{ICAP} arbitration signals (for systems that share \ac{ICAP}), and optional external-memory support for error classification data storage.
-The \ac{IP} can be configured in multiple modes: Mitigation and Testing, Mitigation Only, Detect and Testing, Detect Only, Emulation, and Monitoring Only. In this work, \ac{SEM} is instantiated in Mitigation and Testing mode with error classification disabled. Mitigation and Testing enables both continuous mitigation and controlled fault injection, while the detect-only variants restrict the controller to reporting behaviour. \ac{SEM}'s mitigation and correction features are not used in this work.
+In this work, \ac{SEM} is instantiated in Mitigation and Testing mode with error classification disabled, enabling both continuous scanning and controlled fault injection; its correction features are not used.
 The system's behaviour changes with its current state in \ac{SEM}'s \ac{FSM}, displayed in \Cref{fig:sem_state}, described in \Cref{tab:sem_state_codes}, and controlled via commands listed in \Cref{tab:sem_cmds_most_used}.
 
 \begin{figure}[h]
@@ -82,7 +79,7 @@ The system's behaviour changes with its current state in \ac{SEM}'s \ac{FSM}, di
 \centering
 \begin{tabularx}{\textwidth}{|l|l|X|}
 \hline
-Report & State & Meaning in practice \\
+\rowcolor{tableheader}\textbf{Report} & \textbf{State} & \textbf{Meaning in practice} \\
 \hline
 \hline
 \texttt{SC 01} & Initialization & Startup sequence: configuration interfaces are checked and the controller is prepared to operate. \\
@@ -109,7 +106,7 @@ Report & State & Meaning in practice \\
 \centering
 \begin{tabularx}{\textwidth}{|l|l|X|}
 \hline
-Command & Typical state & Effect on SEM \\
+\rowcolor{tableheader}\textbf{Command} & \textbf{Typical state} & \textbf{Effect on SEM} \\
 \hline
 \hline
 \texttt{I} & Observation or Idle & Forces the controller into Idle (\texttt{SC 00}). This is the injection-accepting state. \\
@@ -217,7 +214,7 @@ Self-testing \emph{(detection)} checks a block by applying predefined inputs and
 \section{State of the Art on Fault Tolerance Testing Platforms}
 \label{chap2:existing_tools}
 
-The lack of complete \ac{FT}/\ac{FI} platforms noted in \Cref{chap1:motivation} is further illustrated in \Cref{tab:fi_platforms_gap}, which compares state-of-the-art platforms according to the features needed to develop and test \acp{FTM}. Full \ac{RTL} shows whether the platform provides a modifiable hardware implementation required for \ac{FTM} integration. \ac{FT} Interface shows whether \acp{FTM} can be integrated and observed without building all fault signalling from scratch. Memory Types shows whether available \ac{FI} can cover the relevant \ac{FPGA} areas, including configuration memory and register/\ac{FF} memory. Readable \ac{UI} shows whether experiments can be defined through a user-facing configuration instead of per-run code edits. \ac{FI} Setup shows whether injection time and target selection can be reused across campaigns. Metrics shows whether \ac{FT}, performance, and hardware-cost results are extracted in a comparable form. The entries use Yes, Partial, and No to indicate whether each point is provided as part of an integrated workflow; Partial in the Memory Types column indicates that only a subset of the relevant memory types is covered.
+The lack of complete \ac{FT}/\ac{FI} platforms noted in \Cref{chap1:motivation} is further illustrated in \Cref{tab:fi_platforms_gap}, which compares state-of-the-art platforms against the features needed to develop and test \acp{FTM}. Column headings are self-explanatory; entries use Yes, Partial, and No to indicate whether each feature is provided as part of an integrated workflow.
 
 
 \begin{table}[h]
@@ -228,13 +225,13 @@ The lack of complete \ac{FT}/\ac{FI} platforms noted in \Cref{chap1:motivation} 
 \resizebox{\textwidth}{!}{%
 \begin{tabular}{|p{0.18\textwidth}|c|c|c|c|c|c|}
 \hline
-\ac{FT}/\ac{FI} Platform &
-Full \ac{RTL} &
-\ac{FT} Interface &
-Memory Types &
-Readable \ac{UI} &
-\ac{FI} Setup &
-Metrics \\
+\rowcolor{tableheader}\textbf{\ac{FT}/\ac{FI} Platform} &
+\textbf{Full \ac{RTL}} &
+\textbf{\ac{FT} Interface} &
+\textbf{Memory Types} &
+\textbf{Readable \ac{UI}} &
+\textbf{\ac{FI} Setup} &
+\textbf{Metrics} \\
 \hline
 \hline
 Ruano \cite{ruano2021_fi_emulation} &
@@ -320,15 +317,15 @@ The surveyed candidates were CVA6 \cite{CVA6}, a 64-bit Linux-capable core; CV32
 >{\raggedright\arraybackslash}p{0.08\textwidth}|
 }
 \hline
-Core &
-Doc. &
-Readability and Modification &
-Workflow &
-FT Infrastructure &
-Dev. Access &
-Min. Hardware Cost &
-Max. Performance &
-Community \\
+\rowcolor{tableheader}\textbf{Core} &
+\textbf{Doc.} &
+\textbf{Readability and Modification} &
+\textbf{Workflow} &
+\textbf{FT Infrastructure} &
+\textbf{Dev. Access} &
+\textbf{Min. Hardware Cost} &
+\textbf{Max. Performance} &
+\textbf{Community} \\
 \hline
 \hline
 CVA6 &

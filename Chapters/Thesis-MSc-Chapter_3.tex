@@ -22,13 +22,7 @@
 
 The operational workflow begins with the user providing input and configuration files, specifically through \texttt{.yaml} files. \ac{Fatori-V} interprets these files to generate the necessary macro headers for SystemVerilog, firmware, benchmark configurations, and auxiliary Vivado TCL scripts. Subsequently, the Py2HWSW layer automates the compilation, bitstream generation, and \ac{FPGA} programming processes. During execution, the platform orchestrates benchmark sessions and integrates optional \ac{FI} campaigns, capturing logs and synthesising results into structured tables. Within this framework, a single run represents a specific architecture configuration, encompassing multiple benchmark sessions to ensure comprehensive testing.
 
-The platform offers extensive configurability across four primary domains. First, Architectural Configuration allows users to define performance features such as instruction cache settings and \ac{RISC-V} \ac{ISA} extensions. Additionally, it provides control over monitor depth and enables dynamic sizing of pblocks for native Ibex modules, allowing for precise control over logic utilisation.
-
-Second, the Fault Tolerance and Injection capabilities support the selection and parameterisation of both native Ibex and platform-specific \acp{FTM}, including M-of-N redundancy schemes. Complementing this, the \ac{FI} module allows for temporal and spatial distribution of errors — ranging from uniform to burst distributions across various hardware targets — enabling unified injection into both configuration memory and registers.
-
-Third, the Batch Execution and Automation features maximise efficiency and reproducibility. The platform supports sequential batch processing of experiments and multiple benchmark sessions per run. Features such as fixed-seed trees, input auto-fixes, and dry mode debugging ensure that experiments remain reliable and traceable. Users can also incorporate standard benchmarks, such as CoreMark \cite{coremark} and Embench-IoT \cite{embench-iot}, or provide file overrides to bypass specific build steps.
-
-Finally, the Data Logging and Reporting functionality automates the storage of per-run and per-session logs, governed by configurable verbosity levels and centralised message control. It facilitates performance analysis by exporting results to \texttt{.csv} and \texttt{.xlsx} formats, mirroring build artefacts for future inspection, and calculating derived metrics through centralised configuration files.
+The platform is configurable across four domains. \emph{Architectural configuration} covers performance features (instruction cache, branch predictor), \ac{ISA} extensions, monitor depth, and pblock sizing for native Ibex modules. \emph{Fault tolerance and injection} supports selection and parameterisation of both native Ibex and platform-specific \acp{FTM}, including M-of-N redundancy, and a \ac{FI} module with configurable temporal and spatial error distributions across configuration memory and registers. \emph{Batch execution} supports sequential experiment runs with multiple benchmark sessions each, reproducible seeds, and standard benchmark suites including CoreMark \cite{coremark} and Embench-IoT \cite{embench-iot}. \emph{Data logging and reporting} exports per-run and per-session results to \texttt{.csv} and \texttt{.xlsx}, archives build artefacts, and computes derived metrics from centralised configuration files.
 
 % -------------------------------------------------------------
 \section{Implementation Layers and Platform Structure}
@@ -45,7 +39,7 @@ The two layers communicate through macro files, which are generated header files
 `__FATORI_MACRO_DEF(FATORI_REGFILE, ibex_pkg::RegFileFPGA)
 \end{lstlisting}
 
-Each line in \Cref{lst:fatori_features} invokes \texttt{\_\_FATORI\_MACRO\_DEF}, which expands to a conditional \texttt{\`define} or parameter assignment evaluated by the \ac{RTL} at compile time. The first two entries, \texttt{FATORI\_ICACHE} and \texttt{FATORI\_BRANCH\_PRED}, are Boolean flags set to \texttt{1}, indicating that both the instruction cache and the branch predictor are to be included in the synthesised design. \texttt{FATORI\_RV32M} is assigned the enumerated value \texttt{ibex\_pkg::RV32MSingleCycle}, selecting the single-cycle multiplier implementation of the \ac{RISC-V} M~extension. Finally, \texttt{FATORI\_REGFILE} is set to \texttt{ibex\_pkg::RegFileFPGA}, directing the processor to use the \ac{FPGA}-optimised register file backed by flip-flops rather than a generic \ac{SRAM} model. Together, these four entries encode the complete set of microarchitectural features for one experiment run.
+Each line invokes \texttt{\_\_FATORI\_MACRO\_DEF}, which expands to a conditional \texttt{\`define} or parameter assignment evaluated by the \ac{RTL} at compile time.
 
 The repository is organised into several top-level directories, as shown in \Cref{fig:fatori_repo_tree}.
 
@@ -77,8 +71,8 @@ The user-facing directories are \texttt{runs/}, \texttt{inputs/}, \texttt{config
 \renewcommand{\arraystretch}{1.25}
 \begin{tabularx}{\textwidth}{|l|X|}
 \hline
-Field path &
-Purpose \\
+\rowcolor{tableheader}\textbf{Field path} &
+\textbf{Purpose} \\
 \hline
 \hline
 \texttt{run.identification.name} &
@@ -102,8 +96,8 @@ Selects \ac{FPGA} execution or simulation mode. \\
 \renewcommand{\arraystretch}{1.25}
 \begin{tabularx}{\textwidth}{|>{\raggedright\arraybackslash}p{0.47\textwidth}|X|}
 \hline
-Field path &
-Purpose \\
+\rowcolor{tableheader}\textbf{Field path} &
+\textbf{Purpose} \\
 \hline
 \hline
 \texttt{general.features.fault\_manager} &
@@ -148,8 +142,8 @@ Selects the amount of metric hardware counters included. \\
 \renewcommand{\arraystretch}{1.25}
 \begin{tabularx}{\textwidth}{|>{\raggedright\arraybackslash}p{0.5\textwidth}|X|}
 \hline
-Field path &
-Purpose \\
+\rowcolor{tableheader}\textbf{Field path} &
+\textbf{Purpose} \\
 \hline
 \hline
 \texttt{specifics.ibex.*} &
@@ -208,11 +202,11 @@ The final output of a run is a pair of consolidated tables — a \texttt{CSV} an
 \renewcommand{\arraystretch}{1.25}
 \begin{tabularx}{\textwidth}{|X|X|X|X|X|}
 \hline
-System Features &
-FI Parameters &
-coremark &
-embench-iot &
-fatori stress \\
+\rowcolor{tableheader}\textbf{System Features} &
+\textbf{FI Parameters} &
+\textbf{coremark} &
+\textbf{embench-iot} &
+\textbf{fatori stress} \\
 \hline
 \hline
 &
@@ -275,12 +269,12 @@ hpm\_br\_taken: 343518 \\
 \renewcommand{\arraystretch}{1.25}
 \begin{tabularx}{\textwidth}{|X|X|X|X|X|X|}
 \hline
-Common Info &
-Utilization &
-Timing &
-Power &
-Methodology &
-DRC \\
+\rowcolor{tableheader}\textbf{Common Info} &
+\textbf{Utilization} &
+\textbf{Timing} &
+\textbf{Power} &
+\textbf{Methodology} &
+\textbf{DRC} \\
 \hline
 \hline
 Vivado: v.2020.2 &
