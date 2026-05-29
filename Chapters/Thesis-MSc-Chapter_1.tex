@@ -48,24 +48,24 @@ The primary objective of this work was to develop \ac{Fatori-V} as a configurabl
 
 
 % #############################################################################
-\section{Document outline}
+\section{Document Organization}
 The remainder of the document is organized as follows:
 \begin{itemize}
     \item \textbf{Chapter 2} introduces the background concepts required for this project. It then presents the \ac{FT}/\ac{FI} testing platform state of the art and surveys \ac{SoC} candidate architectures for \ac{Fatori-V}'s baseline. An initial hardware backbone for \ac{Fatori-V} is chosen.
-    
-    \item \textbf{Chapter 3} provides a complete overview of the proposed and later developed \ac{Fatori-V} platform, its layers, \ac{UI}, and the experiment workflow.
-    
+
+    \item \textbf{Chapter 3} presents the \ac{Fatori-V} platform design, its architecture layers, user interface, and experiment workflow.
+
     \item \textbf{Chapter 4} describes the initial attempt to build \ac{Fatori-V} on top of the VeeRwolf EL2 platform, including the planned \acp{FTM} and the lessons that motivated a change in direction.
-    
-    \item \textbf{Chapter 5} introduces the Ibex in IOb-SoC \ac{RTL} baseline for \ac{Fatori-V} and the required integration process. It details the main adaptations required to support \ac{CPU} configuration and external control.
-    
+
+    \item \textbf{Chapter 5} presents the IOb-SoC-Ibex baseline, the Ibex core and its native fault tolerance mechanisms, and the integration work required to support \ac{CPU} configuration and external control.
+
     \item \textbf{Chapter 6} details \ac{Fatori-V}'s Py2HWSW layer, which includes the support infrastructure, implemented \acp{FTM}, the fault manager, and the metrics monitoring system.
-    
+
     \item \textbf{Chapter 7} details the \ac{Fatori-V} upper layer, explaining how experiments are defined, validated, transformed into build parameters, executed, and how results are delivered. The chapter also includes the benchmark porting, the Pblock Assigning Model, and \ac{FI} synchronization.
-    
-    \item \textbf{Chapter 8} presents the developed, standalone \ac{FI} tool, including its \ac{UI}, configuration, results, and some implementation details.
-    
-    \item \textbf{Chapter 9} reports the \ac{Fatori-V} evaluation experiments, the \ac{FTM} trade-off analysis, the experimental setup, the computed metrics, and the obtained results. A discussion on hardware cost, performance, and \ac{FT} behaviour is provided.
-    
+
+    \item \textbf{Chapter 8} details the standalone \ac{FI} tool, covering its architecture, the software controller, the on-chip injection hardware, and additional features.
+
+    \item \textbf{Chapter 9} reports the platform validation experiments and the \ac{FTM} comparative study. It covers the experimental setup, validation results, computed metrics, obtained results, and a discussion on hardware cost, performance, and \ac{FT} behaviour.
+
     \item \textbf{Chapter 10} concludes the thesis by reflecting on how the work addresses the gap introduced earlier and proposing directions for future work.
 \end{itemize}

@@ -5,9 +5,9 @@
 \chapter{Appendix B: System Dictionary File}
 \label{app_c:system_dict}
 
-This is an example System Dictionary \texttt{.yaml} file. It is used by the \ac{FI} System (see \cref{chap8:fatori_fi}) to describe the device bounds, each target module pblock, and the register IDs that belong to each module.
+This is an example System Dictionary \texttt{.yaml} file. It is used by the \ac{FI} System (see \Cref{chap8:fatori_fi}) to describe the device bounds, each target module pblock, and the register IDs that belong to each module.
 
-The file is meant to be created by users detailing the \ac{RTL} where they will be using the \ac{FI} System on. For the IOb-SoC-Ibex \cite{iob-soc-ibex} architecture, \ac{Fatori-V} uses the Pblock Assigning Model (\cref{chap7:pblock}) to dynamically size pblocks depending on input features, then the tool merges the output coordinates with the config file \texttt{fatori\_registers.yaml} (\cref{chap3:ui_config}) and automatically generates System Dictionary dependent on the user requested configuration.
+The file is meant to be created by users detailing the \ac{RTL} where they will be using the \ac{FI} System on. For the IOb-SoC-Ibex \cite{iob-soc-ibex} architecture, \ac{Fatori-V} uses the Pblock Assigning Model (\Cref{chap7:pblock}) to dynamically size pblocks depending on input features, then the tool merges the output coordinates with the config file \texttt{fatori\_registers.yaml} (\Cref{chap3:ui_config}) and automatically generates System Dictionary dependent on the user requested configuration.
 
 \begingroup
 \setlength{\columnsep}{28pt}     % two-column layout (more separation)

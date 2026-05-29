@@ -12,19 +12,19 @@
 \section{Fault Tolerance Support Infrastructure}
 \label{chap6:starting}
 
-The IOb-\ac{SoC}-Ibex described in \cref{chap5:iob-soc-ibex} was developed to stay as close to the native Ibex implementation as possible. In order to meet \ac{Fatori-V}'s requirements, preliminary support infrastructure was added to make the system externally configurable and easier to modify at the \ac{RTL} level.
+The IOb-\ac{SoC}-Ibex described in \Cref{chap5:iob-soc-ibex} was developed to stay as close to the native Ibex implementation as possible. In order to meet \ac{Fatori-V}'s requirements, preliminary support infrastructure was added to make the system externally configurable and easier to modify at the \ac{RTL} level.
 
-As described in \cref{chap3:hwvssw}, \ac{Fatori-V} requires the \ac{RTL} to be configured through macro files. IOb-\ac{SoC}-Ibex was modified to use two macro files. The \texttt{fatori\_features.svh} file controls architectural features, such as the ICache, branch prediction, the Writeback Stage, and \ac{ISA} extensions. The \texttt{fatori\_ftm.svh} file controls native Ibex \acp{FTM}. In native Ibex, the SecureIbex flag enables all \acp{FTM} as one group. Through \texttt{fatori\_ftm.svh}, those mechanisms can be enabled independently.
+As described in \Cref{chap3:hwvssw}, \ac{Fatori-V} requires the \ac{RTL} to be configured through macro files. IOb-\ac{SoC}-Ibex was modified to use two macro files. The \texttt{fatori\_features.svh} file controls architectural features, such as the ICache, branch prediction, the Writeback Stage, and \ac{ISA} extensions. The \texttt{fatori\_ftm.svh} file controls native Ibex \acp{FTM}. In native Ibex, the SecureIbex flag enables all \acp{FTM} as one group. Through \texttt{fatori\_ftm.svh}, those mechanisms can be enabled independently.
 
 The native Ibex clock-gating cell was disabled from the Ibex top module, and the internal clock was wired directly to \texttt{clk\_i}, from the \ac{SoC}. This allowed the implemented architecture to meet timing constraints.
 
-Ibex originally implemented 186 pipeline registers directly with \texttt{always\_ff} blocks spread across the source files, many times inside cascaded \texttt{if} conditions or complex \acp{FSM}. This made register-level modifications harder to implement. Register Redundancy, planned since the WeeRwolf EL2 work in \cref{chap4:el2}, requires a register to be replaced by multiple replicas and a voter, which cannot be done cleanly while each register is implemented as a separate \texttt{always\_ff} block.
+Ibex originally implemented 186 pipeline registers directly with \texttt{always\_ff} blocks spread across the source files, many times inside cascaded \texttt{if} conditions or complex \acp{FSM}. This made register-level modifications harder to implement. Register Redundancy, planned since the WeeRwolf EL2 work in \Cref{chap4:el2}, requires a register to be replaced by multiple replicas and a voter, which cannot be done cleanly while each register is implemented as a separate \texttt{always\_ff} block.
 
 Each pipeline register was replaced by a \texttt{FATORI\_REG()} or \texttt{FATORI\_REG\_ENUM()} macro call, developed for \ac{Fatori-V} and defined in \texttt{fatori\_macro\_functions.svh}. These macros act as register wrapper entry points. They keep the register call sites uniform and expand to the selected register hardware implementation. By default, the macro expands to IOBundle's \texttt{iob\_reg\_re}. Other register wrappers were implemented for \ac{Fatori-V}, and are described in subsequent sections.
 
 \texttt{FATORI\_REG()} is used for logic vectors. \texttt{FATORI\_REG\_ENUM()} is used for typed registers by packing the input data into a logic vector with \texttt{\$bits()} and casting it back on output. Each register enable logic was also reduced to one explicit \texttt{enable} per-register signal.
 
-Each wrapped register has a unique prefix used to derive internal signal names and identifiers. The file \texttt{fatori\_registers.yaml}, introduced in \cref{chap3:fatori-v}, stores the prefix, hierarchy path, and ID of every wrapped register.
+Each wrapped register has a unique prefix used to derive internal signal names and identifiers. The file \texttt{fatori\_registers.yaml}, introduced in \Cref{chap3:fatori-v}, stores the prefix, hierarchy path, and ID of every wrapped register.
 
 
 
@@ -43,9 +43,9 @@ Although Ibex already includes native \acp{FTM}, this work expanded that set to 
 \subsection{Hardware Redundancy}
 \label{chap6:mon}
 
-As introduced in \cref{chap2:ftms}, M-of-N Redundancy (or M-of-N Systems) replicates a block \(N\) times and accepts an output when at least \(M\) replicas agree. In \ac{Fatori-V}, this is applied to wrapped pipeline registers and to selected logic modules. When correction is enabled, the same flow also applies scrubbing by restoring replicas that disagree with the voted value.
+As introduced in \Cref{chap2:ftms}, M-of-N Redundancy (or M-of-N Systems) replicates a block \(N\) times and accepts an output when at least \(M\) replicas agree. In \ac{Fatori-V}, this is applied to wrapped pipeline registers and to selected logic modules. When correction is enabled, the same flow also applies scrubbing by restoring replicas that disagree with the voted value.
 
-\label{chap6:mofn_reg}Register M-of-N extends the register wrapper introduced in \cref{chap6:starting}. Each register's M-of-N parameters are configured through a new single macro file, \texttt{fatori\_reg\_mon.svh}. The \texttt{*\_MON\_N} macro selects the number of replicas, \texttt{*\_MON\_M} selects the quorum threshold, and \texttt{*\_MON\_CORRECTION} enables correction. When \texttt{M=0}, the threshold is set to strict majority, \(\lfloor N/2 \rfloor + 1\), by the hardware.
+\label{chap6:mofn_reg}Register M-of-N extends the register wrapper introduced in \Cref{chap6:starting}. Each register's M-of-N parameters are configured through a new single macro file, \texttt{fatori\_reg\_mon.svh}. The \texttt{*\_MON\_N} macro selects the number of replicas, \texttt{*\_MON\_M} selects the quorum threshold, and \texttt{*\_MON\_CORRECTION} enables correction. When \texttt{M=0}, the threshold is set to strict majority, \(\lfloor N/2 \rfloor + 1\), by the hardware.
 
 When redundancy is disabled, the wrapper keeps the default register implementation. When redundancy is enabled, it instantiates exactly \(N\) physical register replicas using Verilog \texttt{generate} logic. All replicas receive the same input and enable signal.
 
@@ -67,7 +67,7 @@ The voter accepts the value produced by at least \(M\) replicas. When a valid va
 \subsection{Self-Testing Hardware}
 \label{chap6:self_test}
 
-As introduced in \cref{chap2:ftms}, Self-Testing checks a hardware block by applying predefined inputs and comparing the outputs with known results. In this work, it was implemented for hardware blocks that can be tested with deterministic input patterns and whose idle periods can be identified from existing Ibex signals.
+As introduced in \Cref{chap2:ftms}, Self-Testing checks a hardware block by applying predefined inputs and comparing the outputs with known results. In this work, it was implemented for hardware blocks that can be tested with deterministic input patterns and whose idle periods can be identified from existing Ibex signals.
 
 Each self-test wrapper keeps the same interface as the native block. Internally, it instantiates the native module and the developed \ac{ST} Core. The wrapper computes the \texttt{idle} signal. The \ac{ST} Core reads this signal, stores the test inputs and expected outputs, drives the native module through a multiplexer during a test, compares the produced output with the expected result, and reports mismatches.
 
@@ -94,7 +94,7 @@ A stable Self-Testing implementation was not reached within the project time. Th
 \section{Fault Monitoring and Control Hardware}
 \label{chap6:control_report}
 
-The \acp{FTM} described in the previous sections report errors, but those reports must still be collected, counted, and exposed to firmware. For that purpose, \ac{Fatori-V} adds monitoring and control hardware using, and extending, the native Ibex error interface described in \cref{chap5:ibex_ft}.
+The \acp{FTM} described in the previous sections report errors, but those reports must still be collected, counted, and exposed to firmware. For that purpose, \ac{Fatori-V} adds monitoring and control hardware using, and extending, the native Ibex error interface described in \Cref{chap5:ibex_ft}.
 
 The extended interface keeps the minor and major error native signals and adds the one-cycle pulses \texttt{new\_min} and \texttt{new\_maj}, which mark each new detected error for counting. It also adds \texttt{scrub\_occurred}, which marks corrections performed by redundancy voters.
 
@@ -109,7 +109,7 @@ Error signals are merged as they propagate through the core hierarchy. Each leve
 
 The developed \texttt{fatori\_fault\_mgr} module is the main \ac{FT} control block added in this work. It receives the merged minor, major, correction, and injection event signals, and drives the control outputs used to stop instruction fetching or request a reset. Its interface includes the error inputs, \texttt{core\_sleep\_i}, \texttt{fetch\_enable\_o}, and \texttt{core\_reset\_req\_o}. Additional monitor inputs and counter outputs are included when \ac{FI} or extra monitoring hardware is enabled.
 
-The amount of monitoring hardware is selected by the Metric Level configured in \texttt{fatori\_features.svh}. Each level keeps the hardware from the lower levels and adds the monitors listed in \cref{tab:fatori_metric_levels}.
+The amount of monitoring hardware is selected by the Metric Level configured in \texttt{fatori\_features.svh}. Each level keeps the hardware from the lower levels and adds the monitors listed in \Cref{tab:fatori_metric_levels}.
 
 \begin{table}[h]
 \centering
@@ -163,7 +163,7 @@ The fault manager also controls the system response to major errors. The user se
 
 The fault manager measures fault events in hardware, but those values must be readable by firmware so they can be provided to the user. For this reason, the monitor outputs are exposed through custom read-only \acp{CSR}. Firmware can then read with \texttt{csrr}, serialize the values, and send them to the upper layers of \ac{Fatori-V}.
 
-Ibex already implements a \ac{CSR} access block, \texttt{ibex\_cs\_registers}, and leaves address space for custom \acp{CSR}. The new \ac{Fatori-V} monitor \acp{CSR} use this path instead of memory-mapped loads and stores. The measured values remain implemented in \texttt{fatori\_fault\_mgr}, where the counters are updated, and are wired to \texttt{ibex\_cs\_registers}. This block exposes the corresponding value when firmware reads the matching \ac{CSR} address. This also keeps the added \acp{CSR} easier to gate according to the Metric Level selected in \cref{tab:fatori_metric_levels}.
+Ibex already implements a \ac{CSR} access block, \texttt{ibex\_cs\_registers}, and leaves address space for custom \acp{CSR}. The new \ac{Fatori-V} monitor \acp{CSR} use this path instead of memory-mapped loads and stores. The measured values remain implemented in \texttt{fatori\_fault\_mgr}, where the counters are updated, and are wired to \texttt{ibex\_cs\_registers}. This block exposes the corresponding value when firmware reads the matching \ac{CSR} address. This also keeps the added \acp{CSR} easier to gate according to the Metric Level selected in \Cref{tab:fatori_metric_levels}.
 
 \begin{table}[h]
 \centering

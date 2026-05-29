@@ -17,7 +17,7 @@
 \end{figure}
 
 
-A \ac{Fatori-V} run starts from a user-defined \texttt{.yaml} file provided through \texttt{runs/}. Each run file describes the hardware configuration, benchmark setup, build options, and \ac{FI} parameters. The top script, \texttt{fatori-v.py}, reads the selected run files and executes the same staged workflow for each one, as shown in \cref{fig:fatori_overview}.
+A \ac{Fatori-V} run starts from a user-defined \texttt{.yaml} file provided through \texttt{runs/}. Each run file describes the hardware configuration, benchmark setup, build options, and \ac{FI} parameters. The top script, \texttt{fatori-v.py}, reads the selected run files and executes the same staged workflow for each one, as shown in \Cref{fig:fatori_overview}.
 
 During a run, \ac{Fatori-V} validates the user configuration, generates the required interface files, stages those files in the architecture and benchmark repositories, builds the configured system, executes the selected benchmark sessions, and writes the final result tables. When \ac{FI} is enabled, the same flow also prepares the \ac{FI} command and launches the \ac{FI} tool during benchmark execution.
 
@@ -29,7 +29,7 @@ The File Movement Stage copies generated files according to \texttt{gen\_locatio
 
 The Build Stage runs the IOb-\ac{SoC}-Ibex Makefile targets. It builds the \ac{FPGA} image, prepares the selected benchmarks, and stores the implementation reports used later for hardware metrics. When \ac{FI} is enabled, this stage also prepares the \ac{FI} command used during execution.
 
-The Execution Stage runs each enabled benchmark as a separate session. A session is valid when the process exits cleanly, the benchmark succeeds, and a valid \texttt{metrics.txt} file, containing measured data, is produced. When \ac{FI} is enabled, the session controller launches the \ac{FI} tool as a parallel process and uses the synchronization mechanism described in \cref{chap7:sw_logging}.
+The Execution Stage runs each enabled benchmark as a separate session. A session is valid when the process exits cleanly, the benchmark succeeds, and a valid \texttt{metrics.txt} file, containing measured data, is produced. When \ac{FI} is enabled, the session controller launches the \ac{FI} tool as a parallel process and uses the synchronization mechanism described in \Cref{chap7:sw_logging}.
 
 The Results Stage collects the session data, benchmark outputs, \texttt{metrics.txt} files, \ac{FI} logs, and implementation reports. These files are stored under \texttt{results/} and used to create the result tables.
 
@@ -42,7 +42,7 @@ The Results Stage collects the session data, benchmark outputs, \texttt{metrics.
 \section{Pblock Sizing Model}
 \label{chap7:pblock}
 
-To inject faults into a specific hardware module, the \ac{FI} tool must know where that module is placed in the \ac{FPGA}. \ac{Fatori-V} solves this by constraining each injectable target to a pblock and storing its bounds in the System Dictionary used by the \ac{FI} tool. These bounds are later used to select configuration memory addresses that belong to the target region, as described in \cref{chap8:fi_acme_impl}.
+To inject faults into a specific hardware module, the \ac{FI} tool must know where that module is placed in the \ac{FPGA}. \ac{Fatori-V} solves this by constraining each injectable target to a pblock and storing its bounds in the System Dictionary used by the \ac{FI} tool. These bounds are later used to select configuration memory addresses that belong to the target region, as described in \Cref{chap8:fi_acme_impl}.
 
 The size of each hardware module depends on the active Ibex configuration, including \ac{ISA} extensions, multiplier type, bit manipulation variant, cache support, branch logic, writeback stage, \ac{FI} instrumentation, and enabled \acp{FTM}. A static table would not cover all possible combinations, especially for parameters such as the M-of-N replication factor, which can be virtually any integer number. The Pblock Sizing Model estimates the required area of each target from the configuration used in each run.
 
@@ -58,7 +58,7 @@ The model is used for the following pblock targets: \ac{ALU}, \ac{LSU}, Controll
 \subsection{Sizing Equations}
 \label{chap7:pblock_sizing_model}
 
-The model estimates the \ac{LUT} and \ac{FF} usage of each pblock target. Each target starts from a measured baseline and adds the overhead of the active hardware features. The baseline with architectural features is defined in \cref{eq:pblock_target_base}.
+The model estimates the \ac{LUT} and \ac{FF} usage of each pblock target. Each target starts from a measured baseline and adds the overhead of the active hardware features. The baseline with architectural features is defined in \Cref{eq:pblock_target_base}.
 
 \begin{equation}
 A_t =
@@ -68,9 +68,9 @@ B_t
 \label{eq:pblock_target_base}
 \end{equation}
 
-In \cref{eq:pblock_target_base}, \(B_t\) is the measured \ac{LUT} baseline of target \(t\), and \(\sum \Delta^{\text{feat}}_t\) is the sum of the enabled architectural feature overheads. Negative feature effects are set to zero, preventing the model from estimating  pblock sizes below the measured baseline.
+In \Cref{eq:pblock_target_base}, \(B_t\) is the measured \ac{LUT} baseline of target \(t\), and \(\sum \Delta^{\text{feat}}_t\) is the sum of the enabled architectural feature overheads. Negative feature effects are set to zero, preventing the model from estimating  pblock sizes below the measured baseline.
 
-Logic M-of-N replicates the complete target. This includes the combinational logic and the registers inside the target. Register M-of-N overhead, if the \ac{FTM} is enabled, is included within each logic replica. The \ac{LUT} estimate is computed with \cref{eq:pblock_lut_model}.
+Logic M-of-N replicates the complete target. This includes the combinational logic and the registers inside the target. Register M-of-N overhead, if the \ac{FTM} is enabled, is included within each logic replica. The \ac{LUT} estimate is computed with \Cref{eq:pblock_lut_model}.
 
 \begin{equation}
 \text{LUT}_t =
@@ -85,9 +85,9 @@ V_t(N_{\text{logic}})
 \label{eq:pblock_lut_model}
 \end{equation}
 
-In \cref{eq:pblock_lut_model}, \(N_{\text{logic}}=1\) when Logic M-of-N is disabled. \(V_t(N_{\text{logic}})\) is the voter cost of the Logic M-of-N wrapper and is set to zero when Logic M-of-N is disabled.
+In \Cref{eq:pblock_lut_model}, \(N_{\text{logic}}=1\) when Logic M-of-N is disabled. \(V_t(N_{\text{logic}})\) is the voter cost of the Logic M-of-N wrapper and is set to zero when Logic M-of-N is disabled.
 
-Register M-of-N mainly increases the number of \acp{FF}, because it replicates stored state. However, the generated wrappers, voters, correction logic, and control logic can also use \acp{LUT}. For this reason, the model includes a Register M-of-N \ac{LUT} term when measured data showed a relevant \ac{LUT} cost. This term is computed with \cref{eq:pblock_reg_mon}.
+Register M-of-N mainly increases the number of \acp{FF}, because it replicates stored state. However, the generated wrappers, voters, correction logic, and control logic can also use \acp{LUT}. For this reason, the model includes a Register M-of-N \ac{LUT} term when measured data showed a relevant \ac{LUT} cost. This term is computed with \Cref{eq:pblock_reg_mon}.
 
 \begin{equation}
 \Delta^{\text{RegMon}}_t(N_{\text{reg}})
@@ -98,9 +98,9 @@ A_t
 \label{eq:pblock_reg_mon}
 \end{equation}
 
-In \cref{eq:pblock_reg_mon}, \(P_t(N_{\text{reg}})\) is the measured or fitted total \ac{LUT} count of target \(t\) with Register M-of-N enabled. When Register M-of-N is disabled, or when the measured \ac{LUT} overhead was not relevant, \(\Delta^{\text{RegMon}}_t(N_{\text{reg}})=0\).
+In \Cref{eq:pblock_reg_mon}, \(P_t(N_{\text{reg}})\) is the measured or fitted total \ac{LUT} count of target \(t\) with Register M-of-N enabled. When Register M-of-N is disabled, or when the measured \ac{LUT} overhead was not relevant, \(\Delta^{\text{RegMon}}_t(N_{\text{reg}})=0\).
 
-The \ac{FF} model follows the same structure. The model starts from the measured \ac{FF} baseline, adds the \ac{FF} effects of the enabled architectural features, and applies the \ac{FF} cost of Register M-of-N when enabled. Since XCKU040 slices contain 8 \acp{LUT} and 16 \acp{FF}, the final pblock size is set by the most restrictive resource, as shown in \cref{eq:pblock_slice_binding}.
+The \ac{FF} model follows the same structure. The model starts from the measured \ac{FF} baseline, adds the \ac{FF} effects of the enabled architectural features, and applies the \ac{FF} cost of Register M-of-N when enabled. Since XCKU040 slices contain 8 \acp{LUT} and 16 \acp{FF}, the final pblock size is set by the most restrictive resource, as shown in \Cref{eq:pblock_slice_binding}.
 
 \begin{equation}
 \text{Slices}_{t}
@@ -129,7 +129,7 @@ M_t
 
 The model parameters were extracted from implementation reports generated for the XCKU040 \ac{FPGA}. Each experiment enabled a controlled hardware configuration, implemented the design, and parsed the utilization reports to measure the \ac{LUT} and \ac{FF} usage of each pblock target.
 
-The experiments were organized to isolate the terms defined in \cref{eq:pblock_target_base,eq:pblock_lut_model,eq:pblock_reg_mon}. Baseline experiments measured each target with optional features and \acp{FTM} disabled. Feature experiments enabled one parameter at a time, including RV32B, RV32M, instruction cache, branch prediction, branch target \ac{ALU}, and writeback stage. M-of-N experiments varied \(N\) for Logic M-of-N and Register M-of-N. Combined experiments checked whether the extracted terms still produced usable pblock sizes when features and \acp{FTM} were enabled together.
+The experiments were organized to isolate the terms defined in \Cref{eq:pblock_target_base,eq:pblock_lut_model,eq:pblock_reg_mon}. Baseline experiments measured each target with optional features and \acp{FTM} disabled. Feature experiments enabled one parameter at a time, including RV32B, RV32M, instruction cache, branch prediction, branch target \ac{ALU}, and writeback stage. M-of-N experiments varied \(N\) for Logic M-of-N and Register M-of-N. Combined experiments checked whether the extracted terms still produced usable pblock sizes when features and \acp{FTM} were enabled together.
 
 \Cref{tab:pblock_feature_params} reports the baseline and feature parameters used in \(A_t\). RV32M values are ordered as none, single-cycle, fast, and slow. RV32B values are ordered as none, balanced, full, and OTEarlGrey. Empty entries mean that no positive measured contribution was kept.
 
@@ -218,7 +218,7 @@ Metrics included. \\
 \label{tab:pblock_feature_params}
 \end{table}
 
-\Cref{tab:pblock_redundancy_params} reports the redundancy parameters used after \(A_t\) is computed. Logic M-of-N terms are used inside \cref{eq:pblock_lut_model}. Register M-of-N terms are used to compute \(\Delta^{\text{RegMon}}_t(N_{\text{reg}})\) in \cref{eq:pblock_reg_mon}.
+\Cref{tab:pblock_redundancy_params} reports the redundancy parameters used after \(A_t\) is computed. Logic M-of-N terms are used inside \Cref{eq:pblock_lut_model}. Register M-of-N terms are used to compute \(\Delta^{\text{RegMon}}_t(N_{\text{reg}})\) in \Cref{eq:pblock_reg_mon}.
 
 \begin{table}[h]
 \centering
@@ -273,7 +273,7 @@ Only without instruction cache. \\
 \label{tab:pblock_redundancy_params}
 \end{table}
 
-Negative measured contributions are kept at zero. This prevents synthesis optimizations from reducing the predicted pblock size below the measured baseline. The slice conversion from \cref{eq:pblock_slice_binding} is applied after the \ac{LUT} and \ac{FF} estimates are computed.
+Negative measured contributions are kept at zero. This prevents synthesis optimizations from reducing the predicted pblock size below the measured baseline. The slice conversion from \Cref{eq:pblock_slice_binding} is applied after the \ac{LUT} and \ac{FF} estimates are computed.
 
 
 
