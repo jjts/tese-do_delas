@@ -267,4 +267,12 @@ For high-rate campaigns, \ac{SEM} injections can be sent without waiting for eac
 
 The tool also provides a debug mode, where hardware communication is replaced by stub messages, while target generation, scheduling, logging, and campaign termination remain active.
 
+
+
+% #############################################################################
+\section{Summary}
+\label{chap8:summary}
+
+This chapter presented the fault injection component of the Fatori-V layer. The \ac{FI} system overview was described, covering how Area and Time Profiles define the spatial and temporal distribution of injections across configuration memory and register targets. The \ac{ACME} algorithm was presented as the method for mapping pblock regions to \ac{SEM}-compatible essential-bit addresses, with implementations for the Basys3 and KCU105 boards. The \ac{FI} hardware was described, including the register injection path and the \ac{UART} router that multiplexes register and configuration memory injection commands. \Cref{chap9:results} presents the experimental results obtained using this infrastructure.
+
 Logging is configurable through verbosity levels and event selection. This allows short logs during normal campaigns and more detailed logs during debugging, without changing the campaign implementation.

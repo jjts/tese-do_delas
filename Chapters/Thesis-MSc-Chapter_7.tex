@@ -2,7 +2,7 @@
 % This is Chapter 7
 % !TEX root = ../main.tex
 % #############################################################################
-\fancychapter{Fatori-V Layer}
+\fancychapter{Campaign Orchestration}
 \label{chap7:fatori_software}
 
 % #############################################################################
@@ -360,5 +360,12 @@ Some direct metrics are sampled before and after the benchmark. For these metric
 
 The Results Stage also parses Vivado implementation reports to add hardware metrics. The final tables combine direct metrics, indirect metrics, benchmark-specific fields, \ac{FI} metrics, and implementation data. \Cref{app_b:metrics} lists the metrics exported by \ac{Fatori-V} in its current version.
 
+
+
+% #############################################################################
+\section{Summary}
+\label{chap7:summary}
+
+This chapter presented the campaign orchestration component of the Fatori-V layer. The operation sequence was described, showing how \ac{Fatori-V} translates \texttt{.yaml} run files into configured hardware and software builds and drives the full experiment lifecycle. The Pblock Sizing Model was presented, enabling module-targeted configuration memory injections. Benchmark porting was described for CoreMark, Embench-IoT, and the Fatori Native benchmark. Finally, the synchronisation, logging, and metrics infrastructure was presented, covering the file-based handshake, the event-driven logging system, and the result-table generation pipeline. \Cref{chap8:fatori_fi} describes the fault injection tool, also part of this layer.
 
 

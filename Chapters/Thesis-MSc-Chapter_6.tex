@@ -2,7 +2,7 @@
 % This is Chapter 6
 % !TEX root = ../main.tex
 % #############################################################################
-\fancychapter{Py2HWSW Layer}
+\fancychapter{Fault Tolerance Hardware}
 \label{chap6:fatori_hardware}
 
 
@@ -67,7 +67,8 @@ The voter accepts the value produced by at least \(M\) replicas. When a valid va
 \subsection{Self-Testing Hardware}
 \label{chap6:self_test}
 
-As introduced in \Cref{chap2:ftms}, Self-Testing checks a hardware block by applying predefined inputs and comparing the outputs with known results. In this work, it was implemented for hardware blocks that can be tested with deterministic input patterns and whose idle periods can be identified from existing Ibex signals.
+As introduced in \Cref{chap2:ftms}, Self-Testing checks a hardware block by applying predefined inputs and comparing the outputs with known results. A stable Self-Testing implementation was not reached within the project time; the wrappers and \ac{ST} Core structure were developed but the mechanism was not included in the final experimental evaluation. The design is described here for completeness.
+
 
 Each self-test wrapper keeps the same interface as the native block. Internally, it instantiates the native module and the developed \ac{ST} Core. The wrapper computes the \texttt{idle} signal. The \ac{ST} Core reads this signal, stores the test inputs and expected outputs, drives the native module through a multiplexer during a test, compares the produced output with the expected result, and reports mismatches.
 
@@ -78,14 +79,6 @@ Through the \ac{ST} Core, the Self-Testing \ac{FTM} can be configured with the \
 Test execution is controlled inside the \ac{ST} Core through three inputs connected by the wrapper. \texttt{enable} allows the \ac{ST} Core to run tests. \texttt{kick} requests an immediate test. \texttt{idle} is computed by each wrapper from native Ibex signals and tells the \ac{ST} Core that the target can be tested without interfering with the current instruction. 
 
 Because each target has its own interface and usage pattern, each wrapper defines \texttt{idle} from the native Ibex signals that were identified as reliable indicators of whether that target is currently being used. The \ac{ALU} wrapper marks the target as idle during \ac{CSR}, branch, or jump instructions, as long as no \ac{LSU} request is active. The multiplier and divider wrapper uses the native \texttt{inflight} signal to avoid testing while a multiplication or division is active. The \ac{LSU} wrapper marks idle only when there are no active requests and no pending completions. The \ac{PC} adder wrapper marks idle when the IF stage is stalled.
-
-A stable Self-Testing implementation was not reached within the project time. The wrappers and \ac{ST} Core structure were developed, but the mechanism was not included in the final experimental evaluation.
-
-
-
-
-
-
 
 
 
@@ -235,3 +228,11 @@ Counts detection latency samples. \\
 \end{table}
 
 The \ac{CSR} names and addresses are defined in the Ibex package source files, while the read path is added to the Ibex \ac{CSR} block. Each read-only entry returns the corresponding signal produced by \texttt{fatori\_fault\_mgr}. If a Metric Level does not include a monitor, the related hardware and read path are not synthesized.
+
+
+
+% #############################################################################
+\section{Summary}
+\label{chap6:summary}
+
+This chapter presented the hardware fault tolerance layer of \ac{Fatori-V}, the hardware component of the Py2HWSW layer built on top of IOb-\ac{SoC}-Ibex. The support infrastructure was described first: the macro-file configuration interface and the \texttt{FATORI\_REG} register-wrapping system that enables \acp{FTM} to be selected and combined at compile time without modifying individual \texttt{always\_ff} blocks. The M-of-N Redundancy \ac{FTM} was then presented, covering both register-level and logic-level implementations with parameterised voting and optional scrubbing. The Self-Testing \ac{FTM} structure was described, though a stable implementation was not reached within the project. Finally, the Fault Manager and monitoring \acp{CSR} were presented, providing hardware counters and timing monitors readable by firmware for metric extraction. \Cref{chap7:fatori_software} describes the campaign orchestration layer built on top of this hardware.
