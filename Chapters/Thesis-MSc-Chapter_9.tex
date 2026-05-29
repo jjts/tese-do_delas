@@ -1053,7 +1053,7 @@ The Whole-device rows show that protecting one logic target at a time is not eno
 
 The Pblock-target rows then isolate each protected module and show which \(N\) value was enough for that module under more accurate \ac{FI}. For this system and campaign, the Controller, Decoder, and \ac{ALU} pass from \(N=3\), \(M=2\), with one tolerable fault. The \ac{LSU} only passes from \(N=5\), \(M=3\), with two tolerable faults. 
 
-The IF Stage passes for all valid configurations, including \(N=1\), \(M=1\). The IF Stage is the largest logic target evaluated, so it may include more configuration bits whose corruption does not affect the benchmark. It also had the lowest Pblock Model accuracy among the Logic Redundancy targets, which may reduce how precisely the injected faults are confined to the intended region. Higher IF Stage replication factors failed timing.
+The IF Stage passes for all valid configurations, including \(N=1\), \(M=1\). The IF Stage is the largest logic target evaluated, so it may include more configuration bits whose corruption does not affect the benchmark. It also had the lowest Pblock Sizing Model accuracy among the Logic Redundancy targets, which may reduce how precisely the injected faults are confined to the intended region. Higher IF Stage replication factors failed timing.
 
 Increasing \(N\) is only useful when it increases the number of faulty replicas that can be tolerated. The \(N=4\), \(M=3\) configuration has the same correction margin as \(N=3\), \(M=2\), since both tolerate one faulty replica. The first margin increase appears at \(N=5\), \(M=3\), which tolerates two faulty replicas. The \(N=7\), \(M=4\) configuration tolerates three, but adds higher cost and timing pressure.
 
