@@ -149,7 +149,7 @@ Py2HWSW is a Python-based framework for embedded hardware and software design. A
 \subsection{IOb-SoC-Ibex}
 \label{chap5:iob-soc-ibex}
 
-The top layer, IOb-SoC-Ibex, is forked from IOb-SoC with Ibex selected as the \ac{CPU}. Two hook mechanisms were added to make it externally configurable: a Vivado \ac{TCL} hook that sources user-provided scripts at fixed synthesis stages, and a benchmark hook that compiles sources from an external directory instead of the default firmware. Since Ibex relies on SystemVerilog packages, the \ac{FPGA} build flow was also modified to compile \texttt{*\_pkg.sv} files before other sources, as shown in \Cref{lst:src_order}.
+The top layer, IOb-SoC-Ibex, is forked from IOb-SoC with Ibex selected as the \ac{CPU}. Two hook mechanisms were added to make it externally configurable: a Vivado \ac{TCL} hook that sources user-provided scripts at fixed synthesis stages, and a benchmark hook that compiles sources from an external directory instead of the default firmware. Since Ibex relies on SystemVerilog packages, the \ac{FPGA} build flow was also modified to compile SystemVerilog package files before other sources, as shown in \Cref{lst:src_order}.
 
 \begin{lstlisting}[float=h,language=matlabfloz,caption={Portion of the modified Py2HWSW \ac{FPGA} Makefile enforcing package ordering}, label={lst:src_order}]
 VHDR+=$(wildcard ../src/*.vh) $(wildcard ./src/*.vh)
