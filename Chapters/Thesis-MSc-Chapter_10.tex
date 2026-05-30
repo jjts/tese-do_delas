@@ -3,7 +3,7 @@
 % !TEX root = ../main.tex
 % #############################################################################
 \fancychapter{Conclusion}
-\label{chap:conclusion}
+\label{chap10:conclusion}
 
 % #############################################################################
 \section{Summary}
@@ -11,13 +11,13 @@
 
 This thesis developed \ac{Fatori-V}, a \texttt{.yaml}-driven platform for implementing and evaluating \acp{FTM} on a configurable \ac{RISC-V} \ac{SoC} targeting \acp{FPGA}. The work selected the final Ibex-based baseline, integrated Ibex in IOb-\ac{SoC}, implemented the Ibex-to-\ac{AXI} bridge, added Py2HWSW build hooks, wrapped pipeline registers, integrated benchmarks, automated runs, and generated comparable \ac{FT}, performance, power, timing, and hardware-cost metrics.
 
-The platform includes Register M-of-N, Logic M-of-N, \ac{ST} hardware, the Fault Manager, and the \ac{CSR}-based monitoring path. The standalone \ac{FI} tool supports \ac{SEM} and \ac{ACME}-based configuration memory injection, register and \ac{FF} injection through on-chip hardware, mixed target pools, reusable area and time profiles, benchmark synchronization, and target-pool replay. The Pblock Assignment Model maps selected hardware targets to physical regions, allowing configuration memory injections to be aimed at module-level scopes.
+The platform includes Register M-of-N, Logic M-of-N, \ac{ST} hardware, the Fault Manager, and the \ac{CSR}-based monitoring path. The standalone \ac{FI} tool supports \ac{SEM} and \ac{ACME}-based configuration memory injection, register and \ac{FF} injection through on-chip hardware, mixed target pools, reusable area and time profiles, benchmark synchronization, and target-pool replay. The Pblock Sizing Model maps selected hardware targets to physical regions, allowing configuration memory injections to be aimed at module-level scopes.
 
-The validation in \Cref{chap9:fatori_validation} showed that the Pblock Sizing Model reached 91.63\% average accuracy and that the implemented time profiles matched their configured behaviour with scores between 96.50\% and 98.64\%. The \ac{FTM} comparison in \Cref{chap9:general-ftm-testing} showed that register faults were the most disruptive tested fault type. Without Register M-of-N, register-injection campaigns crashed at all tested rates. With Register M-of-N and Correction enabled, the benchmark passed the full register-only sweep. Native Ibex \acp{FTM}, including SecureIbex, did not improve the breaking points in the tested \ac{SEU}-oriented campaigns.
+The validation in \Cref{chap9:fatori_validation} showed that the Pblock Sizing Model reached 92.44\% average accuracy and that the implemented time profiles matched their configured behaviour with scores between 96.50\% and 98.64\%. The \ac{FTM} comparison in \Cref{chap9:general-ftm-testing} showed that register faults were the most disruptive tested fault type. Without Register M-of-N, register-injection campaigns crashed at all tested rates. With Register M-of-N and Correction enabled, the benchmark passed the full register-only sweep. Native Ibex \acp{FTM}, including SecureIbex, did not improve the breaking points in the tested \ac{SEU}-oriented campaigns.
 
 The studies in \Cref{chap9:register-Redundancy,chap9:logic-Redundancy} showed that $N=3$, $M=2$ with Correction enabled was the best tested Register M-of-N trade-off. Logic M-of-N improved configuration memory campaigns, but its effect was limited to the five protected targets and by the absence of configuration memory correction. The observability results also exposed two limits in the current implementation. Register M-of-N protects the system, but the aggregation path can merge several detections into one counted event. Logic M-of-N can mask corrupted replica outputs, but it does not repair corrupted configuration memory.
 
-%The fact that we could compare so many things from so many ftms, is a form of validating Fatori as a analysis platform
+Taken together, these results show that the effectiveness of a given \ac{FTM} depends critically on the fault type, the injection scope, and the specific hardware targets protected — distinctions that a generic evaluation framework cannot expose. \ac{Fatori-V} demonstrates that a single configurable platform can make these distinctions visible, enabling meaningful and reproducible \ac{FTM} comparisons on a real \ac{RISC-V} \ac{SoC} under controlled \ac{FI} conditions.
 
 % #############################################################################
 \section{Future Work}
@@ -32,9 +32,3 @@ Logic M-of-N should be extended with configuration memory correction. The curren
 The \ac{ST} \ac{FTM} should be completed and evaluated. Future work should finalize the test patterns, select scheduling policies, measure execution overhead, and compare its detection results with Register M-of-N and Logic M-of-N under the same \ac{FI} campaigns.
 
 \ac{Fatori-V} should also be expanded with more benchmarks, automatic parameter sweeps, finer injection-rate steps near failure transitions, more \acp{FPGA}, and more \acp{CPU} and \acp{SoC}. The Ibex-to-\ac{AXI} bridge can be extended with burst support, and the logging flow can be made more resilient so metrics are preserved when a campaign causes a hang or reset.
-
-%frequency control
-
-%more MoN targets
-
-%Perform an analysis on FTMs with other already exported Fatori-V metrics
