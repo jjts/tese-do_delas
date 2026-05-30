@@ -5,9 +5,13 @@
 \fancychapter{Campaign Orchestration}
 \label{chap7:fatori_software}
 
+
+
 % #############################################################################
 \section{Fatori-V Operation Sequence}
 \label{chap7:software_overview}
+
+A \ac{Fatori-V} run starts from a user-defined \texttt{.yaml} file placed under \texttt{runs/}. The run file defines the hardware setup, benchmark selection, build options, and \ac{FI} parameters. From that file, \ac{Fatori-V} prepares the configured experiment by generating the required files, staging them in the Py2HWSW Setup Directory and benchmark folders, launching the build and execution flow, and collecting the data used in the final result tables. \Cref{fig:fatori_overview} summarizes the run flow.
 
 \begin{figure}[h]
 \centering
@@ -16,264 +20,23 @@
     \label{fig:fatori_overview}
 \end{figure}
 
+The entry script, \texttt{fatori-v.py}, reads the selected run files and applies the same sequence to each one. When \ac{FI} is enabled, the same flow also prepares the \ac{FI} command and launches the \ac{FI} tool during benchmark execution.
 
-A \ac{Fatori-V} run starts from a user-defined \texttt{.yaml} file provided through \texttt{runs/}. Each run file describes the hardware configuration, benchmark setup, build options, and \ac{FI} parameters. The top script, \texttt{fatori-v.py}, reads the selected run files and executes the same staged workflow for each one, as shown in \Cref{fig:fatori_overview}.
+The Validation Stage checks the input \texttt{.yaml} file before any generated file is written. The checks are defined in \texttt{config/validation\_checks.py}, which can be extended. Each check inspects selected fields and either applies a deterministic correction or aborts the run. After validation, \ac{Fatori-V} rewrites the input \texttt{.yaml} file into \texttt{verified\_yaml.yaml}, which is used by the remaining stages and stored in the final results folder.
 
-During a run, \ac{Fatori-V} validates the user configuration, generates the required interface files, stages those files in the architecture and benchmark repositories, builds the configured system, executes the selected benchmark sessions, and writes the final result tables. When \ac{FI} is enabled, the same flow also prepares the \ac{FI} command and launches the \ac{FI} tool during benchmark execution.
+The Generation Stage translates the verified configuration into the interface macro files required by the Py2HWSW Layer described in \cref{chap6:fatori_hardware}. It also generates firmware headers for benchmark selection and Vivado \texttt{.tcl} scripts for the Vivado build flow.
 
-The Validation Stage checks the run \texttt{.yaml} before any file is generated. The checks are defined in \texttt{config/validation\_checks.py}. Each check inspects selected fields and either applies a deterministic correction or aborts the run. In strict mode, warnings without automatic corrections also abort the run. After validation, \ac{Fatori-V} writes \texttt{verified\_yaml.yaml}, which is used by the remaining stages and stored in the final results folder. Users can add custom checks to \texttt{config/validation\_checks.py}.
+The File Movement Stage places generated and user-provided files in the directories expected by the Py2HWSW build. Generated files are copied according to \texttt{gen\_locations.yaml}. User-provided hardware and software files are copied according to the corresponding \texttt{locations.yaml} files. Before overwriting a destination file, \ac{Fatori-V} creates a backup so the repository can be restored after the run.
 
-The Generation Stage translates the verified configuration into the interface macro files required by the build flow. These include SystemVerilog headers for feature selection, \ac{FTM} configuration, and pblock constraints, as well as firmware headers for benchmark selection and Vivado \texttt{.tcl} scripts for the build flow.
+The Build Stage runs the IOb-\ac{SoC}-Ibex Makefile targets from the Py2HWSW Setup Directory. It builds the \ac{FPGA} image, prepares the selected benchmarks, and stores the implementation reports later used for hardware metrics. When \ac{FI} is enabled, this stage also prepares the command used to launch the \ac{FI} tool during execution.
 
-The File Movement Stage copies generated files according to \texttt{gen\_locations.yaml}. User-provided hardware and software inputs are copied according to the corresponding \texttt{locations.yaml} files. Before overwriting a destination file, \ac{Fatori-V} creates a backup so the repository can be restored after the run.
+The Execution Stage runs each enabled benchmark as a separate session. During each session, the firmware samples the hardware metrics before and after benchmark execution and sends them to the host, where they are written to \texttt{metrics.txt}. When \ac{FI} is enabled, the session controller launches the \ac{FI} tool as a parallel process and synchronizes it with the benchmark.
 
-The Build Stage runs the IOb-\ac{SoC}-Ibex Makefile targets. It builds the \ac{FPGA} image, prepares the selected benchmarks, and stores the implementation reports used later for hardware metrics. When \ac{FI} is enabled, this stage also prepares the \ac{FI} command used during execution.
-
-The Execution Stage runs each enabled benchmark as a separate session. A session is valid when the process exits cleanly, the benchmark succeeds, and a valid \texttt{metrics.txt} file, containing measured data, is produced. When \ac{FI} is enabled, the session controller launches the \ac{FI} tool as a parallel process and uses the synchronization mechanism described in \Cref{chap7:sw_logging}.
-
-The Results Stage collects the session data, benchmark outputs, \texttt{metrics.txt} files, \ac{FI} logs, and implementation reports. These files are stored under \texttt{results/} and used to create the result tables.
+The Results Stage collects benchmark outputs, \texttt{metrics.txt} files, \ac{FI} logs, and implementation reports from the run directory. These files are stored under \texttt{results/} and used to generate the final result tables.
 
 
 
 
-
-
-% #############################################################################
-\section{Pblock Sizing Model}
-\label{chap7:pblock}
-
-To inject faults into a specific hardware module, the \ac{FI} tool must know where that module is placed in the \ac{FPGA}. \ac{Fatori-V} solves this by constraining each injectable target to a pblock and storing its bounds in the System Dictionary used by the \ac{FI} tool. These bounds are later used to select configuration memory addresses that belong to the target region, as described in \Cref{chap8:fi_acme_impl}.
-
-The size of each hardware module depends on the active Ibex configuration, including \ac{ISA} extensions, multiplier type, bit manipulation variant, cache support, branch logic, writeback stage, \ac{FI} instrumentation, and enabled \acp{FTM}. A static table would not cover all possible combinations, especially for parameters such as the M-of-N replication factor, which can be virtually any integer number. The Pblock Sizing Model estimates the required area of each target from the configuration used in each run.
-
-The model is used for the following pblock targets: \ac{ALU}, \ac{LSU}, Controller, Decoder, IF Stage, ID Stage, Multiplier, Prefetch Buffer, WB Stage, Branch Predictor, and Fault Manager.
-
-
-
-
-
-
-
-% -----------------------------------------------------------------------------
-\subsection{Sizing Equations}
-\label{chap7:pblock_sizing_model}
-
-The model estimates the \ac{LUT} and \ac{FF} usage of each pblock target. Each target starts from a measured baseline and adds the overhead of the active hardware features. The baseline with architectural features is defined in \Cref{eq:pblock_target_base}.
-
-\begin{equation}
-A_t =
-B_t
-+
-\sum \Delta^{\text{feat}}_t
-\label{eq:pblock_target_base}
-\end{equation}
-
-In \Cref{eq:pblock_target_base}, \(B_t\) is the measured \ac{LUT} baseline of target \(t\), and \(\sum \Delta^{\text{feat}}_t\) is the sum of the enabled architectural feature overheads. Negative feature effects are set to zero, preventing the model from estimating  pblock sizes below the measured baseline.
-
-Logic M-of-N replicates the complete target. This includes the combinational logic and the registers inside the target. Register M-of-N overhead, if the \ac{FTM} is enabled, is included within each logic replica. The \ac{LUT} estimate is computed with \Cref{eq:pblock_lut_model}.
-
-\begin{equation}
-\text{LUT}_t =
-N_{\text{logic}}
-\left(
-A_t
-+
-\Delta^{\text{RegMon}}_t(N_{\text{reg}})
-\right)
-+
-V_t(N_{\text{logic}})
-\label{eq:pblock_lut_model}
-\end{equation}
-
-In \Cref{eq:pblock_lut_model}, \(N_{\text{logic}}=1\) when Logic M-of-N is disabled. \(V_t(N_{\text{logic}})\) is the voter cost of the Logic M-of-N wrapper and is set to zero when Logic M-of-N is disabled.
-
-Register M-of-N mainly increases the number of \acp{FF}, because it replicates stored state. However, the generated wrappers, voters, correction logic, and control logic can also use \acp{LUT}. For this reason, the model includes a Register M-of-N \ac{LUT} term when measured data showed a relevant \ac{LUT} cost. This term is computed with \Cref{eq:pblock_reg_mon}.
-
-\begin{equation}
-\Delta^{\text{RegMon}}_t(N_{\text{reg}})
-=
-P_t(N_{\text{reg}})
--
-A_t
-\label{eq:pblock_reg_mon}
-\end{equation}
-
-In \Cref{eq:pblock_reg_mon}, \(P_t(N_{\text{reg}})\) is the measured or fitted total \ac{LUT} count of target \(t\) with Register M-of-N enabled. When Register M-of-N is disabled, or when the measured \ac{LUT} overhead was not relevant, \(\Delta^{\text{RegMon}}_t(N_{\text{reg}})=0\).
-
-The \ac{FF} model follows the same structure. The model starts from the measured \ac{FF} baseline, adds the \ac{FF} effects of the enabled architectural features, and applies the \ac{FF} cost of Register M-of-N when enabled. Since XCKU040 slices contain 8 \acp{LUT} and 16 \acp{FF}, the final pblock size is set by the most restrictive resource, as shown in \Cref{eq:pblock_slice_binding}.
-
-\begin{equation}
-\text{Slices}_{t}
-=
-\left\lceil
-M_t
-\cdot
-\max
-\left(
-\left\lceil \frac{\text{LUT}_{t}}{8} \right\rceil,
-\left\lceil \frac{\text{FF}_{t}}{16} \right\rceil
-\right)
-\right\rceil
-\label{eq:pblock_slice_binding}
-\end{equation}
-
-\(M_t\) is the safety margin used to account for placement and routing constraints. 
-
-
-
-
-
-% -----------------------------------------------------------------------------
-\subsection{Measured Model Parameters}
-\label{chap7:pblock_study}
-
-The model parameters were extracted from implementation reports generated for the XCKU040 \ac{FPGA}. Each experiment enabled a controlled hardware configuration, implemented the design, and parsed the utilization reports to measure the \ac{LUT} and \ac{FF} usage of each pblock target.
-
-The experiments were organized to isolate the terms defined in \Cref{eq:pblock_target_base,eq:pblock_lut_model,eq:pblock_reg_mon}. Baseline experiments measured each target with optional features and \acp{FTM} disabled. Feature experiments enabled one parameter at a time, including RV32B, RV32M, instruction cache, branch prediction, branch target \ac{ALU}, and writeback stage. M-of-N experiments varied \(N\) for Logic M-of-N and Register M-of-N. Combined experiments checked whether the extracted terms still produced usable pblock sizes when features and \acp{FTM} were enabled together.
-
-\Cref{tab:pblock_feature_params} reports the baseline and feature parameters used in \(A_t\). RV32M values are ordered as none, single-cycle, fast, and slow. RV32B values are ordered as none, balanced, full, and OTEarlGrey. Empty entries mean that no positive measured contribution was kept.
-
-\begin{table}[h]
-\centering
-\scriptsize
-\setlength{\tabcolsep}{2.8pt}
-\renewcommand{\arraystretch}{1.20}
-\begin{tabularx}{\textwidth}{|X|X|X|X|X|}
-\hline
-\rowcolor{tableheader}\textbf{Target} &
-\textbf{Baseline} &
-\textbf{RV32M \(\Delta\ac{LUT}\)} &
-\textbf{RV32B \(\Delta\ac{LUT}\)} &
-\textbf{Notes} \\
-\hline
-\hline
-\ac{ALU} &
-96 \acp{LUT}, 0 \acp{FF} &
-0, 7, 10, 51 &
-0, 27, 27, 29 &
-Pure \ac{ALU} has no registers. \\
-\hline
-Multiplier &
-0, 326, 317, 357 \acp{LUT}; 0, 74, 75, 76 \acp{FF} &
-Set by RV32M mode &
- &
-DSP count is also stored per RV32M mode. \\
-\hline
-Controller &
-331 \acp{LUT}, 14 \acp{FF} &
-0, 10, 1, 51 &
- &
-RV32B effects are set to zero. \\
-\hline
-Decoder &
-257 \acp{LUT}, 1 \ac{FF} &
- &
-0, 40, 38, 40 &
-RV32M has no measured effect. \\
-\hline
-\ac{LSU} &
-103 \acp{LUT}, 68 \acp{FF} &
-0, 16, 9, 7 &
-0, 45, 42, 44 &
-Used by load/store logic. \\
-\hline
-IF Stage &
-1667 \acp{LUT}, 284 \acp{FF} &
-0, 305, 235, 361 &
-0, 930, 1802, 1750 &
-Largest feature variation. \\
-\hline
-ID Stage &
-334 \acp{LUT}, 17 \acp{FF} &
-0, 5, 32, 97 &
-0, 0, 86, 0 &
-\ac{FF} effects are also fitted. \\
-\hline
-WB Stage &
-135 \acp{LUT}, 75 \acp{FF} &
- &
- &
-Only when enabled. \\
-\hline
-Prefetch Buffer &
-486 \acp{LUT}, 199 \acp{FF} &
-0, 0, 13, 0 &
- &
-Disabled when instruction cache is enabled. \\
-\hline
-Branch Predictor &
-38 \acp{LUT}, 0 \acp{FF} &
- &
- &
-Only when enabled. \\
-\hline
-Fault Manager &
-5 \acp{LUT}, 114 \acp{FF} &
- &
- &
-Metrics included. \\
-\hline
-\end{tabularx}
-\caption{Baseline and feature parameters used by the Pblock Sizing Model.}
-\label{tab:pblock_feature_params}
-\end{table}
-
-\Cref{tab:pblock_redundancy_params} reports the redundancy parameters used after \(A_t\) is computed. Logic M-of-N terms are used inside \Cref{eq:pblock_lut_model}. Register M-of-N terms are used to compute \(\Delta^{\text{RegMon}}_t(N_{\text{reg}})\) in \Cref{eq:pblock_reg_mon}.
-
-\begin{table}[h]
-\centering
-\scriptsize
-\setlength{\tabcolsep}{2.8pt}
-\renewcommand{\arraystretch}{1.22}
-\begin{tabularx}{\textwidth}{|p{0.16\textwidth}|p{0.38\textwidth}|p{0.30\textwidth}|X|}
-\hline
-\rowcolor{tableheader}\textbf{Target} &
-\textbf{Logic M-of-N \ac{LUT} term} &
-\textbf{Register M-of-N term} &
-\textbf{Notes} \\
-\hline
-\hline
-\ac{ALU} &
-\((N_{\text{logic}}-1)A_{\text{ALU}} + 26.63N_{\text{logic}}^2 + 1249.09N_{\text{logic}} - 97.21\) &
-0 &
-No registers. \\
-\hline
-Controller &
-\(30N_{\text{logic}}^2 + 800N_{\text{logic}}\) &
-\(P(N_{\text{reg}})=70.38N_{\text{reg}}+68.03\), \(\text{FF}=15N_{\text{reg}}\) &
-Register term is inside each logic replica. \\
-\hline
-Decoder &
-\((N_{\text{logic}}-1)A_{\text{DEC}} + 1594N_{\text{logic}}\) &
-\(\text{FF}=N_{\text{reg}}\) &
-One baseline \ac{FF}. \\
-\hline
-\ac{LSU} &
-\((N_{\text{logic}}-1)A_{\text{LSU}} + 89.61N_{\text{logic}}^2 - 645.61N_{\text{logic}} + 1609.00\) &
-\(P(N_{\text{reg}})=280.47N_{\text{reg}}-510.13\), \(\text{FF}=66N_{\text{reg}}+2\) &
-Fitted from register runs. \\
-\hline
-IF Stage &
-\((N_{\text{logic}}-1)A_{\text{IF}} + 23.93N_{\text{logic}}^2 - 1860.13N_{\text{logic}} + 2164.80\) &
-\(P(N_{\text{reg}})=1465.65N_{\text{reg}}-548.46\), \(\text{FF}=321N_{\text{reg}}\) &
-Fitted from register runs. \\
-\hline
-ID Stage &
-Logic Redundancy not implemented &
-\(P(N_{\text{reg}})=367.97N_{\text{reg}}-441.69\), \(\text{FF}=87N_{\text{reg}}\) &
-No standalone Logic M-of-N target. \\
-\hline
-Prefetch Buffer &
-Logic Redundancy not implemented &
-\(\text{FF}=199N_{\text{reg}}\) &
-Only without instruction cache. \\
-\hline
-\end{tabularx}
-\caption{Redundancy parameters used by the Pblock Sizing Model.}
-\label{tab:pblock_redundancy_params}
-\end{table}
-
-Negative measured contributions are kept at zero. This prevents synthesis optimizations from reducing the predicted pblock size below the measured baseline. The slice conversion from \Cref{eq:pblock_slice_binding} is applied after the \ac{LUT} and \ac{FF} estimates are computed.
 
 
 
@@ -363,9 +126,149 @@ The Results Stage also parses Vivado implementation reports to add hardware metr
 
 
 % #############################################################################
+\section{Pblock Sizing Model}
+\label{chap7:pblock}
+
+
+To inject faults into a selected hardware target, the \ac{FI} tool requires the pblock coordinates that contain that target. Users can define these pblocks manually, but this would make each new configuration require manual placement work. \ac{Fatori-V} implements the Pblock Sizing Model to automate this step. The model estimates the minimum pblock size required to contain each target from the selected hardware configuration, then uses that size to generate the pblock constraints used by the \ac{FI} flow.
+
+The required pblock size depends on the active Ibex configuration. The main factors are the selected \ac{ISA} extensions, multiplier type, bit manipulation variant, cache support, branch logic, writeback stage, \ac{FI} instrumentation, enabled \acp{FTM}, and \ac{FTM} configuration. 
+
+A fixed size table would not cover the supported configurations, especially when any M-of-N \ac{FTM} is enable, since it accepts any replication factor.
+
+\ac{Fatori-V} implements the model for the following pblock targets: \ac{ALU}, \ac{LSU}, Controller, Decoder, IF Stage, ID Stage, Multiplier, Prefetch Buffer, WB Stage, Branch Predictor, and Fault Manager.
+
+\begin{table}[h]
+\centering
+\small
+\setlength{\tabcolsep}{3.2pt}
+\renewcommand{\arraystretch}{1.20}
+\begin{tabularx}{0.92\textwidth}{|p{0.28\textwidth}|X|}
+\hline
+Configuration factor &
+Affected pblock targets \\
+\hline
+\hline
+Multiplier configuration &
+Multiplier, \ac{ALU}, Controller, Decoder, \ac{LSU}, IF Stage, ID Stage. \\
+\hline
+Bit manipulation configuration &
+\ac{ALU}, Decoder, \ac{LSU}, IF Stage, ID Stage. \\
+\hline
+Instruction cache and prefetch configuration &
+IF Stage, Prefetch Buffer. \\
+\hline
+Branch prediction and branch target \ac{ALU} &
+IF Stage, Branch Predictor. \\
+\hline
+Writeback stage &
+WB Stage and targets connected to the writeback path. \\
+\hline
+Register M-of-N &
+Targets that contain wrapped registers. \\
+\hline
+Logic M-of-N &
+Targets with implemented Logic M-of-N wrappers. \\
+\hline
+\end{tabularx}
+\caption{Configuration factors used by the Pblock Sizing Model.}
+\label{tab:pblock_model_factors}
+\end{table}
+
+The model estimates \ac{LUT} and \ac{FF} usage independently, using the same structure for both resources. For each resource \(R \in \{\text{\ac{LUT}}, \text{\ac{FF}}\}\), the estimate starts from a measured baseline and adds the contributions of the enabled architectural features, as shown in \Cref{eq:pblock_target_base}.
+
+\begin{equation}
+A_{t,R} =
+B_{t,R}
++
+\sum \Delta^{\text{feat}}_{t,R}
+\label{eq:pblock_target_base}
+\end{equation}
+
+In \Cref{eq:pblock_target_base}, \(B_{t,R}\) is the measured baseline of target \(t\) for resource \(R\), and \(\Delta^{\text{feat}}_{t,R}\) is the contribution of each enabled architectural feature. Negative measured contributions are set to zero, so the model does not estimate pblock sizes below the measured baseline.
+
+Feature contributions with a fixed set of values, such as multiplier type or bit manipulation variant, are stored as table parameters. Effects that depend on a variable parameter, such as the M-of-N replication factor \(N\), are fitted from measurement traces instead of being listed for every possible value.
+
+
+Despite Register M-of-N mainly increasing \ac{FF} usage, it can also add \acp{LUT} through wrappers, voters, correction logic, and control logic. For each target and resource, this contribution is modelled as proportional to the number of additional register replicas, as shown in \Cref{eq:pblock_reg_mon}.
+
+\begin{equation}
+\Delta^{\text{RegMon}}_{t,R}(N_{\text{reg}})
+=
+(N_{\text{reg}} - 1)
+\cdot
+C^{\text{RegMon}}_{t,R}
+\label{eq:pblock_reg_mon}
+\end{equation}
+
+In \Cref{eq:pblock_reg_mon}, \(C^{\text{RegMon}}_{t,R}\) is the measured contribution of one additional register replica for target \(t\) and resource \(R\). This coefficient is extracted from implementation measurements. When Register M-of-N is disabled, when the target has no wrapped registers, or when the measured contribution was not relevant for resource \(R\), \(\Delta^{\text{RegMon}}_{t,R}(N_{\text{reg}})=0\).
+
+Logic M-of-N replicates the complete target. This includes the feature-dependent logic represented by \(A_{t,R}\), and the Register M-of-N contribution when it is enabled. Since \(A_{t,R}\) already represents one target instance, the Logic M-of-N contribution adds only the extra replicas and the wrapper voter cost, as shown in \Cref{eq:pblock_logic_mon}.
+
+\begin{equation}
+\Delta^{\text{LogicMon}}_{t,R}(N_{\text{logic}},N_{\text{reg}})
+=
+(N_{\text{logic}}-1)
+\left(
+A_{t,R}
++
+\Delta^{\text{RegMon}}_{t,R}(N_{\text{reg}})
+\right)
++
+V_{t,R}(N_{\text{logic}})
+\label{eq:pblock_logic_mon}
+\end{equation}
+
+In \Cref{eq:pblock_logic_mon}, \(N_{\text{logic}}=1\) when Logic M-of-N is disabled. \(V_{t,R}(N_{\text{logic}})\) is the resource cost of the Logic M-of-N wrapper and voter for resource \(R\), set to zero when Logic M-of-N is disabled.
+
+The final estimate for each resource is defined in \Cref{eq:pblock_resource_model}.
+
+\begin{equation}
+\hat{R}_{t,R}
+=
+A_{t,R}
++
+\Delta^{\text{RegMon}}_{t,R}(N_{\text{reg}})
++
+\Delta^{\text{LogicMon}}_{t,R}(N_{\text{logic}},N_{\text{reg}})
+\label{eq:pblock_resource_model}
+\end{equation}
+
+After the \ac{LUT} and \ac{FF} estimates are computed, they are converted into the number of required Kintex Ultrascale XCKU040 \cite{xcku040} slices. Since each slice contains 8 \acp{LUT} and 16 \acp{FF}, the pblock size is set by the resource that requires more slices, as shown in \Cref{eq:pblock_slice_binding}.
+
+\begin{equation}
+\text{Slices}_{t}
+=
+\left\lceil
+M_t
+\cdot
+\max
+\left(
+\left\lceil \frac{\hat{R}_{t,\text{\ac{LUT}}}}{8} \right\rceil,
+\left\lceil \frac{\hat{R}_{t,\text{\ac{FF}}}}{16} \right\rceil
+\right)
+\right\rceil
+\label{eq:pblock_slice_binding}
+\end{equation}
+
+In \Cref{eq:pblock_slice_binding}, \(M_t\) is a multiplicative pblock sizing margin. It is applied once after the \ac{LUT} and \ac{FF} estimates are converted to slices, reserving extra placement space for routing and implementation constraints.
+
+The model parameters were extracted from implementation reports generated for the Kintex Ultrascale XCKU040 \cite{xcku040} \ac{FPGA}. 
+
+
+\ac{Fatori-V} was used to automate the parameter extraction experiments. Since the Pblock Sizing Model was not yet implemented, these runs used manually written Vivado \texttt{.tcl} files that assigned each target to fixed pblocks. The pblocks were intentionally oversized, so implementation would not fail because of an underestimated target region. The \ac{Fatori-V} override feature was used to replace the pblock files that would normally be generated by the Pblock Sizing Model with the manually written Vivado \texttt{.tcl} files.
+
+Each run enabled a controlled hardware configuration and used the normal \ac{Fatori-V} build flow to implement the design. Vivado hierarchical utilization reports were then used to measure the \ac{LUT} and \ac{FF} usage of each target, while pblock reports showed how much area had been reserved. These measurements were used to tune the baseline terms, feature contributions, and M-of-N terms used by the model.
+
+The study included baseline configurations, single-feature configurations, M-of-N sweeps, and combined configurations. Baseline configurations measured each target with optional features and \acp{FTM} disabled. Single-feature configurations enabled one parameter at a time. M-of-N sweeps varied \(N\) for Register M-of-N and Logic M-of-N. Combined configurations checked whether the extracted terms still produced usable pblock sizes when features and \acp{FTM} were enabled together.
+
+
+
+% #############################################################################
 \section{Summary}
 \label{chap7:summary}
 
 This chapter presented the campaign orchestration component of the Fatori-V layer. The operation sequence was described, showing how \ac{Fatori-V} translates \texttt{.yaml} run files into configured hardware and software builds and drives the full experiment lifecycle. The Pblock Sizing Model was presented, enabling module-targeted configuration memory injections. Benchmark porting was described for CoreMark, Embench-IoT, and the Fatori Native benchmark. Finally, the synchronisation, logging, and metrics infrastructure was presented, covering the file-based handshake, the event-driven logging system, and the result-table generation pipeline. \Cref{chap8:fatori_fi} describes the fault injection tool, also part of this layer.
+
 
 
