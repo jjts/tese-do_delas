@@ -20,18 +20,11 @@ Each test session synthesizes and implements its custom hardware, programs the F
 \begin{figure}[h]
   \centering
   \includegraphics[width=0.9\linewidth]{Images/chap9_exp_setup.png}
-  \caption{Fatori-V system used in the experimental setup.}
+  \caption{\ac{Fatori-V} system used in the experimental setup.}
   \label{fig:chap9_exp_setup}
 \end{figure}
 
-%orange
-All \acp{FTM} implemented in this work report their error signals to the central \texttt{fault manager} (orange paths in \Cref{fig:chap9_exp_setup}). The fault manager writes the error data to the implemented Ibex \acp{CSR}.
-
-%blue
-The firmware reads the \acp{CSR} and sends the metrics to the user desktop console (blue path in \Cref{fig:chap9_exp_setup}). The \ac{Fatori-V} platform parses the results and consolidates them into the tables used in the analyses presented below.
-
-%green
-During execution, faults are injected (green paths in \Cref{fig:chap9_exp_setup}) using the \ac{FI} \ac{UART}, and decoded either as "R" commands (register injections), or \ac{SEM} commands (configuration-memory injections).
+As shown in \Cref{fig:chap9_exp_setup}, the \acp{FTM} report errors to the Fault Manager, which writes them to the monitoring \acp{CSR}. Firmware reads those values and sends them to the host, where \ac{Fatori-V} consolidates them into result tables. Faults are injected over the \ac{FI} \ac{UART} as either register injection commands or \ac{SEM} configuration memory commands.
 
 
 The complete experimental system is available in \cite{FatoriV}, allowing for result reproducibility and verification as well as further independent research.
@@ -812,7 +805,7 @@ With Correction enabled, each detected error is corrected in the next cycle, so 
 
 \subsection{Performance and Hardware Resources}
 
-The Register Redundancy experiments showed no changes in performance. All configurations reported an \ac{IPC} of 0.28, a CoreMark score of 44, and a Embench-IoT score of 0.076. As in \Cref{chap9:general-ftm-testing}, performance is not the limiting factor in this comparison. \Cref{tab:chap9-regRedundancy-cost} displays the hardware and timing overheads.
+As in \Cref{chap9:general-ftm-testing}, the Register Redundancy experiments showed no changes in performance. Performance is not the limiting factor in this comparison. \Cref{tab:chap9-regRedundancy-cost} displays the hardware and timing overheads.
 
 \begin{table}[h]
 \centering
@@ -1071,7 +1064,7 @@ All experiments in \Cref{tab:chap9-logicRedundancy-status} were repeated with \t
 
 \subsection{Performance and Hardware Resources}
 
-The Logic Redundancy experiments showed no changes in performance for configurations that produced valid metrics. Those configurations reported an \ac{IPC} of 0.28, a CoreMark score of 44, and a Embench-IoT score of 0.076. \Cref{tab:chap9-logicRedundancy-cost} displays hardware and timing overheads.
+As in \Cref{chap9:general-ftm-testing}, the Logic Redundancy experiments showed no changes in performance for configurations that produced valid metrics. \Cref{tab:chap9-logicRedundancy-cost} displays hardware and timing overheads.
 
 \begin{table}[h]
 \centering
@@ -1244,3 +1237,11 @@ IF Stage &
 The lowest-cost passing configuration depends on the target. For the Controller, Decoder, and \ac{ALU}, the best tested choice is \(N=3\), \(M=2\). For the \ac{LSU}, the best tested choice is \(N=5\), \(M=3\). For the IF Stage, the campaign passes even with \(N=1\), \(M=1\), so this experiment does not show a need for IF Stage redundancy. If voting is still required for this target, \(N=3\), \(M=2\) is the first valid majority option, but with low timing slack. 
 
 Since a single protected target does not recover the Whole-device failing campaigns, Logic Redundancy should be applied as a set of protected modules, with \(N\) and \(M\) selected per target.
+
+
+
+% #############################################################################
+\section{Summary}
+\label{chap9:summary}
+
+This chapter presented the experimental results obtained using \ac{Fatori-V}. The platform was validated first: the Pblock Sizing Model reached 92.44\% average accuracy across the evaluated targets, and all five time profiles achieved match scores above 96\%. The general \ac{FTM} comparison showed that Register Redundancy with correction enabled is the only tested mechanism that fully protects the system against register faults across all evaluated injection rates, and that Logic Redundancy improves resilience under targeted configuration memory injection. The native Ibex \acp{FTM} did not change the pass, fail, or crash outcomes under the tested fault model. The Register Redundancy isolation study confirmed that \(N=3\), \(M=2\) with correction is the best tested trade-off between fault tolerance, hardware cost, and timing. The Logic Redundancy isolation study showed that the best configuration depends on the protected target — \(N=3\), \(M=2\) suffices for the Controller, Decoder, and \ac{ALU}, while the \ac{LSU} requires \(N=5\), \(M=3\) — and that redundancy should be applied as a set of modules with per-target parameters, since single-target protection is insufficient for outer-space-like injection scenarios. \Cref{chap10:conclusion} draws the conclusions from these results.
